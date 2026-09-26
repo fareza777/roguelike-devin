@@ -1,0 +1,10 @@
+export type Screen='title'|'creation'|'city'|'map'|'dungeon'|'combat'|'event'|'character'|'journal'|'shop'|'skills'|'ending';
+export type Stat='vigor'|'will'|'cunning';
+export interface Choice{label:string;text:string;effect:string;requires?:Stat}
+export interface StoryEvent{id:string;title:string;icon:string;text:string;choices:Choice[]}
+export interface Enemy{id:string;name:string;icon:string;hp:number;maxHp:number;damage:[number,number];sanity:number;armor:number;trait:string}
+export interface Region{id:string;name:string;subtitle:string;description:string;art:string;pos:[number,number];danger:number;unlock:number;boss:string}
+export interface Item{id:string;name:string;icon:string;type:'weapon'|'armor'|'charm'|'consumable';desc:string;price:number;power:number}
+export interface Skill{id:string;name:string;icon:string;school:string;desc:string;cost:number;cooldown:number;kind:'damage'|'heal'|'ward'|'sanity'}
+export interface Log{tone:'good'|'bad'|'plain';text:string}
+export interface GameState{version:number;screen:Screen;name:string;origin:string;path:string;companion:string;difficulty:string;day:number;level:number;xp:number;xpNext:number;gold:number;supplies:number;hp:number;maxHp:number;sanity:number;maxSanity:number;vigor:number;will:number;cunning:number;armor:number;weapon:number;region:string;depth:number;maxDepth:number;enemy:Enemy|null;event:StoryEvent|null;inventory:string[];equipped:string[];skills:string[];cooldowns:Record<string,number>;questStep:number;lore:string[];kills:number;bosses:number;corruption:number;guarding:boolean;log:Log[];settings:{sound:boolean;motion:boolean}}
