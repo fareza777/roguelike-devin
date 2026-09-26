@@ -1,22 +1,215 @@
-import'./style.css';import{COMPANIONS,ITEMS,LORE,ORIGINS,PATHS,REGIONS,SKILLS}from'./content';import{attack,buy,defend,explore,flee,fresh,learn,load,region,resolveEvent,rest,save,setup,equipItem,useItem,useSkill}from'./engine';import type{GameState,Screen}from'./types';
-let s:GameState=load()||fresh();const app=document.querySelector<HTMLDivElement>('#app')!;let creationStep=0;
-const pct=(v:number,m:number)=>Math.max(0,Math.min(100,v/m*100));
-function nav(screen:Screen){s.screen=screen;save(s);render()}
-function top(){const locked=s.screen==='combat'||s.screen==='event';return`<header class="topbar"><button data-go="city" ${locked?'disabled':''}>⌂</button><button data-go="title" ${locked?'disabled':''}>☰</button><div class="brand">DREADMARCH</div><div class="topstats"><div class="stat">◈ <b>${s.gold}</b></div><div class="stat">▣ <b>${s.supplies}</b></div><div class="stat">♥ <b>${s.hp}/${s.maxHp}</b></div><div class="stat">◉ <b>${s.sanity}/${s.maxSanity}</b></div><div class="stat">DAY <b>${s.day}</b></div></div></header>`}
-function bars(){return`<div class="bars"><div class="bar"><div class="fill hp" style="width:${pct(s.hp,s.maxHp)}%"></div><span>VITALITY ${s.hp} / ${s.maxHp}</span></div><div class="bar"><div class="fill san" style="width:${pct(s.sanity,s.maxSanity)}%"></div><span>RESOLVE ${s.sanity} / ${s.maxSanity}</span></div><div class="bar"><div class="fill xp" style="width:${pct(s.xp,s.xpNext)}%"></div><span>LEVEL ${s.level} — ${s.xp} / ${s.xpNext} XP</span></div></div>`}
-function side(){return`<aside class="side">${bars()}<div class="section quest"><b>THE BLACK MERIDIAN</b><p>${s.questStep<4?`Break the seals. Wardens defeated: ${s.bosses}/4`:'Enter the Black Meridian and confront the King Behind Noon.'}</p></div><div class="section"><h3>Wayfarer</h3><p>${s.name}<br><small>${s.origin} · ${s.path}<br>${s.companion}</small></p><div class="grid3"><span>⚔ ${s.weapon}</span><span>♜ ${s.armor}</span><span>☣ ${s.corruption}</span></div></div><div class="section"><h3>Latest Chronicle</h3>${s.log.slice(0,3).map(x=>`<div class="log ${x.tone}">${x.text}</div>`).join('')||'<p>The road waits.</p>'}</div></aside>`}
-function title(){return`<div class="title"><div class="title-card"><div class="sigil">◐</div><h1><span>A Chronicle of the Final City</span>Dreadmarch</h1><em>The sun is dead. The road remembers your name.</em><div class="title-actions">${load()?'<button data-act="continue" class="primary">CONTINUE</button>':''}<button data-act="new">NEW CHRONICLE</button></div><p><small>Offline · No ads · No gacha · Every choice is permanent</small></p></div></div>`}
-function creation(){const sets=[ORIGINS,PATHS,COMPANIONS];const headings=['Choose your history','Choose your discipline','Choose your companion'];const key=(['origin','path','companion']as const)[creationStep];return`<div class="creation"><div class="creation-head"><div class="sigil">${['♙','⚔','♞'][creationStep]}</div><h1>${headings[creationStep]}</h1><p>${['The past is not behind you. It is a weapon, or a wound.','How will you answer what waits beyond the walls?','No one survives the Dreadmarch alone.'][creationStep]}</p></div>${creationStep===0?`<input id="heroName" maxlength="18" placeholder="NAME YOUR WAYFARER" value="${s.name}">`:''}<div class="cards">${sets[creationStep].map((x,i)=>`<div class="choice-card ${s[key]===x[0]?'selected':''}" data-pick="${x[0]}"><div class="big-icon">${[['⚕','♜','⌘'],['⚔','✦','⟲'],['♞','♝','♟']][creationStep][i]}</div><h3>${x[0]}</h3><p>${x[1]}</p><small>${x[2]}</small></div>`).join('')}</div><div class="create-nav"><button data-act="creationBack">BACK</button><button class="primary" data-act="creationNext" ${!s[key]?'disabled':''}>${creationStep===2?'BEGIN THE MARCH':'CONTINUE'}</button></div></div>`}
-function city(){return`${top()}<div class="layout"><main class="main"><div class="art" style="background-image:url('/art/city.webp')"><div class="art-title"><h1>VEYRGARD — THE FINAL CITY</h1><p>Day ${s.day}. The western wall is still standing.</p></div></div><div class="grid section"><button class="menu-btn" data-go="map"><i>◈</i><span>WORLD MAP<small>Choose an expedition</small></span></button><button class="menu-btn" data-go="shop"><i>⚒</i><span>BLACK MARKET<small>Weapons, armor, supplies</small></span></button><button class="menu-btn" data-go="skills"><i>✦</i><span>FORBIDDEN ARCHIVE<small>Learn disciplines</small></span></button><button class="menu-btn" data-go="character"><i>♙</i><span>CHARACTER<small>Equipment and attributes</small></span></button><button class="menu-btn" data-go="journal"><i>▤</i><span>CHRONICLE<small>Quests and recovered lore</small></span></button><button class="menu-btn" data-act="rest"><i>☾</i><span>THE LAST LANTERN<small>Rest fully · ${12+s.day*2} gold</small></span></button></div></main>${side()}</div>`}
-function map(){return`${top()}<div class="layout"><main class="main"><h2>The Shattered Continent</h2><p>Four seals hold the wound shut. Each has a warden.</p><div class="map">${REGIONS.map((r,i)=>{const locked=i>s.bosses;return`<button class="map-pin ${locked?'locked':''} ${s.region===r.id?'active':''}" style="left:${r.pos[0]}%;top:${r.pos[1]}%" data-region="${r.id}" ${locked?'disabled':''}>${['☠','♠','♜','❄','◐'][i]}</button><div class="map-label" style="left:${r.pos[0]}%;top:${r.pos[1]}%">${locked?'SEALED':r.name}</div>`}).join('')}</div></main>${side()}</div>`}
-function dungeon(){const r=region(s);return`${top()}<div class="layout"><main class="main"><div class="art dungeon-art" style="background-image:url('/art/${r.art}')"><div class="art-title"><h1>${r.name}</h1><p>${r.subtitle}</p></div></div><div class="progress">${Array.from({length:s.maxDepth},(_,i)=>`<i class="${i<s.depth?'done':''}"></i>`).join('')}</div><p>${r.description}</p><div class="actions"><button class="primary" data-act="explore">VENTURE DEEPER<br><small>${s.depth}/${s.maxDepth} · costs 1 supply</small></button><button data-go="city">RETURN TO VEYRGARD</button></div></main>${side()}</div>`}
-function combat(){const e=s.enemy!;return`${top()}<div class="layout"><main class="main"><div class="enemy"><div class="enemy-icon">${e.icon}</div><div class="enemy-name">${e.name}</div><p>${e.trait}</p><div class="bar"><div class="fill hp" style="width:${pct(e.hp,e.maxHp)}%"></div><span>${e.hp} / ${e.maxHp}</span></div></div>${bars()}<div class="combat-actions section"><button class="primary" data-act="attack">⚔ ATTACK</button><button data-act="defend">♜ DEFEND</button><button data-act="flee">➳ RETREAT</button></div><div class="skillbar">${s.skills.map(id=>{const x=SKILLS.find(k=>k.id===id)!;return`<button data-skill="${id}" ${s.cooldowns[id]>0?'disabled':''}>${x.icon} ${x.name}<small>${s.cooldowns[id]>0?` · ${s.cooldowns[id]}`:''}</small></button>`}).join('')}</div><div class="skillbar">${[...new Set(s.inventory.filter(id=>ITEMS.find(i=>i.id===id)?.type==='consumable'))].map(id=>{const x=ITEMS.find(i=>i.id===id)!;const n=s.inventory.filter(v=>v===id).length;return`<button data-item="${id}">${x.icon} ${x.name}${n>1?` ×${n}`:''}</button>`}).join('')}</div>${s.log.map(x=>`<div class="log ${x.tone}">${x.text}</div>`).join('')}</main>${side()}</div>`}
-function event(){const e=s.event!;return`${top()}<div class="event panel"><div class="event-icon">${e.icon}</div><h1>${e.title}</h1><p>${e.text}</p><div class="section">${e.choices.map((c,i)=>`<button data-choice="${i}" ${(c.effect==='seal'||c.effect==='kind')&&s.supplies<1?'disabled':''}><b>${c.label}${c.requires?` · ${c.requires.toUpperCase()} CHECK`:''}</b><small>${c.text}</small></button>`).join('')}</div></div>`}
-function character(){const owned=s.inventory.map(id=>ITEMS.find(x=>x.id===id)).filter(Boolean);return`${top()}<div class="layout"><main class="main"><h2>${s.name}</h2><p>${s.origin} · ${s.path} · Level ${s.level}</p>${bars()}<div class="grid3 section"><div class="panel"><h3>Vigor</h3><div class="big-icon">${s.vigor}</div><small>Damage & vitality</small></div><div class="panel"><h3>Will</h3><div class="big-icon">${s.will}</div><small>Resolve & occult</small></div><div class="panel"><h3>Cunning</h3><div class="big-icon">${s.cunning}</div><small>Checks & escape</small></div></div><h3>Inventory</h3><div class="list">${owned.map(x=>`<div class="list-item"><div class="big-icon">${x!.icon}</div><div class="info"><b>${x!.name}</b><p>${x!.desc}</p></div>${x!.type==='consumable'?`<button data-item="${x!.id}">USE</button>`:s.equipped.includes(x!.id)?'<span class="badge">EQUIPPED</span>':`<button data-equip="${x!.id}">EQUIP</button>`}</div>`).join('')}</div></main>${side()}</div>`}
-function journal(){return`${top()}<div class="layout"><main class="main"><h2>Chronicle & Lore</h2><div class="quest"><b>THE BLACK MERIDIAN</b><p>${s.bosses}/4 seals broken. ${s.questStep>=4?'The final road is open.':'Hunt the wardens beyond Veyrgard.'}</p></div><div class="section">${LORE.map(l=>`<article class="journal-entry ${s.lore.includes(l[0])?'':'locked'}"><h3>${s.lore.includes(l[0])?l[0]:'UNRECOVERED FRAGMENT'}</h3><p>${s.lore.includes(l[0])?l[1]:'The ink moves when you try to read it. Find this fragment in the Dreadmarch.'}</p></article>`).join('')}</div></main>${side()}</div>`}
-function shop(){return`${top()}<div class="layout"><main class="main"><h2>The Carrion Exchange</h2><p>“Everything here belonged to somebody brave.”</p><div class="list">${ITEMS.map(x=>`<div class="list-item"><div class="big-icon">${x.icon}</div><div class="info"><b>${x.name}</b><p>${x.desc}</p></div><button data-buy="${x.id}" ${s.gold<x.price?'disabled':''}>${x.price} ◈</button></div>`).join('')}</div></main>${side()}</div>`}
-function skills(){return`${top()}<div class="layout"><main class="main"><h2>The Forbidden Archive</h2><p>Master techniques copied from people who no longer exist.</p><div class="list">${SKILLS.map(x=>`<div class="list-item"><div class="big-icon">${x.icon}</div><div class="info"><b>${x.name} · ${x.school}</b><p>${x.desc} Cooldown: ${x.cooldown} turns.</p></div>${s.skills.includes(x.id)?'<span class="badge">KNOWN</span>':`<button data-learn="${x.id}" ${s.gold<x.cost*80?'disabled':''}>${x.cost*80} ◈</button>`}</div>`).join('')}</div></main>${side()}</div>`}
-function ending(){return`<div class="ending"><div><div class="sigil">${s.hp<=0?'☠':'◐'}</div><h1>${s.hp<=0?'THE MARCH ENDS':'THE FALSE NOON'}</h1><p>${s.hp<=0?`${s.name} falls on day ${s.day}, after defeating ${s.kills} horrors and breaking ${s.bosses} seals. The city will remember — briefly.`:'At the Black Meridian, you discover the King Behind Noon wears your face. One of you must return to Veyrgard. One of you already has.'}</p><button data-act="new">BEGIN ANOTHER CHRONICLE</button></div></div>`}
-function render(){const views:Record<Screen,()=>string>={title,creation,city,map,dungeon,combat,event,character,journal,shop,skills,ending};app.innerHTML=`<div class="app">${views[s.screen]()}</div>`;bind()}
-function bind(){document.querySelectorAll<HTMLElement>('[data-go]').forEach(el=>el.onclick=()=>nav(el.dataset.go as Screen));document.querySelectorAll<HTMLElement>('[data-pick]').forEach(el=>el.onclick=()=>{const input=document.querySelector<HTMLInputElement>('#heroName');if(input)s.name=input.value;const k=(['origin','path','companion']as const)[creationStep];s[k]=el.dataset.pick!;render()});document.querySelectorAll<HTMLElement>('[data-region]').forEach(el=>el.onclick=()=>{s.region=el.dataset.region!;s.depth=0;s.screen=s.region==='meridian'?'ending':'dungeon';save(s);render()});document.querySelectorAll<HTMLElement>('[data-skill]').forEach(el=>el.onclick=()=>{useSkill(s,el.dataset.skill!);render()});document.querySelectorAll<HTMLElement>('[data-item]').forEach(el=>el.onclick=()=>{useItem(s,el.dataset.item!);render()});document.querySelectorAll<HTMLElement>('[data-equip]').forEach(el=>el.onclick=()=>{equipItem(s,el.dataset.equip!);render()});document.querySelectorAll<HTMLElement>('[data-buy]').forEach(el=>el.onclick=()=>{buy(s,el.dataset.buy!);render()});document.querySelectorAll<HTMLElement>('[data-learn]').forEach(el=>el.onclick=()=>{learn(s,el.dataset.learn!);render()});document.querySelectorAll<HTMLElement>('[data-choice]').forEach(el=>el.onclick=()=>{const c=s.event!.choices[Number(el.dataset.choice)];resolveEvent(s,c.effect,c.requires);render()});const acts:Record<string,()=>void>={continue:()=>{s=load()!;if(s.screen==='title'||s.screen==='creation')s.screen='city';render()},new:()=>{s=fresh();s.screen='creation';creationStep=0;render()},creationBack:()=>{if(creationStep>0){creationStep--;render()}else nav('title')},creationNext:()=>{const input=document.querySelector<HTMLInputElement>('#heroName');if(input)s.name=input.value.trim()||'Nameless';if(creationStep<2){creationStep++;render()}else{setup(s);render()}},rest:()=>{rest(s);render()},explore:()=>{explore(s);render()},attack:()=>{attack(s);render()},defend:()=>{defend(s);render()},flee:()=>{flee(s);render()}};document.querySelectorAll<HTMLElement>('[data-act]').forEach(el=>el.onclick=()=>acts[el.dataset.act!]?.())}
+import './style.css';
+import { sfx, setMusic, type Sfx } from './audio';
+import {
+  abandonRun, acceptQuest, attack, buy, buySupplies, chooseEnding, claimQuest, cleanse, clearSave, closeReward, defend, enterRoom,
+  equip, flee, fresh, learn, learnTalent, load, loadMeta, resolveEvent, rest, revive, save, saveMeta, sell, setup, spendStat,
+  startRun, unequip, useItem, useSkill,
+} from './engine';
+import { haptic, nativeReady, rateGame, shareGame } from './platform';
+import type { GameState, Meta, Screen, Settings, Stat } from './types';
+import * as V from './views';
+
+const app = document.querySelector<HTMLDivElement>('#app')!;
+const meta: Meta = loadMeta();
+let s: GameState = load() ?? fresh(meta.settings.difficulty);
+let screen: Screen = 'splash';
+let lastScreen: Screen | null = null;
+let toastTimer = 0;
+const ui: V.UI = {
+  creationStep: 0, introPanel: 0, onboardStep: 0, back: 'title', prevScreen: 'title', mapSel: null, invSel: null,
+  charTab: 'attributes', journalTab: 'quests', shopTab: 'buy', confirmDelete: false, toast: null,
+};
+const META_SCREENS: Screen[] = ['splash', 'intro', 'onboarding', 'title', 'settings', 'about'];
+
+function current(): Screen { return META_SCREENS.includes(screen) ? screen : s.screen }
+function persist() { if (s.name && s.origin && !(s.screen === 'death' && s.difficulty === 'Doomed')) save(s) }
+function show(next: Screen) {
+  screen = next;
+  if (!META_SCREENS.includes(next)) { s.screen = next; persist() }
+  render();
+}
+function play(kind: Sfx) { if (meta.settings.sfx) sfx(kind) }
+function toast(text: string) {
+  ui.toast = text;
+  clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => { ui.toast = null; render() }, 2600);
+  render();
+}
+function persistMeta() { saveMeta(meta); applySettings() }
+function applySettings() {
+  document.documentElement.classList.toggle('large-text', meta.settings.textSize === 'large');
+  document.documentElement.classList.toggle('reduce-motion', !meta.settings.motion);
+}
+function afterSplash() { show(!meta.introSeen ? 'intro' : !meta.onboarded ? 'onboarding' : 'title') }
+function inGame() { return !!load() && !['title', 'creation', 'death'].includes(s.screen) }
+
+function view(): string {
+  switch (current()) {
+    case 'splash': return V.splash();
+    case 'intro': return V.intro(ui);
+    case 'onboarding': return V.onboarding(ui);
+    case 'title': return V.title(meta);
+    case 'settings': return V.settings(meta, ui, inGame());
+    case 'about': return V.about();
+    case 'creation': return V.creation(s, ui, meta);
+    case 'city': return V.city(s);
+    case 'map': return V.map(s, ui);
+    case 'dungeon': return s.run ? V.dungeon(s) : V.city(s);
+    case 'combat': return s.enemy ? V.combat(s) : V.city(s);
+    case 'event': return s.event ? V.event(s) : V.city(s);
+    case 'reward': return s.reward ? V.reward(s) : V.city(s);
+    case 'character': return V.character(s, ui);
+    case 'inventory': return V.inventory(s, ui);
+    case 'journal': return V.journal(s, ui);
+    case 'shop': return V.shop(s, ui);
+    case 'skills': return V.skills(s);
+    case 'board': return V.board(s);
+    case 'death': return V.death(s);
+    case 'ending': return V.ending(s);
+  }
+}
+
+function render() {
+  const cur = current();
+  const entering = cur !== lastScreen;
+  lastScreen = cur;
+  app.innerHTML = `<div class="app screen-${cur} ${entering ? 'enter' : ''}">${V.embers(meta.settings.motion && !['combat', 'inventory', 'shop'].includes(cur))}${view()}${V.bottomNav({ ...s, screen: cur })}${ui.toast ? `<div class="toast">${ui.toast}</div>` : ''}</div>`;
+  if (entering) window.scrollTo(0, 0);
+  bind();
+}
+
+function combatFeedback(before: { hp: number; level: number; screen: Screen }) {
+  const hurt = s.hp < before.hp;
+  if (s.level > before.level) { play('level'); haptic(meta.settings.haptics, true) }
+  if (s.screen === 'death') { play('death'); haptic(meta.settings.haptics, true); return }
+  if (s.screen === 'reward' && before.screen === 'combat') play('win');
+  else if (s.fx.some(f => f.kind === 'crit')) play('crit');
+  else if (s.fx.some(f => f.target === 'enemy')) play('hit');
+  if (hurt) { play('hurt'); haptic(meta.settings.haptics, s.hp < before.hp - 8) }
+  else if (s.fx.some(f => f.kind === 'heal')) play('heal');
+}
+function act(fn: () => void) {
+  const before = { hp: s.hp, level: s.level, screen: s.screen };
+  fn();
+  screen = s.screen;
+  combatFeedback(before);
+  render();
+}
+
+const actions: Record<string, () => void> = {
+  skipSplash: afterSplash,
+  nextIntro: () => { if (ui.introPanel < V.INTRO_LENGTH - 1) { ui.introPanel++; play('door'); render() } else actions.skipIntro() },
+  skipIntro: () => { meta.introSeen = true; persistMeta(); show(meta.onboarded ? 'title' : 'onboarding') },
+  nextOnboard: () => { if (ui.onboardStep < 4) { ui.onboardStep++; render() } else actions.skipOnboard() },
+  skipOnboard: () => { meta.onboarded = true; persistMeta(); show('title') },
+  continue: () => {
+    const saved = load();
+    if (!saved) return;
+    s = saved;
+    if (['title', 'creation', 'splash', 'intro', 'onboarding', 'settings', 'about'].includes(s.screen)) s.screen = 'city';
+    show(s.screen);
+  },
+  new: () => { s = fresh(meta.settings.difficulty); ui.creationStep = 0; meta.runs++; persistMeta(); show('creation') },
+  creationBack: () => { if (ui.creationStep > 0) { ui.creationStep--; render() } else show('title') },
+  creationNext: () => {
+    captureName();
+    if (ui.creationStep < 2) { ui.creationStep++; render(); return }
+    if (!s.name.trim()) s.name = 'Nameless';
+    setup(s);
+    play('door');
+    show('city');
+  },
+  openSettings: () => { ui.prevScreen = current(); ui.confirmDelete = false; show('settings') },
+  closeSettings: () => { show(ui.prevScreen === 'settings' ? 'title' : ui.prevScreen) },
+  toTitle: () => { persist(); show('title') },
+  replayIntro: () => { ui.introPanel = 0; meta.introSeen = false; persistMeta(); show('intro') },
+  replayTutorial: () => { ui.onboardStep = 0; meta.onboarded = false; persistMeta(); show('onboarding') },
+  deleteSave: () => {
+    if (!ui.confirmDelete) { ui.confirmDelete = true; render(); return }
+    clearSave(); s = fresh(meta.settings.difficulty); ui.confirmDelete = false; ui.prevScreen = 'title'; toast('Chronicle erased.');
+  },
+  share: async () => {
+    const text = s.ending && s.ending !== 'pending' ? `I reached the ${V.ENDINGS[s.ending][0]} ending in Dreadmarch: The Black Meridian.` : 'Survive the Dreadmarch — a dark-fantasy roguelike RPG.';
+    const r = await shareGame(text);
+    if (r === 'copied') toast('Link copied to clipboard.');
+    if (r === 'failed') toast('Sharing is unavailable here.');
+  },
+  rate: () => rateGame(),
+  attack: () => act(() => attack(s)),
+  defend: () => act(() => defend(s)),
+  flee: () => act(() => flee(s)),
+  rest: () => { rest(s); play('heal'); toast('You wake rested. Health and sanity restored.') },
+  cleanse: () => { const c = s.corruption; cleanse(s); if (s.corruption < c) { play('heal'); toast('Corruption purged.') } else render() },
+  abandon: () => act(() => abandonRun(s)),
+  closeReward: () => act(() => closeReward(s)),
+  buySupplies: () => { buySupplies(s); play('click'); render() },
+  revive: () => { revive(s); show('city') },
+  epilogue: () => { if (!meta.endings.includes(s.ending!)) { meta.endings.push(s.ending!); persistMeta() } show('city') },
+};
+
+function captureName() {
+  const input = document.querySelector<HTMLInputElement>('#heroName');
+  if (input) s.name = input.value.slice(0, 18);
+}
+
+function on(attr: string, fn: (value: string) => void) {
+  app.querySelectorAll<HTMLElement>(`[data-${attr}]`).forEach(el => {
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (el instanceof HTMLButtonElement && el.disabled) return;
+      if (!['skill', 'act'].includes(attr)) play('click');
+      fn(el.dataset[attr.replace(/-(\w)/g, (_, c: string) => c.toUpperCase())]!);
+    });
+  });
+}
+
+function bind() {
+  on('act', v => actions[v]?.());
+  on('go', v => {
+    ui.invSel = null;
+    ui.mapSel = v === 'map' ? ui.mapSel : null;
+    if (v === 'title') persist();
+    show(v as Screen);
+  });
+  on('pick', v => {
+    captureName();
+    const key = (['origin', 'path', 'companion'] as const)[ui.creationStep];
+    s[key] = v;
+    render();
+  });
+  on('mapsel', v => { ui.mapSel = v; render() });
+  on('region', v => act(() => startRun(s, v)));
+  on('room', v => { play('door'); act(() => enterRoom(s, Number(v))) });
+  on('choice', v => act(() => resolveEvent(s, Number(v))));
+  on('skill', v => act(() => useSkill(s, v)));
+  on('item', v => { act(() => useItem(s, v)); if (!s.inventory.includes(v)) ui.invSel = null; render() });
+  on('equip', v => { equip(s, v); ui.invSel = null; render() });
+  on('unequip', v => { unequip(s, v as keyof GameState['equipment']); render() });
+  on('invsel', v => { ui.invSel = ui.invSel === v ? null : v; render() });
+  on('buy', v => { buy(s, v); toast('Purchased. Find it in your Equipment.') });
+  on('sell', v => { sell(s, v); render() });
+  on('learn', v => { learn(s, v); render() });
+  on('stat', v => { spendStat(s, v as Stat); render() });
+  on('talent', v => { learnTalent(s, v); play('level'); render() });
+  on('accept', v => { acceptQuest(s, v); render() });
+  on('claim', v => act(() => claimQuest(s, v)));
+  on('chartab', v => { ui.charTab = v as V.UI['charTab']; render() });
+  on('jtab', v => { ui.journalTab = v as V.UI['journalTab']; render() });
+  on('shoptab', v => { ui.shopTab = v as V.UI['shopTab']; render() });
+  on('ending', v => { chooseEnding(s, v); play('win'); render() });
+  on('setting', v => {
+    const k = v as 'sfx' | 'music' | 'haptics' | 'motion';
+    meta.settings[k] = !meta.settings[k];
+    persistMeta();
+    if (k === 'music') setMusic(meta.settings.music);
+    render();
+  });
+  on('text', v => { meta.settings.textSize = v as Settings['textSize']; persistMeta(); render() });
+  on('diff', v => { meta.settings.difficulty = v as Settings['difficulty']; persistMeta(); render() });
+}
+
+document.addEventListener('pointerdown', () => { if (meta.settings.music) setMusic(true) }, { once: true });
+applySettings();
 render();
+void nativeReady();
+window.setTimeout(() => { if (screen === 'splash') afterSplash() }, 2600);

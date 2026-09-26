@@ -27,13 +27,15 @@ The debug APK is written under `android/app/build/outputs/apk/debug/`.
 
 ## Features
 
-- Original world, writing, progression, enemies, events, art, and title
-- Character origin, discipline, and companion selection
-- Five-region campaign with escalating bosses
-- Turn-based combat, skills, cooldowns, consumables, armor, sanity, and corruption
-- Branching events with Vigor, Will, and Cunning checks
-- Equipment shop, forbidden skill archive, lore chronicle, quests, leveling
-- Responsive portrait/landscape UI, local saves, fully offline play
-- Capacitor Android wrapper; no ads, subscriptions, gacha, or energy timers
+- Launch flow: native splash, cinematic three-panel intro, five-step onboarding, main menu
+- Settings (SFX, ambient score, haptics, motion, text size, difficulty, replay intro/tutorial, erase save), About, Share, Rate on Play Store
+- Character creation: history, discipline, companion; Wayfarer or Doomed (permadeath) difficulty
+- Leveling with attribute points and three talent trees (Steel, Occult, Shadow)
+- Equipment page with weapon/off-hand/armor/trinket slots, rarity tiers (common → relic), stat comparison, sell/buy
+- Room-choice dungeons: fights, elites, events, caches, shrine blessings, camps, and a warden boss per region
+- Tactical combat: telegraphed enemy intents, Bleed/Burn/Stun/Ward/Weak/Marked, companions, sanity, corruption, boss enrage
+- Five-chapter main quest with three endings, notice-board side contracts, lore fragments, bestiary
+- Synthesized sound and ambience, floating combat numbers, responsive mobile layout with bottom navigation
+- Fully offline, local saves, Capacitor Android wrapper; no ads, subscriptions, gacha, or energy timers
 
 Game art was created specifically for Dreadmarch. Interface icons use Unicode glyphs.
