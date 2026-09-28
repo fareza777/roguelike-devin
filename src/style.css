@@ -133,3 +133,7 @@
   .intro-text{bottom:110px}.intro-text p{font-size:1.1rem}.toast{bottom:76px}
   .statgrid{grid-template-columns:1fr}
 }
+.grid,.grid3,.rooms,.slots,.trees,.statgrid{min-width:0}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.menu-btn{min-width:0;overflow:hidden}.menu-btn span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:720px){.grid3,.cards{grid-template-columns:minmax(0,1fr)}.menu-btn{padding:10px 8px;gap:8px}.menu-btn i{width:26px;font-size:1.4rem}}
