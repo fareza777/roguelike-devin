@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dreadmarch</string>
+    <string name="title_activity_main">Dreadmarch</string>
+    <string name="package_name">com.dreadmarch.blackmeridian</string>
+    <string name="custom_url_scheme">com.dreadmarch.blackmeridian</string>
+</resources>
