@@ -51,11 +51,12 @@
 .cd{font-size:.72rem;padding:1px 7px;border-radius:7px}.cd.up{color:#9fe08a;background:rgba(120,200,110,.1)}.cd.down{color:#f0907f;background:rgba(220,90,70,.1)}
 
 /* ---------- rarity ---------- */
-.r-common{--rc:var(--r-common)}.r-rare{--rc:var(--r-rare)}.r-epic{--rc:var(--r-epic)}.r-relic{--rc:var(--r-relic)}
+.r-common{--rc:var(--r-common)}.r-rare{--rc:var(--r-rare)}.r-epic{--rc:var(--r-epic)}.r-relic{--rc:var(--r-relic)}.r-mythic{--rc:var(--r-mythic)}
 .iicon{display:grid;place-items:center;width:46px;height:46px;flex:none;border-radius:12px;color:var(--rc,#9a9285);background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.08),rgba(0,0,0,.5));border:1px solid color-mix(in srgb,var(--rc,#9a9285) 65%,transparent);box-shadow:inset 0 0 14px color-mix(in srgb,var(--rc,#9a9285) 22%,transparent)}
 .iicon .ic{width:66%;height:66%;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--rc,#9a9285) 60%,transparent))}
 .iicon.big{width:64px;height:64px}
-.r-relic .iicon{animation:relicGlow 3s ease-in-out infinite}
+.r-relic .iicon{animation:relicGlow 3s ease-in-out infinite}.r-mythic .iicon{animation:mythicGlow 2.4s ease-in-out infinite}
+@keyframes mythicGlow{50%{box-shadow:inset 0 0 20px rgba(255,106,138,.55),0 0 20px rgba(255,106,138,.5)}}
 @keyframes relicGlow{50%{box-shadow:inset 0 0 18px rgba(240,184,80,.5),0 0 16px rgba(240,184,80,.4)}}
 .rar{text-transform:uppercase;letter-spacing:.12em;font:600 .6rem Cinzel;color:var(--rc,var(--muted))}
 

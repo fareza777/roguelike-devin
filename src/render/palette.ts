@@ -38,4 +38,4 @@ export const TERRAIN: Record<string, { base: string; alt: string }> = {
   H: { base: '#2c1a2c', alt: '#221422' },
 };
 
-export const RARITY_COLOR: Record<string, string> = { common: '#9a9285', rare: '#5f9be0', epic: '#b07af0', relic: '#f0b850' };
+export const RARITY_COLOR: Record<string, string> = { common: '#9a9285', rare: '#5f9be0', epic: '#b07af0', relic: '#f0b850', mythic: '#ff6a8a' };

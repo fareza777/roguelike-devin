@@ -46,7 +46,7 @@ export function inventory(s: GameState, ui: UI) {
   s.inventory.forEach(i => groups.set(i, (groups.get(i) ?? 0) + 1));
   const isGear = (d: ItemDef) => d.slot !== 'consumable' && d.slot !== 'junk';
   const entries = [...groups.entries()].map(([id, n]) => ({ d: item(id)!, n })).filter(g => g.d && (ui.invFilter === 'all' || (ui.invFilter === 'gear' ? isGear(g.d) : g.d.slot === ui.invFilter)))
-    .sort((a, b) => (isGear(b.d) ? 1 : 0) - (isGear(a.d) ? 1 : 0) || ['common', 'rare', 'epic', 'relic'].indexOf(b.d.rarity) - ['common', 'rare', 'epic', 'relic'].indexOf(a.d.rarity) || a.d.name.localeCompare(b.d.name));
+    .sort((a, b) => (isGear(b.d) ? 1 : 0) - (isGear(a.d) ? 1 : 0) || ['common', 'rare', 'epic', 'relic', 'mythic'].indexOf(b.d.rarity) - ['common', 'rare', 'epic', 'relic', 'mythic'].indexOf(a.d.rarity) || a.d.name.localeCompare(b.d.name));
   return `<section class="page-in inv">
     <div class="doll panel">${(SLOTS).map(slot => {
       const id = s.equipment[slot];

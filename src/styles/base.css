@@ -7,7 +7,7 @@
   --panel:rgba(18,14,12,.88);--panel2:rgba(30,24,20,.92);--line:rgba(201,164,92,.22);--line2:rgba(255,255,255,.07);
   --accent:var(--gold);
   --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);--safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px);
-  --r-common:#9a9285;--r-rare:#5f9be0;--r-epic:#b07af0;--r-relic:#f0b850;
+  --r-common:#9a9285;--r-rare:#5f9be0;--r-epic:#b07af0;--r-relic:#f0b850;--r-mythic:#ff6a8a;
   --ease:cubic-bezier(.2,.8,.2,1);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}

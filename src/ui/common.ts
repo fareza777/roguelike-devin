@@ -17,9 +17,9 @@ export const pct = (a: number, b: number) => Math.max(0, Math.min(100, (a / Math
 export const fmt = (s: GameState, t: string) => t.replace(/\{name\}/g, esc(s.name || 'Wayfarer')).replace(/\{companion\}/g, esc(s.companion || 'Companion'));
 
 export const SLOT_ICON: Record<Slot, string> = { weapon: 'w_blade', offhand: 'o_round', head: 'h_heavy', body: 'b_heavy', hands: 'g_heavy', feet: 'f_heavy', ring: 'r_ring', amulet: 'a_gem' };
-export const STATUS_ICON: Record<Status, string> = { bleed: 'bleed', burn: 'burn', stun: 'stun', ward: 'ward', weak: 'weak', marked: 'marked', poison: 'poison' };
+export const STATUS_ICON: Record<Status, string> = { bleed: 'bleed', burn: 'burn', stun: 'stun', ward: 'ward', weak: 'weak', marked: 'marked', poison: 'poison', chill: 'chill', regen: 'regen' };
 
-const STAT_LABEL: Record<keyof Bonus, string> = { damage: 'Damage', armor: 'Armor', vigor: 'Vigor', will: 'Will', cunning: 'Cunning', maxHp: 'Health', maxSanity: 'Sanity', crit: 'Crit %', dodge: 'Dodge %', lifesteal: 'Lifesteal %', thorns: 'Thorns', luck: 'Luck %' };
+const STAT_LABEL: Record<keyof Bonus, string> = { damage: 'Damage', armor: 'Armor', vigor: 'Vigor', will: 'Will', cunning: 'Cunning', maxHp: 'Health', maxSanity: 'Sanity', crit: 'Crit %', dodge: 'Dodge %', lifesteal: 'Lifesteal %', thorns: 'Thorns', luck: 'Luck %', flee: 'Escape %', sight: 'Sight', xpPct: 'XP %', goldPct: 'Gold %', shopPct: 'Discount %', encPct: 'Fewer ambushes %', critDmg: 'Crit damage %' };
 export const STAT_KEYS = Object.keys(STAT_LABEL) as (keyof Bonus)[];
 
 export function statChips(b: Bonus) {

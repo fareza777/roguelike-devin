@@ -161,15 +161,15 @@ export const LANDMARKS: LandmarkDef[] = [
 ];
 export const LANDMARK_MAP = new Map(LANDMARKS.map(x => [x.id, x]));
 
-export interface Zone { id: string; at: [number, number]; lvl: number; pool: string[]; name: string; biome: string }
+export interface Zone { id: string; at: [number, number]; lvl: number; pool: string[]; name: string; biome: string; elite: string; fx?: string }
 export const ZONES: Zone[] = [
-  { id: 'heartland', name: 'The Heartland', at: [32, 24], lvl: 2, pool: ['bandit', 'wolf', 'crow', 'scarecrow', 'ratswarm'], biome: 'plains' },
-  { id: 'coast', name: 'The Drowned Coast', at: [12, 38], lvl: 6, pool: ['crab', 'eel', 'drownedsailor', 'brinehag', 'drownedwanderer'], biome: 'coast' },
-  { id: 'swamp', name: 'The Hollow Marsh', at: [48, 38], lvl: 12, pool: ['mirefrog', 'bogwitch', 'hollowmoth', 'scarecrow', 'ratswarm'], biome: 'swamp' },
-  { id: 'ashwood', name: 'Ashwood', at: [54, 24], lvl: 11, pool: ['ashhound', 'lanternkin', 'thornstalker', 'emberstag', 'charcoal'], biome: 'ash' },
-  { id: 'bone', name: 'The Ossuary Reach', at: [8, 20], lvl: 16, pool: ['prospector', 'marrow', 'dustwife', 'gravelgolem', 'marrowworm'], biome: 'bone' },
-  { id: 'north', name: 'The Frozen North', at: [32, 8], lvl: 21, pool: ['deserter', 'rime', 'frostwolf', 'standard', 'frostbat'], biome: 'snow' },
-  { id: 'south', name: 'The Noon Wastes', at: [32, 42], lvl: 27, pool: ['noonchild', 'echo', 'mourner', 'gilded', 'shadethird'], biome: 'noon' },
+  { id: 'heartland', name: 'The Heartland', at: [32, 24], lvl: 2, pool: ['bandit', 'wolf', 'crow', 'scarecrow', 'ratswarm'], biome: 'plains', elite: 'deadsergeant' },
+  { id: 'coast', name: 'The Drowned Coast', at: [12, 38], lvl: 6, pool: ['crab', 'eel', 'drownedsailor', 'brinehag', 'drownedwanderer'], biome: 'coast', elite: 'tidegrasp' },
+  { id: 'swamp', name: 'The Hollow Marsh', at: [48, 38], lvl: 12, pool: ['mirefrog', 'bogwitch', 'hollowmoth', 'scarecrow', 'ratswarm'], biome: 'swamp', elite: 'mothmother' },
+  { id: 'ashwood', name: 'Ashwood', at: [54, 24], lvl: 11, pool: ['ashhound', 'lanternkin', 'thornstalker', 'emberstag', 'charcoal'], biome: 'ash', elite: 'weepingbough' },
+  { id: 'bone', name: 'The Ossuary Reach', at: [8, 20], lvl: 16, pool: ['prospector', 'marrow', 'dustwife', 'gravelgolem', 'marrowworm'], biome: 'bone', elite: 'overseer' },
+  { id: 'north', name: 'The Frozen North', at: [32, 8], lvl: 21, pool: ['deserter', 'rime', 'frostwolf', 'standard', 'frostbat'], biome: 'snow', elite: 'colonel' },
+  { id: 'south', name: 'The Noon Wastes', at: [32, 42], lvl: 27, pool: ['noonchild', 'echo', 'mourner', 'gilded', 'shadethird'], biome: 'noon', elite: 'gildedmarshal' },
 ];
 
 export const GATE_SOLENNE: [number, number] = [32, 33];

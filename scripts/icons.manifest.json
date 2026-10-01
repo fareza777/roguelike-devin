@@ -353,5 +353,8 @@
  "e_bellkeeper": "ringing-bell",
  "e_gearmask": "cog",
  "e_sunhood": "sun-radiations",
- "e_seer": "all-seeing-eye"
+ "e_seer": "all-seeing-eye",
+ "chill": "snowflake-2",
+ "regen": "heart-plus",
+ "cog": "cog"
 }

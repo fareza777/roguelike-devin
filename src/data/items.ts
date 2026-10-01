@@ -2,40 +2,45 @@ import type { Bonus, ItemDef, ItemUse, Rarity, Slot } from '../types';
 
 type SecSpec = [keyof Bonus, number, number];
 const v = (base: number, step: number, t: number) => Math.round(base + step * t);
-const PRICE = [45, 130, 300, 650, 1300];
+const PRICE = [45, 130, 300, 650, 1300, 2400, 4200, 7000, 11000, 17000];
 const TIER_FLAVOR = [
   'Worn, but it has kept someone alive before.',
   'Well made and trusted by people who survive.',
   'Forged for the deep places, and it shows.',
   'Carried by heroes and buried with them.',
+  'Cut from the glass of the Wastes. It throws light where it should not.',
+  'Salt-cured, thorn-wrapped, and unbothered by weather.',
+  'Brass and patience: someone built this to outlast their grudges.',
+  'It remembers the aurora, and the long cold that came after.',
+  'Gilded, hollow-cheeked and perfect. It was made in a city with no night.',
   'A relic of the Twelve Regents. It hums when you sleep.',
 ];
 
-const tierRarity = (t: number, fi: number): Rarity => (t === 0 ? 'common' : t === 1 ? (fi % 2 ? 'rare' : 'common') : t === 2 ? 'rare' : t === 3 ? 'epic' : fi % 2 ? 'relic' : 'epic');
+const tierRarity = (t: number, fi: number): Rarity => (t === 0 ? 'common' : t === 1 ? (fi % 2 ? 'rare' : 'common') : t === 2 ? 'rare' : t === 3 ? 'epic' : t === 4 ? (fi % 2 ? 'relic' : 'epic') : t <= 6 ? 'relic' : t === 7 ? (fi % 2 ? 'mythic' : 'relic') : 'mythic');
 
 interface WeaponFamily { f: string; icon: string; dmg: number; sec: SecSpec[]; blurb: string; names: string[] }
 const WEAPONS: WeaponFamily[] = [
-  { f: 'blade', icon: 'w_blade', dmg: 1, sec: [['crit', 1, 1.6]], blurb: 'A straight blade.', names: ['Notched Sabre', 'Watchman’s Longsword', 'Wardsteel Falchion', 'Warden’s Oathblade', 'Dawnsplitter'] },
-  { f: 'curved', icon: 'w_curved', dmg: 0.95, sec: [['crit', 2, 2.2]], blurb: 'A curved cutting blade.', names: ['Rusted Scimitar', 'Saltmere Cutlass', 'Emberforged Kris', 'Nightwind Tulwar', 'Moonlit Shamshir'] },
-  { f: 'axe', icon: 'w_axe', dmg: 1.1, sec: [['vigor', 0, 0.7]], blurb: 'An axe that ends arguments.', names: ['Woodsman’s Hatchet', 'Bearded Axe', 'Gravedigger’s Bardiche', 'Frostbite Waraxe', 'Hollowbell Cleaver-Axe'] },
-  { f: 'hammer', icon: 'w_hammer', dmg: 1.15, sec: [['maxHp', 2, 4]], blurb: 'A hammer made for breaking things that should not move.', names: ['Mason’s Maul', 'Bell-Breaker', 'Titan’s Gavel', 'Rimefall Hammer', 'Regent’s Judgement'] },
-  { f: 'mace', icon: 'w_mace', dmg: 1, sec: [['armor', 0, 0.9]], blurb: 'A weighted club. The weight is mostly rhetorical.', names: ['Caretaker’s Mace', 'Mourner’s Morningstar', 'Ashbrand Flail', 'Frozen Lamp-Mace', 'Mace of the Blind Seer'] },
-  { f: 'spear', icon: 'w_spear', dmg: 1, sec: [['cunning', 0, 0.8], ['dodge', 1, 1]], blurb: 'Reach is a kind of armor.', names: ['Boar Spear', 'Harpoon-Lance', 'Ashwood Pike', 'Wardstaff Spear', 'Sunpiercer'] },
-  { f: 'halberd', icon: 'w_halberd', dmg: 1.1, sec: [['armor', 0, 0.6], ['vigor', 0, 0.4]], blurb: 'The gate-warden’s answer to most questions.', names: ['Watch Halberd', 'Gatekeeper Poleaxe', 'Marrow Glaive', 'Frostguard Bardiche', 'Pale Regent’s Halberd'] },
-  { f: 'dagger', icon: 'w_dagger', dmg: 0.75, sec: [['crit', 3, 2.6], ['dodge', 1, 1.2]], blurb: 'Quiet, quick and unforgiving.', names: ['Boot Knife', 'Smuggler’s Stiletto', 'Bone Kris', 'Nightshade Dirk', 'Whisper of Noon'] },
-  { f: 'whip', icon: 'w_whip', dmg: 0.8, sec: [['cunning', 1, 0.9], ['crit', 0, 1.6]], blurb: 'Reaches what the sword cannot.', names: ['Drover’s Lash', 'Ringmaster’s Whip', 'Barbed Scourge', 'Frostbitten Flagellum', 'Serpent of Noon'] },
-  { f: 'arquebus', icon: 'w_musket', dmg: 1.25, sec: [['crit', 1, 1.6]], blurb: 'Loud, slow and decisive.', names: ['Grave-Iron Arquebus', 'Marshal’s Handcannon', 'Emberlock Musket', 'Winterbore Long-Gun', 'Thunder of the Last Hour'] },
-  { f: 'pistol', icon: 'w_pistol', dmg: 1, sec: [['crit', 2, 2], ['luck', 0, 1]], blurb: 'Built from coffin nails and bad decisions.', names: ['Coffin-Nail Pistol', 'Duelist’s Flintlock', 'Cinderlock Revolver', 'Frostspit Pistol', 'Star-Eater'] },
-  { f: 'crossbow', icon: 'w_crossbow', dmg: 1.05, sec: [['cunning', 0, 0.8], ['crit', 1, 1.2]], blurb: 'Patient death at range.', names: ['Rustbolt Crossbow', 'Hunter’s Arbalest', 'Marrowbone Crossbow', 'Wintergale Repeater', 'Regent’s Ballista'] },
-  { f: 'staff', icon: 'w_staff', dmg: 0.8, sec: [['will', 1, 0.9], ['maxSanity', 2, 3]], blurb: 'A focus for those who bargain with the dark.', names: ['Driftwood Staff', 'Wanderer’s Crook', 'Ashbloom Staff', 'Rimeglass Staff', 'Staff of the Twelfth Hour'] },
-  { f: 'tome', icon: 'w_tome', dmg: 0.85, sec: [['will', 1, 1], ['crit', 0, 1.4]], blurb: 'Its pages turn toward whatever you fear.', names: ['Water-Stained Ledger', 'Unbound Songbook', 'Outlaw’s Codex', 'Frozen Lexicon', 'Book of Noon’s Names'] },
-  { f: 'scythe', icon: 'w_scythe', dmg: 1.1, sec: [['lifesteal', 0, 1.6]], blurb: 'Harvests more than grain.', names: ['Harvester’s Sickle', 'Reaper’s Scythe', 'Marrow-Reaper', 'Winter’s Tithe', 'Scythe of the Final Harvest'] },
-  { f: 'cleaver', icon: 'w_cleaver', dmg: 1.05, sec: [['vigor', 0, 0.6], ['thorns', 0, 1]], blurb: 'Heavy and honest.', names: ['Butcher’s Cleaver', 'Slaughterman’s Chopper', 'Marrow-Splitter', 'Frostjaw Cleaver', 'Executioner of Noon'] },
+  { f: 'blade', icon: 'w_blade', dmg: 1, sec: [['crit', 1, 1.6]], blurb: 'A straight blade.', names: ['Notched Sabre', 'Watchman’s Longsword', 'Wardsteel Falchion', 'Warden’s Oathblade', 'Prismcut Longsword', 'Coralbrand Falchion', 'Brasswork Claymore', 'Aurorablade', 'Gilded Hourblade', 'Dawnsplitter'] },
+  { f: 'curved', icon: 'w_curved', dmg: 0.95, sec: [['crit', 2, 2.2]], blurb: 'A curved cutting blade.', names: ['Rusted Scimitar', 'Saltmere Cutlass', 'Emberforged Kris', 'Nightwind Tulwar', 'Mirage Scimitar', 'Reefrazor Cutlass', 'Cogwheel Kris', 'Rimeborn Tulwar', 'Noonlit Shamshir', 'Moonlit Shamshir'] },
+  { f: 'axe', icon: 'w_axe', dmg: 1.1, sec: [['vigor', 0, 0.7]], blurb: 'An axe that ends arguments.', names: ['Woodsman’s Hatchet', 'Bearded Axe', 'Gravedigger’s Bardiche', 'Frostbite Waraxe', 'Dune-Cleaver Axe', 'Barnacle Waraxe', 'Pistonfall Hatchet', 'Glacierbite Axe', 'Sunforged Bardiche', 'Hollowbell Cleaver-Axe'] },
+  { f: 'hammer', icon: 'w_hammer', dmg: 1.15, sec: [['maxHp', 2, 4]], blurb: 'A hammer made for breaking things that should not move.', names: ['Mason’s Maul', 'Bell-Breaker', 'Titan’s Gavel', 'Rimefall Hammer', 'Shatterglass Maul', 'Anchorfall Hammer', 'Steamhammer', 'Avalanche Gavel', 'Hourless Warhammer', 'Regent’s Judgement'] },
+  { f: 'mace', icon: 'w_mace', dmg: 1, sec: [['armor', 0, 0.9]], blurb: 'A weighted club. The weight is mostly rhetorical.', names: ['Caretaker’s Mace', 'Mourner’s Morningstar', 'Ashbrand Flail', 'Frozen Lamp-Mace', 'Lens-Cap Mace', 'Kelpwrap Flail', 'Gear-Toothed Mace', 'Frostchain Morningstar', 'Gilded Lamp-Mace', 'Mace of the Blind Seer'] },
+  { f: 'spear', icon: 'w_spear', dmg: 1, sec: [['cunning', 0, 0.8], ['dodge', 1, 1]], blurb: 'Reach is a kind of armor.', names: ['Boar Spear', 'Harpoon-Lance', 'Ashwood Pike', 'Wardstaff Spear', 'Sunglint Pike', 'Harpoon of the Shoals', 'Thorn-Lance', 'Auroral Spear', 'Noonbright Spear', 'Sunpiercer'] },
+  { f: 'halberd', icon: 'w_halberd', dmg: 1.1, sec: [['armor', 0, 0.6], ['vigor', 0, 0.4]], blurb: 'The gate-warden’s answer to most questions.', names: ['Watch Halberd', 'Gatekeeper Poleaxe', 'Marrow Glaive', 'Frostguard Bardiche', 'Mirrorwall Halberd', 'Tideguard Glaive', 'Piston Poleaxe', 'Rimeguard Halberd', 'Solenne Parade-Halberd', 'Pale Regent’s Halberd'] },
+  { f: 'dagger', icon: 'w_dagger', dmg: 0.75, sec: [['crit', 3, 2.6], ['dodge', 1, 1.2]], blurb: 'Quiet, quick and unforgiving.', names: ['Boot Knife', 'Smuggler’s Stiletto', 'Bone Kris', 'Nightshade Dirk', 'Shard Stiletto', 'Eelskin Dirk', 'Cog-Pick Dagger', 'Hoarfrost Kris', 'Shadowless Knife', 'Whisper of Noon'] },
+  { f: 'whip', icon: 'w_whip', dmg: 0.8, sec: [['cunning', 1, 0.9], ['crit', 0, 1.6]], blurb: 'Reaches what the sword cannot.', names: ['Drover’s Lash', 'Ringmaster’s Whip', 'Barbed Scourge', 'Frostbitten Flagellum', 'Mirage Lash', 'Sea-Serpent Whip', 'Chain-and-Gear Scourge', 'Aurora Lash', 'Hourglass Whip', 'Serpent of Noon'] },
+  { f: 'arquebus', icon: 'w_musket', dmg: 1.25, sec: [['crit', 1, 1.6]], blurb: 'Loud, slow and decisive.', names: ['Grave-Iron Arquebus', 'Marshal’s Handcannon', 'Emberlock Musket', 'Winterbore Long-Gun', 'Sunspot Arquebus', 'Brinelock Musket', 'Steamlock Long-Gun', 'Rimebore Rifle', 'Gilded Noon-Gun', 'Thunder of the Last Hour'] },
+  { f: 'pistol', icon: 'w_pistol', dmg: 1, sec: [['crit', 2, 2], ['luck', 0, 1]], blurb: 'Built from coffin nails and bad decisions.', names: ['Coffin-Nail Pistol', 'Duelist’s Flintlock', 'Cinderlock Revolver', 'Frostspit Pistol', 'Glassbarrel Pistol', 'Pearl-Handled Flintlock', 'Cogwork Revolver', 'Icebound Hand-Cannon', 'Sundial Pistol', 'Star-Eater'] },
+  { f: 'crossbow', icon: 'w_crossbow', dmg: 1.05, sec: [['cunning', 0, 0.8], ['crit', 1, 1.2]], blurb: 'Patient death at range.', names: ['Rustbolt Crossbow', 'Hunter’s Arbalest', 'Marrowbone Crossbow', 'Wintergale Repeater', 'Lens-Sight Crossbow', 'Reefbolt Arbalest', 'Ratchet Repeater', 'Aurora Crossbow', 'Noon Ballista', 'Regent’s Ballista'] },
+  { f: 'staff', icon: 'w_staff', dmg: 0.8, sec: [['will', 1, 0.9], ['maxSanity', 2, 3]], blurb: 'A focus for those who bargain with the dark.', names: ['Driftwood Staff', 'Wanderer’s Crook', 'Ashbloom Staff', 'Rimeglass Staff', 'Glasswright Staff', 'Tidecaller Staff', 'Brassbound Staff', 'Auroral Staff', 'Staff of the Gilded Hour', 'Staff of the Twelfth Hour'] },
+  { f: 'tome', icon: 'w_tome', dmg: 0.85, sec: [['will', 1, 1], ['crit', 0, 1.4]], blurb: 'Its pages turn toward whatever you fear.', names: ['Water-Stained Ledger', 'Unbound Songbook', 'Outlaw’s Codex', 'Frozen Lexicon', 'Prism-Bound Tome', 'Sea-Log Grimoire', 'Orrery Codex', 'Frostlight Tome', 'Tome of Hours', 'Book of Noon’s Names'] },
+  { f: 'scythe', icon: 'w_scythe', dmg: 1.1, sec: [['lifesteal', 0, 1.6]], blurb: 'Harvests more than grain.', names: ['Harvester’s Sickle', 'Reaper’s Scythe', 'Marrow-Reaper', 'Winter’s Tithe', 'Dune-Reaper', 'Kelp-Scythe', 'Clockwork Scythe', 'Rime Reaper', 'Noon’s Harvest', 'Scythe of the Final Harvest'] },
+  { f: 'cleaver', icon: 'w_cleaver', dmg: 1.05, sec: [['vigor', 0, 0.6], ['thorns', 0, 1]], blurb: 'Heavy and honest.', names: ['Butcher’s Cleaver', 'Slaughterman’s Chopper', 'Marrow-Splitter', 'Frostjaw Cleaver', 'Glassbreaker Cleaver', 'Brinecleaver', 'Pistoncleaver', 'Glacier Cleaver', 'Gilded Executioner', 'Executioner of Noon'] },
 ];
 
 interface ArmorSlot { slot: Slot; mul: number; label: string }
 const ARMOR_SLOTS: ArmorSlot[] = [{ slot: 'head', mul: 0.45, label: 'head' }, { slot: 'body', mul: 1, label: 'body' }, { slot: 'hands', mul: 0.35, label: 'hands' }, { slot: 'feet', mul: 0.35, label: 'feet' }];
-const BODY_ARMOR = [2, 5, 9, 14, 20];
+const BODY_ARMOR = [2, 5, 9, 14, 20, 27, 35, 44, 54, 66];
 interface Arch { a: 'heavy' | 'medium' | 'cloth'; mul: number; sec: SecSpec[] }
 const ARCH: Arch[] = [
   { a: 'heavy', mul: 1, sec: [['maxHp', 2, 3.5]] },
@@ -43,18 +48,18 @@ const ARCH: Arch[] = [
   { a: 'cloth', mul: 0.4, sec: [['maxSanity', 1, 2.5], ['will', 0, 0.5]] },
 ];
 const ARMOR_NAMES: Record<string, string[][]> = {
-  'head:heavy': [['Kettle Helm', 'Saltsteel Barbute', 'Wardbone Greathelm', 'Frostguard Visor', 'Warden’s Crown-Helm']],
-  'head:medium': [['Ragged Hood', 'Smuggler’s Cowl', 'Ashwood Mask', 'Rimewolf Hood', 'Nightwalker’s Veil']],
-  'head:cloth': [['Wanderer’s Circlet', 'Scholar’s Cap', 'Hexer’s Hat', 'Rimeglass Diadem', 'Circlet of the Third Eye']],
-  'body:heavy': [['Watchman Coat', 'Saltplate Cuirass', 'Wardbone Mail', 'Frostbitten Plate', 'Warden’s Bulwark']],
-  'body:medium': [['Traveler’s Jerkin', 'Smuggler Leathers', 'Ashhide Vest', 'Wolfpelt Coat', 'Nightweave Cloak']],
-  'body:cloth': [['Mourner’s Robe', 'Scribe’s Garb', 'Ember Surcoat', 'Rimespun Robes', 'Garb of the Hollow Chorus']],
-  'hands:heavy': [['Iron Gauntlets', 'Saltforged Gauntlets', 'Bonebound Fists', 'Frostplate Gauntlets', 'Warden’s Grasp']],
-  'hands:medium': [['Worn Gloves', 'Lockpicker’s Gloves', 'Ashfinger Wraps', 'Wolfhide Mitts', 'Whispering Gloves']],
-  'hands:cloth': [['Bandage Wraps', 'Ink-Stained Gloves', 'Cinder Wristbands', 'Rimeweave Cuffs', 'Bracers of Quiet Hands']],
-  'feet:heavy': [['Iron Greaves', 'Saltsteel Sabatons', 'Marrow Greaves', 'Frostshod Sabatons', 'Warden’s Stride']],
-  'feet:medium': [['Muddy Boots', 'Dockwalker Boots', 'Ashstep Boots', 'Snowstalker Boots', 'Boots of Soft Falling']],
-  'feet:cloth': [['Wanderer Sandals', 'Scholar’s Slippers', 'Emberwalk Sandals', 'Rimeslip Slippers', 'Slippers of the Last Hour']],
+  'head:heavy': [['Kettle Helm', 'Saltsteel Barbute', 'Wardbone Greathelm', 'Frostguard Visor', 'Prism Barbute', 'Coralplate Helm', 'Brass Greathelm', 'Rimeguard Helm', 'Gilded Visor', 'Warden’s Crown-Helm']],
+  'head:medium': [['Ragged Hood', 'Smuggler’s Cowl', 'Ashwood Mask', 'Rimewolf Hood', 'Dune Veil Hood', 'Reefwalker Hood', 'Gearwright Cap', 'Aurora Hood', 'Noonshade Cowl', 'Nightwalker’s Veil']],
+  'head:cloth': [['Wanderer’s Circlet', 'Scholar’s Cap', 'Hexer’s Hat', 'Rimeglass Diadem', 'Glasswright Circlet', 'Tideweaver Cap', 'Brass Diadem', 'Aurora Veil', 'Gilded Circlet', 'Circlet of the Third Eye']],
+  'body:heavy': [['Watchman Coat', 'Saltplate Cuirass', 'Wardbone Mail', 'Frostbitten Plate', 'Prism Plate', 'Coralmail', 'Brass Cuirass', 'Rimeplate', 'Gilded Cuirass', 'Warden’s Bulwark']],
+  'body:medium': [['Traveler’s Jerkin', 'Smuggler Leathers', 'Ashhide Vest', 'Wolfpelt Coat', 'Dune Leathers', 'Reefskin Vest', 'Gearwright Coat', 'Aurora Furs', 'Noonwalker Jerkin', 'Nightweave Cloak']],
+  'body:cloth': [['Mourner’s Robe', 'Scribe’s Garb', 'Ember Surcoat', 'Rimespun Robes', 'Glasswright Robes', 'Tidecaller Robes', 'Orrery Robes', 'Aurora Mantle', 'Gilded Robes', 'Garb of the Hollow Chorus']],
+  'hands:heavy': [['Iron Gauntlets', 'Saltforged Gauntlets', 'Bonebound Fists', 'Frostplate Gauntlets', 'Prism Gauntlets', 'Coral Gauntlets', 'Brass Gauntlets', 'Rimeplate Gauntlets', 'Gilded Gauntlets', 'Warden’s Grasp']],
+  'hands:medium': [['Worn Gloves', 'Lockpicker’s Gloves', 'Ashfinger Wraps', 'Wolfhide Mitts', 'Sandgloves', 'Reef Gloves', 'Gearwright Gloves', 'Aurora Mitts', 'Noon Gloves', 'Whispering Gloves']],
+  'hands:cloth': [['Bandage Wraps', 'Ink-Stained Gloves', 'Cinder Wristbands', 'Rimeweave Cuffs', 'Glasswright Wraps', 'Tide Wraps', 'Orrery Cuffs', 'Aurora Cuffs', 'Gilded Cuffs', 'Bracers of Quiet Hands']],
+  'feet:heavy': [['Iron Greaves', 'Saltsteel Sabatons', 'Marrow Greaves', 'Frostshod Sabatons', 'Prism Sabatons', 'Coral Greaves', 'Brass Sabatons', 'Rimeplate Greaves', 'Gilded Greaves', 'Warden’s Stride']],
+  'feet:medium': [['Muddy Boots', 'Dockwalker Boots', 'Ashstep Boots', 'Snowstalker Boots', 'Dunestep Boots', 'Reef Boots', 'Gearwright Boots', 'Aurora Boots', 'Noonstep Boots', 'Boots of Soft Falling']],
+  'feet:cloth': [['Wanderer Sandals', 'Scholar’s Slippers', 'Emberwalk Sandals', 'Rimeslip Slippers', 'Glasswright Slippers', 'Tide Slippers', 'Orrery Slippers', 'Aurora Slippers', 'Gilded Slippers', 'Slippers of the Last Hour']],
 };
 const ARMOR_ICON: Record<string, string> = {
   'head:heavy': 'h_heavy', 'head:medium': 'h_medium', 'head:cloth': 'h_cloth', 'body:heavy': 'b_heavy', 'body:medium': 'b_medium', 'body:cloth': 'b_cloth',
@@ -63,18 +68,18 @@ const ARMOR_ICON: Record<string, string> = {
 
 interface Accessory { f: string; slot: Slot; icon: string; prim: SecSpec[]; mul: number; blurb: string; names: string[] }
 const ACCESSORIES: Accessory[] = [
-  { f: 'shield', slot: 'offhand', icon: 'o_round', prim: [['armor', 1, 2.2], ['maxHp', 2, 3]], mul: 0.85, blurb: 'Something to stand behind.', names: ['Dented Buckler', 'Harbor Roundshield', 'Ashwood Targe', 'Frostguard Kite', 'Aegis of Vigil'] },
-  { f: 'bulwark', slot: 'offhand', icon: 'o_spiked', prim: [['armor', 1, 2.4], ['thorns', 1, 2]], mul: 0.95, blurb: 'Hurts to hit.', names: ['Spiked Pavise', 'Barbed Bulwark', 'Marrowspike Shield', 'Icetooth Bulwark', 'Thornwall of the Dead'] },
-  { f: 'lantern', slot: 'offhand', icon: 'o_lantern', prim: [['maxSanity', 4, 4], ['will', 0, 1]], mul: 0.85, blurb: 'Holds the whispering at arm’s length.', names: ['Tin Lantern', 'Wanderer Lantern', 'Emberglass Lantern', 'Rimeglass Lantern', 'Lantern of the Long Vigil'] },
-  { f: 'orb', slot: 'offhand', icon: 'o_orb', prim: [['will', 1, 1.2], ['crit', 2, 2]], mul: 0.9, blurb: 'Shows a future you did not order.', names: ['Cloudy Scrying Glass', 'Tidecaller Orb', 'Cinder Orb', 'Frozen Eye', 'Orb of Twelve Veyrs'] },
-  { f: 'signet', slot: 'ring', icon: 'r_signet', prim: [['vigor', 1, 0.7], ['maxHp', 3, 4]], mul: 0.85, blurb: 'A ring worn by people who hold the line.', names: ['Copper Signet', 'Watch Signet', 'Bonebound Signet', 'Frostiron Signet', 'Signet of the Regent'] },
-  { f: 'band', slot: 'ring', icon: 'r_ring', prim: [['cunning', 1, 0.7], ['crit', 2, 1.8]], mul: 0.85, blurb: 'Light fingers wear light rings.', names: ['Twisted Wire Band', 'Smuggler’s Band', 'Cinderglass Band', 'Rime Band', 'Band of Idle Hours'] },
-  { f: 'gemring', slot: 'ring', icon: 'r_diamond', prim: [['will', 1, 0.7], ['maxSanity', 3, 3.5]], mul: 0.9, blurb: 'A stone that remembers being a star.', names: ['Glass Ring', 'Pearl Ring', 'Ember Ring', 'Frostdiamond Ring', 'Ring of Noon’s Tears'] },
-  { f: 'links', slot: 'ring', icon: 'r_linked', prim: [['luck', 4, 4], ['dodge', 1, 1.2]], mul: 0.85, blurb: 'Fortune favours those who wear its knots.', names: ['Hempen Knots', 'Charm Rings', 'Amber Links', 'Rime Links', 'Links of Fate'] },
-  { f: 'pendant', slot: 'amulet', icon: 'a_gem', prim: [['maxHp', 5, 6], ['armor', 0, 0.6]], mul: 0.9, blurb: 'Warm against the skin.', names: ['Tin Pendant', 'Warden’s Pendant', 'Ashen Pendant', 'Frozen Pendant', 'Heartstone of the Warden'] },
-  { f: 'charm', slot: 'amulet', icon: 'a_charm', prim: [['luck', 5, 5], ['cunning', 0, 0.6]], mul: 0.85, blurb: 'It watches over your pockets.', names: ['Gull-Bone Charm', 'Saltwitch Charm', 'Charwood Charm', 'Snowbone Charm', 'Seer’s Charm'] },
-  { f: 'rune', slot: 'amulet', icon: 'a_rune', prim: [['damage', 1, 1.6], ['crit', 1, 1.4]], mul: 1, blurb: 'A single word, carved deep.', names: ['Chipped Rune', 'Etched Rune', 'Emberrune', 'Rimerune', 'Sunrune'] },
-  { f: 'locket', slot: 'amulet', icon: 'a_heart', prim: [['maxSanity', 5, 5], ['will', 0, 0.8]], mul: 0.9, blurb: 'A stranger’s face, and it is kind.', names: ['Faded Locket', 'Widow’s Locket', 'Cinder Locket', 'Rimelocket', 'Locket of Remembered Faces'] },
+  { f: 'shield', slot: 'offhand', icon: 'o_round', prim: [['armor', 1, 2.2], ['maxHp', 2, 3]], mul: 0.85, blurb: 'Something to stand behind.', names: ['Dented Buckler', 'Harbor Roundshield', 'Ashwood Targe', 'Frostguard Kite', 'Prism Targe', 'Coralwall Shield', 'Brass Bulwark', 'Rimeguard Aegis', 'Gilded Pavise', 'Aegis of Vigil'] },
+  { f: 'bulwark', slot: 'offhand', icon: 'o_spiked', prim: [['armor', 1, 2.4], ['thorns', 1, 2]], mul: 0.95, blurb: 'Hurts to hit.', names: ['Spiked Pavise', 'Barbed Bulwark', 'Marrowspike Shield', 'Icetooth Bulwark', 'Shardthorn Shield', 'Urchin Bulwark', 'Cogspike Shield', 'Icetooth Aegis', 'Sunthorn Wall', 'Thornwall of the Dead'] },
+  { f: 'lantern', slot: 'offhand', icon: 'o_lantern', prim: [['maxSanity', 4, 4], ['will', 0, 1]], mul: 0.85, blurb: 'Holds the whispering at arm’s length.', names: ['Tin Lantern', 'Wanderer Lantern', 'Emberglass Lantern', 'Rimeglass Lantern', 'Lens Lantern', 'Tidelight Lantern', 'Orrery Lamp', 'Aurora Lantern', 'Noonlight Lantern', 'Lantern of the Long Vigil'] },
+  { f: 'orb', slot: 'offhand', icon: 'o_orb', prim: [['will', 1, 1.2], ['crit', 2, 2]], mul: 0.9, blurb: 'Shows a future you did not order.', names: ['Cloudy Scrying Glass', 'Tidecaller Orb', 'Cinder Orb', 'Frozen Eye', 'Mirage Orb', 'Pearl Scrying Orb', 'Clockwork Orb', 'Aurora Orb', 'Orb of Hours', 'Orb of Twelve Veyrs'] },
+  { f: 'signet', slot: 'ring', icon: 'r_signet', prim: [['vigor', 1, 0.7], ['maxHp', 3, 4]], mul: 0.85, blurb: 'A ring worn by people who hold the line.', names: ['Copper Signet', 'Watch Signet', 'Bonebound Signet', 'Frostiron Signet', 'Prism Signet', 'Coral Signet', 'Brass Signet', 'Rime Signet', 'Gilded Signet', 'Signet of the Regent'] },
+  { f: 'band', slot: 'ring', icon: 'r_ring', prim: [['cunning', 1, 0.7], ['crit', 2, 1.8]], mul: 0.85, blurb: 'Light fingers wear light rings.', names: ['Twisted Wire Band', 'Smuggler’s Band', 'Cinderglass Band', 'Rime Band', 'Glass Band', 'Pearl Band', 'Gear Ring', 'Aurora Band', 'Noon Band', 'Band of Idle Hours'] },
+  { f: 'gemring', slot: 'ring', icon: 'r_diamond', prim: [['will', 1, 0.7], ['maxSanity', 3, 3.5]], mul: 0.9, blurb: 'A stone that remembers being a star.', names: ['Glass Ring', 'Pearl Ring', 'Ember Ring', 'Frostdiamond Ring', 'Sunstone Ring', 'Seaglass Ring', 'Orrery Ring', 'Aurora Ring', 'Hourstone Ring', 'Ring of Noon’s Tears'] },
+  { f: 'links', slot: 'ring', icon: 'r_linked', prim: [['luck', 4, 4], ['dodge', 1, 1.2]], mul: 0.85, blurb: 'Fortune favours those who wear its knots.', names: ['Hempen Knots', 'Charm Rings', 'Amber Links', 'Rime Links', 'Mirage Links', 'Netting Knots', 'Gearlink Chain', 'Aurora Links', 'Links of Noon', 'Links of Fate'] },
+  { f: 'pendant', slot: 'amulet', icon: 'a_gem', prim: [['maxHp', 5, 6], ['armor', 0, 0.6]], mul: 0.9, blurb: 'Warm against the skin.', names: ['Tin Pendant', 'Warden’s Pendant', 'Ashen Pendant', 'Frozen Pendant', 'Prism Pendant', 'Coral Pendant', 'Brass Pendant', 'Aurora Pendant', 'Gilded Pendant', 'Heartstone of the Warden'] },
+  { f: 'charm', slot: 'amulet', icon: 'a_charm', prim: [['luck', 5, 5], ['cunning', 0, 0.6]], mul: 0.85, blurb: 'It watches over your pockets.', names: ['Gull-Bone Charm', 'Saltwitch Charm', 'Charwood Charm', 'Snowbone Charm', 'Dune Charm', 'Shell Charm', 'Gear Charm', 'Aurora Charm', 'Noon Charm', 'Seer’s Charm'] },
+  { f: 'rune', slot: 'amulet', icon: 'a_rune', prim: [['damage', 1, 1.6], ['crit', 1, 1.4]], mul: 1, blurb: 'A single word, carved deep.', names: ['Chipped Rune', 'Etched Rune', 'Emberrune', 'Rimerune', 'Glassrune', 'Tiderune', 'Cogrune', 'Aurorarune', 'Noonrune', 'Sunrune'] },
+  { f: 'locket', slot: 'amulet', icon: 'a_heart', prim: [['maxSanity', 5, 5], ['will', 0, 0.8]], mul: 0.9, blurb: 'A stranger’s face, and it is kind.', names: ['Faded Locket', 'Widow’s Locket', 'Cinder Locket', 'Rimelocket', 'Prism Locket', 'Tide Locket', 'Clockwork Locket', 'Aurora Locket', 'Gilded Locket', 'Locket of Remembered Faces'] },
 ];
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
@@ -87,7 +92,7 @@ function applySec(b: Bonus, specs: SecSpec[], t: number) {
 const generated: ItemDef[] = [];
 WEAPONS.forEach((w, fi) => w.names.forEach((name, t) => {
   const r = tierRarity(t, fi);
-  const bonus: Bonus = { damage: Math.max(1, Math.round([3, 7, 12, 18, 26][t] * w.dmg)) };
+  const bonus: Bonus = { damage: Math.max(1, Math.round([3, 7, 12, 18, 26, 35, 46, 59, 74, 92][t] * w.dmg)) };
   applySec(bonus, w.sec, t);
   generated.push({ id: `w_${w.f}_${t}`, name, icon: w.icon, slot: 'weapon', rarity: r, tier: t, desc: `${w.blurb} ${TIER_FLAVOR[t]}`, price: priceFor(t, 1, r), bonus, family: w.f });
 }));

@@ -1,17 +1,17 @@
 import { ENEMY_MAP } from '../data/enemies';
 import { ITEM_MAP, SETS } from '../data/items';
-import { TALENT_MAP } from '../data/skills';
+import { ASCENSION_MAP, TALENT_MAP } from '../data/skills';
 import { DUNGEON_MAP, MAP_H, MAP_W, START_POS, ZONES } from '../data/world';
 import type { Bonus, EnemyDef, Eff, GameState, ItemDef, Log, Meta, Settings, Slot } from '../types';
 
 export const SAVE_KEY = 'dreadmarch-save';
 export const META_KEY = 'dreadmarch-meta';
 export const VERSION = 4;
-export const LEVEL_CAP = 30;
+export const LEVEL_CAP = 60;
 export const SLOTS: Slot[] = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'ring', 'amulet'];
 export const SLOT_LABEL: Record<Slot, string> = { weapon: 'Weapon', offhand: 'Off-hand', head: 'Head', body: 'Body', hands: 'Hands', feet: 'Feet', ring: 'Ring', amulet: 'Amulet' };
 export const UPGRADABLE: Slot[] = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet'];
-export const MAX_UPGRADE = 5;
+export const MAX_UPGRADE = 8;
 
 export const rand = (a: number, b: number) => Math.floor(Math.random() * (b - a + 1)) + a;
 export const pick = <T>(list: T[]): T => list[Math.floor(Math.random() * list.length)];
@@ -22,7 +22,9 @@ export const hooks: {
   runEffects: (s: GameState, effs: Eff[]) => EffResult;
   startScene: (s: GameState, id: string) => void;
   startFight: (s: GameState, id: string, rank: 'normal' | 'elite' | 'boss', opts?: { entId?: number; win?: Eff[]; noFlee?: boolean; boss?: string; from?: 'dungeon' | 'world' | 'scene'; sneak?: boolean; lvl?: number }) => void;
-} = { runEffects: () => ({ gold: 0, xp: 0, items: [], lines: [], ended: false, fought: false }), startScene: () => undefined, startFight: () => undefined };
+  setMain: (s: GameState, id: string) => void;
+  setArc: (s: GameState, id: string, to: number) => void;
+} = { runEffects: () => ({ gold: 0, xp: 0, items: [], lines: [], ended: false, fought: false }), startScene: () => undefined, startFight: () => undefined, setMain: () => undefined, setArc: () => undefined };
 
 const itemCache = new Map<string, ItemDef>();
 export function splitId(idStr: string): [string, number] {
@@ -72,7 +74,7 @@ export function loadMeta(): Meta {
 }
 export function saveMeta(m: Meta) { localStorage.setItem(META_KEY, JSON.stringify(m)) }
 
-export const xpFor = (level: number) => Math.round(30 * level ** 1.35);
+export const xpFor = (level: number) => Math.round(30 * level ** 1.45);
 
 export function fresh(difficulty: Settings['difficulty'] = 'Wayfarer'): GameState {
   const s: GameState = {
@@ -86,6 +88,7 @@ export function fresh(difficulty: Settings['difficulty'] = 'Wayfarer'): GameStat
     run: null, enemy: null, fight: null, event: null, reward: null, scene: null, queue: [],
     flags: {}, main: 0, quests: [], completedQuests: [],
     lore: [], bestiary: {}, kills: 0, elites: 0, eventsSeen: 0, bosses: [], cleared: [], companionCharge: 0, log: [], fx: [], ending: null, deaths: 0,
+    skillRanks: {}, ascensions: [], companions: [], dynQuests: {}, playSeconds: 0, ads: { day: '', counts: {}, inter: 0, open: 0, freeUntil: 0, boostUntil: 0 }, anim: [], lastRun: null,
   };
   s.hp = stats(s).maxHp;
   s.sanity = stats(s).maxSanity;
@@ -109,7 +112,7 @@ export function hasLegacySave() {
 }
 
 type Full = Required<Bonus>;
-const emptyBonus = (): Full => ({ damage: 0, armor: 0, vigor: 0, will: 0, cunning: 0, maxHp: 0, maxSanity: 0, crit: 0, dodge: 0, lifesteal: 0, thorns: 0, luck: 0 });
+const emptyBonus = (): Full => ({ damage: 0, armor: 0, vigor: 0, will: 0, cunning: 0, maxHp: 0, maxSanity: 0, crit: 0, dodge: 0, lifesteal: 0, thorns: 0, luck: 0, flee: 0, sight: 0, xpPct: 0, goldPct: 0, shopPct: 0, encPct: 0, critDmg: 0 });
 function addBonus(t: Full, b?: Bonus) { if (b) (Object.keys(b) as (keyof Bonus)[]).forEach(k => { t[k] += b[k] ?? 0 }) }
 
 export function setCounts(s: GameState): Record<string, number> {
@@ -122,6 +125,7 @@ export function gearBonus(s: GameState): Full {
   const t = emptyBonus();
   (Object.values(s.equipment) as (string | null)[]).forEach(id => { if (id) addBonus(t, item(id)?.bonus) });
   s.talents.forEach(id => addBonus(t, TALENT_MAP.get(id)?.bonus));
+  s.ascensions.forEach(id => addBonus(t, ASCENSION_MAP.get(id)?.bonus));
   Object.entries(setCounts(s)).forEach(([k, n]) => { const set = SETS[k]; if (n >= 2) addBonus(t, set.two); if (n >= 4) addBonus(t, set.four) });
   if (s.run?.sigil === 'blade') t.damage += 3 + Math.floor(s.level / 4);
   if (s.run?.sigil === 'ward') t.armor += 3 + Math.floor(s.level / 4);
@@ -143,9 +147,10 @@ export function stats(s: GameState) {
     crit: Math.min(70, Math.round(5 + cunning * 1.2 + b.crit)),
     dodge: Math.min(45, Math.round(b.dodge + cunning * 0.4)),
     lifesteal: b.lifesteal, thorns: b.thorns, luck: b.luck,
-    flee: Math.min(90, 40 + cunning * 2),
+    flee: Math.min(92, 40 + cunning * 2 + b.flee),
     corruptionBonus: s.corruption * 4,
-    sight: 5 + (s.run && s.run.torch > 0 ? 2 : 0),
+    sight: 5 + b.sight + (s.run && s.run.torch > 0 ? 2 : 0),
+    critDmg: b.critDmg, xpPct: b.xpPct, goldPct: b.goldPct, shopPct: Math.min(40, b.shopPct), encPct: Math.min(70, b.encPct),
   };
 }
 
@@ -180,7 +185,8 @@ export function areaLevel(s: GameState): number {
   if (s.screen === 'world' || s.ret === 'world') return zoneAt(s.world.x, s.world.y).lvl;
   return clamp(s.level, 1, LEVEL_CAP);
 }
-export const tierForLevel = (lvl: number) => clamp(Math.floor((lvl - 1) / 6), 0, 4);
+export const MAX_TIER = 9;
+export const tierForLevel = (lvl: number) => clamp(Math.floor((lvl - 1) / 6), 0, MAX_TIER);
 export const scaleAmt = (s: GameState, n: number) => Math.round(n * (1 + s.level * 0.25));
 export const scaleSan = (s: GameState, n: number) => Math.round(n * (1 + s.level * 0.1));
 

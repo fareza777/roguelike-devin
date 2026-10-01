@@ -5,8 +5,8 @@ import type { GameState, ItemDef, Rarity } from '../types';
 import { LEVEL_CAP, clamp, clampVitals, pick, push, rand, stats, tierForLevel, xpFor } from './core';
 import { questEvent } from './quests';
 
-const RARITY_ORDER: Rarity[] = ['common', 'rare', 'epic', 'relic'];
-const RARITY_WEIGHT: Record<Rarity, number> = { common: 55, rare: 30, epic: 12, relic: 3 };
+const RARITY_ORDER: Rarity[] = ['common', 'rare', 'epic', 'relic', 'mythic'];
+const RARITY_WEIGHT: Record<Rarity, number> = { common: 55, rare: 30, epic: 12, relic: 4, mythic: 1.5 };
 const GEAR = ITEMS.filter(x => !x.unique && x.slot !== 'consumable' && x.slot !== 'junk');
 const CONS = ITEMS.filter(x => x.slot === 'consumable');
 const JUNK = ITEMS.filter(x => x.slot === 'junk' && !x.unique);
@@ -77,9 +77,11 @@ export function rollDrops(s: GameState, rank: 'normal' | 'elite' | 'boss', lvl: 
 }
 
 export function goldFor(s: GameState, lvl: number, mult: number) {
-  return Math.round((6 + lvl * 3.4 + rand(0, 5)) * mult * luckMult(s));
+  return Math.round((6 + lvl * 3.4 + rand(0, 5)) * mult * luckMult(s) * (1 + stats(s).goldPct / 100) * adBoost(s, 'gold'));
 }
-export function xpForKill(lvl: number, mult: number) { return Math.round((10 + 5.5 * lvl) * mult) }
+export function xpForKill(s: GameState, lvl: number, mult: number) { return Math.round((10 + 5.5 * lvl) * mult * (1 + stats(s).xpPct / 100) * adBoost(s, 'xp')) }
+/** Rewarded-ad boost: +35% xp / gold while it lasts. */
+export const adBoost = (s: GameState, _kind: 'xp' | 'gold') => (s.ads.boostUntil > Date.now() ? 1.35 : 1);
 
 export function addLore(s: GameState, id?: string): string | null {
   const known = new Set(s.lore);
