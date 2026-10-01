@@ -233,7 +233,7 @@ describe('systems', () => {
   it('levels up to the cap', () => {
     const s = newGame();
     gainXp(s, 10_000_000);
-    expect(s.level).toBe(30);
+    expect(s.level).toBe(60);
     expect(TOWNS.length).toBeGreaterThan(5);
   });
 });

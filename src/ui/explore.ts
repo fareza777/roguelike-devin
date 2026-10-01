@@ -15,6 +15,9 @@ import { icon } from '../icons';
 import type { GameState, ItemDef, Slot } from '../types';
 import { UI, compareChips, emptyState, esc, itemIcon, kindName, statChips } from './common';
 import { locBar } from './shell';
+import { REWARDS, canWatch, watchedToday } from '../data/ads';
+import { rewardedAvailable } from '../ads';
+import { boostLeft } from '../engine/adrewards';
 
 const dirBtn = (d: number, cls: string, label: string) => `<button class="dbtn ${cls}" data-dir="${d}" aria-label="${label}"><svg viewBox="0 0 24 24"><path d="${['M8 4l8 8-8 8', 'M4 8l8 8 8-8', 'M16 4l-8 8 8 8', 'M4 16l8-8 8 8'][d]}"/></svg></button>`;
 const dpad = (mid: string) => `<div class="dpad" role="group" aria-label="Movement">${dirBtn(3, 'up', 'Move up')}${dirBtn(2, 'left', 'Move left')}<div class="dmid">${mid}</div>${dirBtn(0, 'right', 'Move right')}${dirBtn(1, 'down', 'Move down')}</div>`;
@@ -162,7 +165,7 @@ export function inn(s: GameState, ui: UI) {
   return `<section class="page-in"><div class="page-head"><h2>${icon('inn')}The Inn</h2><p class="muted">A bed, a fire, and a door that locks. Rest restores health, sanity and clears ailments.</p></div>
     <div class="panel feature"><span class="fi">${icon('inn')}</span><div><h3>A warm bed</h3><p>Sleep until the world stops whispering.</p></div><button class="btn primary" data-act="rest" ${s.gold < cost ? 'disabled' : ''}>Rest · ${cost}${icon('gold')}</button></div>
     ${ownedCompanions(s).length > 1 ? `<h3 class="sec-h">Companion</h3><div class="svc-grid">${['None', ...ownedCompanions(s)].map(n => `<button class="svc ${s.companion === n ? 'on' : ''}" data-companion="${esc(n)}"><span class="si">${icon('e_hound')}</span><span class="st2"><b>${esc(n)}</b><small>${n === 'None' ? 'Walk alone' : s.companion === n ? 'Travelling with you' : 'Swap'}</small></span></button>`).join('')}</div>` : ''}
-    <div id="adslot-inn"></div>
+    ${adSlot(s)}
     ${tavern ? `<div class="panel feature"><span class="fi">${icon('tavern')}</span><div><h3>The tavern</h3><p>Tongues loosen for those who buy a round. Rumors may point to places you have not yet found.</p></div><button class="btn" data-act="round" ${s.gold < roundCost(s) ? 'disabled' : ''}>Buy a round · ${roundCost(s)}${icon('gold')}</button></div>
     ${ui.tavernText ? `<blockquote class="rumor" data-key="rum-${ui.tavernText.length}">“${esc(ui.tavernText)}”</blockquote>` : '<blockquote class="rumor muted">Rumors are free. Listen at the bar.<button class="btn" data-act="listen">Listen</button></blockquote>'}` : ''}
   </section>`;
@@ -244,4 +247,13 @@ export function harbor(s: GameState) {
   const dests = ferryTargets(s, t.id);
   return `<section class="page-in"><div class="page-head"><h2>${icon('m_ship')}Harbor of ${esc(t.name)}</h2><p class="muted">Ferrymen who ask no questions, for a price. Sailing takes a day or more.</p></div>
     <div class="list">${dests.map(d => { const cost = ferryCost(t.id, d.id); return `<div class="irow"><span class="iicon r-rare">${icon(d.kind === 'city' ? 'm_city' : 'm_town')}</span><div class="imain"><div class="iname"><b>${esc(d.name)}</b><em class="cnt">${s.world.visited.includes(d.id) ? 'visited' : 'unvisited'}</em></div><small class="idesc">${esc(d.subtitle)}</small></div><div class="iact"><button class="btn buy" data-sail="${d.id}" ${canSail(s, d.id) ? '' : 'disabled'}>${cost}${icon('gold')}</button></div></div>` }).join('') || emptyState('m_ship', 'No ships sail from here yet. Ask around the docks.')}</div></section>`;
+}
+
+/** Optional rewarded offers shown at the inn. Hidden when no ad can be played. */
+function adSlot(s: GameState) {
+  if (!rewardedAvailable()) return '<div id="adslot-inn"></div>';
+  const mins = Math.ceil(boostLeft(s) / 60000);
+  const row = (id: 'supplies' | 'boost', act: string, ic: string, extra = '') => canWatch(s, id)
+    ? `<div class="panel feature ad-offer"><span class="fi">${icon(ic)}</span><div><h3>${REWARDS[id].name}${extra}</h3><p>${REWARDS[id].text}</p></div><button class="btn ad" data-act="${act}">Watch · ${REWARDS[id].cap - watchedToday(s, id)} left today</button></div>` : '';
+  return `<div id="adslot-inn"><h3 class="sec-h">Optional offers</h3>${row('supplies', 'adSupplies', 'supplies')}${row('boost', 'adBoost', 'star', mins > 0 ? ` <small>· ${mins} min active</small>` : '')}</div>`;
 }

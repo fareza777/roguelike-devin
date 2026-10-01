@@ -1,3 +1,4 @@
+import { ADS_POLICY } from '../data/ads';
 import { BOSS_LOOT } from '../data/enemies';
 import { ITEMS } from '../data/items';
 import { LORE } from '../data/story';
@@ -77,11 +78,11 @@ export function rollDrops(s: GameState, rank: 'normal' | 'elite' | 'boss', lvl: 
 }
 
 export function goldFor(s: GameState, lvl: number, mult: number) {
-  return Math.round((6 + lvl * 3.4 + rand(0, 5)) * mult * luckMult(s) * (1 + stats(s).goldPct / 100) * adBoost(s, 'gold'));
+  return Math.round((6 + lvl * 3.4 + rand(0, 5)) * mult * luckMult(s) * (1 + stats(s).goldPct / 100) * adBoost(s));
 }
-export function xpForKill(s: GameState, lvl: number, mult: number) { return Math.round((10 + 5.5 * lvl) * mult * (1 + stats(s).xpPct / 100) * adBoost(s, 'xp')) }
+export function xpForKill(s: GameState, lvl: number, mult: number) { return Math.round((10 + 5.5 * lvl) * mult * (1 + stats(s).xpPct / 100) * adBoost(s)) }
 /** Rewarded-ad boost: +35% xp / gold while it lasts. */
-export const adBoost = (s: GameState, _kind: 'xp' | 'gold') => (s.ads.boostUntil > Date.now() ? 1.35 : 1);
+export const adBoost = (s: GameState) => (s.ads.boostUntil > Date.now() ? ADS_POLICY.boostMult : 1);
 
 export function addLore(s: GameState, id?: string): string | null {
   const known = new Set(s.lore);

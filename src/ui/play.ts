@@ -71,7 +71,7 @@ export function reward(s: GameState, adOffer = false) {
     <div class="rw-stats">${r.gold ? `<span class="rs">${icon('gold')}<b>${r.gold > 0 ? '+' : ''}${r.gold}</b> gold</span>` : ''}${r.xp ? `<span class="rs">${icon('xp')}<b>+${r.xp}</b> XP</span>` : ''}</div>
     ${r.lines.map(l => `<p class="log ${/Level \d+!/.test(l) ? 'epic' : 'plain'}">${esc(l)}</p>`).join('')}
     ${r.items.length ? `<h3>Spoils</h3><div class="rw-items">${r.items.map((id, i) => { const d = item(id)!; return `<div class="ri r-${d.rarity}" style="animation-delay:${0.15 + i * 0.09}s" title="${esc(d.name)}">${itemIcon(d)}<b>${esc(d.name)}</b><small>${d.rarity}</small></div>` }).join('')}</div>` : ''}
-    ${adOffer && !r.doubled && r.gold > 0 ? `<button class="btn ad wide" data-act="adDouble">${icon('gold')}<span>Double the gold<small>Watch a short video</small></span></button>` : ''}
+    ${adOffer && !r.doubled && r.gold > 0 ? `<button class="btn ad wide" data-act="adDouble">${icon('gold')}<span>Double the gold<small>Watch a short video · optional</small></span></button>` : ''}
     <button class="btn primary wide" data-act="closeReward">Continue</button></div></section>`;
 }
 

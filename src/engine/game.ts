@@ -12,6 +12,7 @@ export * from './loot';
 export * from './quests';
 export * from './story';
 export * from './town';
+export * from './adrewards';
 export * from './world';
 export { getWorld, tileAt as worldTile, poiAt, TERRAIN_NAME } from './worldgen';
 
