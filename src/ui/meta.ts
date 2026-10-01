@@ -77,7 +77,7 @@ export function settings(meta: Meta, ui: UI, inGame: boolean) {
 export function about() {
   return `<div class="page bg-splash"><div class="panel page-card center">
     ${eclipse('small')}<h2>Dreadmarch: The Black Meridian</h2><p class="muted">Version ${VERSION_LABEL}</p>
-    <p>A dark-fantasy roguelike RPG of grim choices, grid exploration, tactical combat and slow madness. Cross a shattered continent, break the seals, and decide what morning means.</p>
+    <p>A dark-fantasy roguelike RPG of grim choices, grid exploration, tactical combat and slow madness. Traverse a shattered continent, break the seals, and decide what morning means.</p>
     <div class="section left"><h3>Credits</h3><p>Design, writing and code: the Dreadmarch team.<br>Typefaces: Cinzel and Crimson Pro (SIL Open Font License).<br>Icons by Lorc, Delapouite, Skoll, Willdabeast, Sbed and others from game-icons.net, licensed CC BY 3.0. Painted art created for Dreadmarch.</p></div>
     <div class="section left"><h3>Privacy</h3><p>Dreadmarch runs fully offline. No accounts, ads, trackers or analytics. Your chronicle is stored only on this device.</p></div>
     <div class="grid2 section"><button class="btn" data-act="share">${icon('share')}Share the game</button><button class="btn" data-act="rate">${icon('star')}Rate on Play Store</button></div>
@@ -85,7 +85,7 @@ export function about() {
   </div></div>`;
 }
 
-const CREATE_ICONS = [['c_bandage', 'shield', 'archive'], ['w_blade', 'burn', 'w_dagger'], ['e_hound', 'e_nun', 'e_raven']];
+const CREATE_ICONS = [['c_bandage', 'shield', 'archive'], ['w_blade', 'burn', 'w_dagger'], ['e_hound', 'e_veiled', 'e_raven']];
 export function creation(s: GameState, ui: UI, meta: Meta) {
   const sets = [ORIGINS, PATHS, COMPANIONS];
   const key = (['origin', 'path', 'companion'] as const)[ui.creationStep];

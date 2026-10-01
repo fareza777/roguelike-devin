@@ -106,7 +106,7 @@ export function death(s: GameState) {
   const doomed = s.difficulty === 'Doomed';
   return `<section class="finale death"><div class="fin-in"><div class="fin-ic">${icon('skull')}</div><h1>The March Ends</h1>
     <p class="story">${esc(s.name)} falls on day ${s.day}, after ${s.kills} horrors slain.</p>
-    <p class="muted">${doomed ? 'On the Doomed path, death is final. This chronicle is erased.' : 'Mother Ilse’s people can drag you back — but the dark keeps half your gold.'}</p>
+    <p class="muted">${doomed ? 'On the Doomed path, death is final. This chronicle is erased.' : 'The Lantern Court’s runners can drag you back — but the dark keeps half your gold.'}</p>
     <div class="menu-stack">${doomed ? '' : `<button class="btn primary big" data-act="revive">${icon('heart')}<span>Rise again in Veyrgard</span></button>`}<button class="btn big" data-act="new">${icon('quest')}<span>Begin another chronicle</span></button><button class="btn" data-act="toTitle">Main menu</button></div></div></section>`;
 }
 

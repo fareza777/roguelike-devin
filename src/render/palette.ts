@@ -14,7 +14,7 @@ export const THEMES: Record<Theme, ThemePal> = {
   cave: { floor: '#2d2924', floor2: '#26221e', wall: '#100e0c', wallTop: '#443d35', wallFace: '#1b1713', accent: '#c9a45c', ambient: 'rgba(16,10,4,0.42)', particle: 'dust', light: '255,210,140' },
   ruin: { floor: '#332d28', floor2: '#2a2521', wall: '#141110', wallTop: '#4d4238', wallFace: '#211b17', accent: '#c9a45c', ambient: 'rgba(20,12,6,0.4)', particle: 'dust', light: '255,205,140' },
   swamp: { floor: '#28362c', floor2: '#213026', wall: '#0e1610', wallTop: '#385040', wallFace: '#15211a', accent: '#a8c878', ambient: 'rgba(6,26,12,0.44)', particle: 'spore', light: '210,255,170' },
-  sanctum: { floor: '#2e202b', floor2: '#271b24', wall: '#120b11', wallTop: '#4d3349', wallFace: '#20131d', accent: '#e07acb', ambient: 'rgba(30,6,28,0.44)', particle: 'ember', light: '255,190,240' },
+  archive: { floor: '#2e202b', floor2: '#271b24', wall: '#120b11', wallTop: '#4d3349', wallFace: '#20131d', accent: '#e07acb', ambient: 'rgba(30,6,28,0.44)', particle: 'ember', light: '255,190,240' },
 };
 
 export const TERRAIN: Record<string, { base: string; alt: string }> = {

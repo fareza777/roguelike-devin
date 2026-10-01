@@ -6,7 +6,7 @@ import type { Bonus, EnemyDef, Eff, GameState, ItemDef, Log, Meta, Settings, Slo
 
 export const SAVE_KEY = 'dreadmarch-save';
 export const META_KEY = 'dreadmarch-meta';
-export const VERSION = 3;
+export const VERSION = 4;
 export const LEVEL_CAP = 30;
 export const SLOTS: Slot[] = ['weapon', 'offhand', 'head', 'body', 'hands', 'feet', 'ring', 'amulet'];
 export const SLOT_LABEL: Record<Slot, string> = { weapon: 'Weapon', offhand: 'Off-hand', head: 'Head', body: 'Body', hands: 'Hands', feet: 'Feet', ring: 'Ring', amulet: 'Amulet' };
@@ -79,7 +79,7 @@ export function fresh(difficulty: Settings['difficulty'] = 'Wayfarer'): GameStat
     version: VERSION, screen: 'creation', ret: 'town', difficulty, name: '', origin: '', path: '', companion: '',
     day: 1, level: 1, xp: 0, xpNext: xpFor(1), statPoints: 0, talentPoints: 0,
     gold: 80, supplies: 8, hp: 1, sanity: 1, vigor: 5, will: 5, cunning: 5, corruption: 0,
-    inventory: ['tonic', 'incense', 'pitchtorch'], equipment: { weapon: 'w_blade_0', offhand: null, head: null, body: null, hands: null, feet: null, ring: null, amulet: null },
+    inventory: ['tonic', 'tallow', 'pitchtorch'], equipment: { weapon: 'w_blade_0', offhand: null, head: null, body: null, hands: null, feet: null, ring: null, amulet: null },
     skills: [], loadout: [], cooldowns: {}, talents: [], status: {}, guarding: false,
     town: 'veyrgard',
     world: { x: START_POS[0], y: START_POS[1], steps: 0, explored: '0'.repeat(MAP_W * MAP_H), known: ['veyrgard'], visited: ['veyrgard'], done: [], facing: 0, lastRoadX: START_POS[0], lastRoadY: START_POS[1] },
@@ -123,9 +123,9 @@ export function gearBonus(s: GameState): Full {
   (Object.values(s.equipment) as (string | null)[]).forEach(id => { if (id) addBonus(t, item(id)?.bonus) });
   s.talents.forEach(id => addBonus(t, TALENT_MAP.get(id)?.bonus));
   Object.entries(setCounts(s)).forEach(([k, n]) => { const set = SETS[k]; if (n >= 2) addBonus(t, set.two); if (n >= 4) addBonus(t, set.four) });
-  if (s.run?.blessing === 'blade') t.damage += 3 + Math.floor(s.level / 4);
-  if (s.run?.blessing === 'ward') t.armor += 3 + Math.floor(s.level / 4);
-  if (s.run?.blessing === 'eye') t.crit += 10;
+  if (s.run?.sigil === 'blade') t.damage += 3 + Math.floor(s.level / 4);
+  if (s.run?.sigil === 'ward') t.armor += 3 + Math.floor(s.level / 4);
+  if (s.run?.sigil === 'eye') t.crit += 10;
   return t;
 }
 

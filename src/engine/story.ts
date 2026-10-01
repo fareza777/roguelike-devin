@@ -68,7 +68,7 @@ export function runEffects(s: GameState, effs: Eff[]): EffResult {
         case 'log': push(s, e.text, e.tone ?? 'plain'); note(e.text); break;
         case 'end': s.ending = e.id; s.main = MAIN.length - 1; s.flags[`ending_${e.id}`] = 1; enqueue(s, { k: 'ending', id: e.id }, true); r.ended = true; break;
         case 'goto': r.goto = e.node; break;
-        case 'bless': if (s.run) s.run.blessing = e.k; else s.flags.pending_bless = ['blade', 'ward', 'eye'].indexOf(e.k) + 1; note(`Blessing: ${e.k === 'blade' ? 'Blades' : e.k === 'ward' ? 'Warding' : 'the Open Eye'}`); break;
+        case 'sigil': if (s.run) s.run.sigil = e.k; else s.flags.pending_sigil = ['blade', 'ward', 'eye'].indexOf(e.k) + 1; note(`Sigil: ${e.k === 'blade' ? 'Blades' : e.k === 'ward' ? 'Warding' : 'the Open Eye'}`); break;
         case 'key': if (s.run) s.run.keys += e.n; note(`+${e.n} key`); break;
         case 'reveal': if (s.run) { const f = s.run.floors[s.run.floor]; if (f) f.seen = '1'.repeat(f.w * f.h); note('The floor is revealed to you.') } break;
         case 'companion': s.companion = e.name; break;

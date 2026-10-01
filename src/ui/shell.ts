@@ -3,8 +3,8 @@ import { stats } from '../engine/core';
 import type { GameState, Screen } from '../types';
 import { UI, pct, vitals } from './common';
 
-export const HUD_SCREENS: Screen[] = ['town', 'world', 'dungeon', 'map', 'character', 'inventory', 'journal', 'shop', 'smithy', 'skills', 'board', 'inn', 'temple', 'combat'];
-export const DOCK_SCREENS: Screen[] = ['town', 'world', 'dungeon', 'map', 'character', 'inventory', 'journal', 'shop', 'smithy', 'skills', 'board', 'inn', 'temple'];
+export const HUD_SCREENS: Screen[] = ['town', 'world', 'dungeon', 'map', 'character', 'inventory', 'journal', 'shop', 'smithy', 'skills', 'board', 'inn', 'wardhouse', 'combat'];
+export const DOCK_SCREENS: Screen[] = ['town', 'world', 'dungeon', 'map', 'character', 'inventory', 'journal', 'shop', 'smithy', 'skills', 'board', 'inn', 'wardhouse'];
 
 export function hud(s: GameState) {
   const st = stats(s);

@@ -1,15 +1,15 @@
 export type Screen =
   | 'splash' | 'intro' | 'onboarding' | 'title' | 'settings' | 'about' | 'creation'
   | 'town' | 'world' | 'dungeon' | 'map' | 'combat' | 'event' | 'reward' | 'dialogue'
-  | 'character' | 'inventory' | 'journal' | 'shop' | 'smithy' | 'skills' | 'board' | 'inn' | 'temple'
+  | 'character' | 'inventory' | 'journal' | 'shop' | 'smithy' | 'skills' | 'board' | 'inn' | 'wardhouse'
   | 'death' | 'ending';
 
 export type Stat = 'vigor' | 'will' | 'cunning';
 export type Slot = 'weapon' | 'offhand' | 'head' | 'body' | 'hands' | 'feet' | 'ring' | 'amulet';
 export type Rarity = 'common' | 'rare' | 'epic' | 'relic';
 export type Status = 'bleed' | 'burn' | 'stun' | 'ward' | 'weak' | 'marked' | 'poison';
-export type School = 'Steel' | 'Occult' | 'Shadow' | 'Sanguine' | 'Discipline' | 'Astral' | 'Ash';
-export type Tree = 'Steel' | 'Occult' | 'Shadow' | 'Ash';
+export type School = 'Steel' | 'Hex' | 'Shadow' | 'Sanguine' | 'Discipline' | 'Astral' | 'Ash';
+export type Tree = 'Steel' | 'Hex' | 'Shadow' | 'Ash';
 
 export interface Bonus {
   damage?: number; armor?: number; vigor?: number; will?: number; cunning?: number;
@@ -71,7 +71,7 @@ export type Eff =
   | { t: 'main'; to: string } | { t: 'quest'; id: string } | { t: 'lore'; id?: string } | { t: 'unlock'; loc: string }
   | { t: 'fight'; enemy: string; rank?: Enemy['rank']; win?: Eff[]; noFlee?: boolean }
   | { t: 'rand'; p: number; eff: Eff[]; else?: Eff[] } | { t: 'log'; text: string; tone?: Log['tone'] }
-  | { t: 'end'; id: string } | { t: 'goto'; node: string } | { t: 'bless'; k: 'blade' | 'ward' | 'eye' }
+  | { t: 'end'; id: string } | { t: 'goto'; node: string } | { t: 'sigil'; k: 'blade' | 'ward' | 'eye' }
   | { t: 'key'; n: number } | { t: 'reveal' } | { t: 'companion'; name: string } | { t: 'scene'; id: string };
 
 export interface Choice {
@@ -85,7 +85,7 @@ export interface DNode { id: string; who?: string; text: string; eff?: Eff[]; ch
 export interface SceneDef { id: string; art?: string; nodes: DNode[] }
 export interface Speaker { name: string; title?: string; icon: string; color?: string }
 
-export type Theme = 'crypt' | 'flooded' | 'forest' | 'ember' | 'bone' | 'mine' | 'ice' | 'noon' | 'cave' | 'ruin' | 'swamp' | 'sanctum';
+export type Theme = 'crypt' | 'flooded' | 'forest' | 'ember' | 'bone' | 'mine' | 'ice' | 'noon' | 'cave' | 'ruin' | 'swamp' | 'archive';
 
 export interface DungeonDef {
   id: string; name: string; subtitle: string; desc: string; art: string; theme: Theme; floors: number; lvl: number;
@@ -98,7 +98,7 @@ export interface NpcDef {
   talk?: { cond?: Cond; scene: string }[]; shop?: boolean;
 }
 
-export type ServiceId = 'inn' | 'shop' | 'smithy' | 'temple' | 'tavern' | 'board' | 'trainer';
+export type ServiceId = 'inn' | 'shop' | 'smithy' | 'wardhouse' | 'tavern' | 'board' | 'trainer';
 export interface TownDef {
   id: string; name: string; kind: 'city' | 'village'; subtitle: string; desc: string; art: string; pos: [number, number];
   theme: { sky: string; glow: string; ink: string }; services: ServiceId[]; tier: number; shopTags: string[];
@@ -123,8 +123,8 @@ export interface Log { tone: 'good' | 'bad' | 'plain' | 'epic'; text: string }
 export interface Fx { target: 'enemy' | 'player'; text: string; kind: 'dmg' | 'crit' | 'heal' | 'sanity' | 'status' | 'miss' }
 
 export type EntKind =
-  | 'enemy' | 'boss' | 'chest' | 'trap' | 'event' | 'shrine' | 'camp' | 'fountain' | 'lore' | 'key' | 'lever'
-  | 'potion' | 'gold' | 'altar' | 'prisoner' | 'questitem' | 'exit' | 'secret' | 'npc';
+  | 'enemy' | 'boss' | 'chest' | 'trap' | 'event' | 'waystone' | 'camp' | 'fountain' | 'lore' | 'key' | 'lever'
+  | 'potion' | 'gold' | 'plinth' | 'prisoner' | 'questitem' | 'exit' | 'secret' | 'npc';
 export interface Ent {
   id: number; k: EntKind; x: number; y: number; enemy?: string; rank?: Enemy['rank']; awake?: boolean;
   done?: boolean; hidden?: boolean; ref?: string; cd?: number; locked?: boolean; mimic?: boolean;
@@ -132,7 +132,7 @@ export interface Ent {
 export interface Floor { w: number; h: number; tiles: string; seen: string; ents: Ent[]; up: [number, number] | null; down: [number, number] | null; nextId: number }
 export interface Run {
   dungeon: string; floor: number; seed: number; px: number; py: number; floors: (Floor | null)[]; keys: number;
-  steps: number; blessing: string | null; found: string[]; gold: number; kills: number; light: number; torch: number;
+  steps: number; sigil: string | null; found: string[]; gold: number; kills: number; light: number; torch: number;
   bossDown: boolean; facing: number;
 }
 export interface WorldState { x: number; y: number; steps: number; explored: string; known: string[]; visited: string[]; done: string[]; facing: number; lastRoadX: number; lastRoadY: number }

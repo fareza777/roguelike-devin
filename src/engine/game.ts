@@ -30,7 +30,7 @@ export function setup(s: GameState) {
   s.screen = 'town';
   s.ret = 'town';
   s.town = 'veyrgard';
-  push(s, 'Mother Ilse’s summons found you at dawn. There was no dawn.', 'epic');
+  push(s, 'Seer Ilse’s summons found you at dawn. There was no dawn.', 'epic');
   save(s);
 }
 

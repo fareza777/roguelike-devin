@@ -12,12 +12,12 @@ export const SKILLS: SkillDef[] = [
   s('rally', 'Iron Rally', 'shield', 'Steel', 12, 380, 5, 0, 0, 'Restore 20% of your health and gain a Ward for 1 turn.', { effect: { healPct: 20, status: 'ward', turns: 1, target: 'self' } }),
   s('headsman', 'Headsman’s Due', 'w_cleaver', 'Steel', 18, 560, 6, 0, 2.5, '250% damage, +60% against bleeding foes.', { effect: { bonusVs: 'bleed', bonusMult: 0.6 } }),
 
-  s('cinder', 'Cinder Hex', 'burn', 'Occult', 1, 0, 3, 1, 1.3, '130% damage and sets the enemy Burning for 3 turns.', { effect: { status: 'burn', turns: 3, target: 'enemy' } }),
-  s('hexbrand', 'Hexbrand', 'marked', 'Occult', 3, 130, 4, 1, 0.6, '60% damage. The enemy is Marked and takes 30% more damage for 3 turns.', { effect: { status: 'marked', turns: 3, target: 'enemy' } }),
-  s('void', 'Void Lance', 'e_dread', 'Occult', 8, 260, 4, 4, 2.2, '220% damage that ignores armor.', { effect: { pierce: true } }),
-  s('soulflame', 'Soulflame', 'e_fireelem', 'Occult', 12, 400, 5, 3, 0.7, 'Three strikes of 70% damage; sets the enemy Burning.', { hits: 3, effect: { status: 'burn', turns: 3, target: 'enemy' } }),
-  s('unravel', 'Unravel', 'e_ghost', 'Occult', 15, 460, 5, 3, 2, '200% damage and Weakens the enemy for 3 turns.', { effect: { status: 'weak', turns: 3, target: 'enemy' } }),
-  s('nightfall', 'Nightfall', 'moon', 'Occult', 22, 820, 6, 6, 3.2, '320% damage that ignores armor.', { effect: { pierce: true } }),
+  s('cinder', 'Cinder Hex', 'burn', 'Hex', 1, 0, 3, 1, 1.3, '130% damage and sets the enemy Burning for 3 turns.', { effect: { status: 'burn', turns: 3, target: 'enemy' } }),
+  s('hexbrand', 'Hexbrand', 'marked', 'Hex', 3, 130, 4, 1, 0.6, '60% damage. The enemy is Marked and takes 30% more damage for 3 turns.', { effect: { status: 'marked', turns: 3, target: 'enemy' } }),
+  s('void', 'Void Lance', 'e_dread', 'Hex', 8, 260, 4, 4, 2.2, '220% damage that ignores armor.', { effect: { pierce: true } }),
+  s('soulflame', 'Soulflame', 'e_fireelem', 'Hex', 12, 400, 5, 3, 0.7, 'Three strikes of 70% damage; sets the enemy Burning.', { hits: 3, effect: { status: 'burn', turns: 3, target: 'enemy' } }),
+  s('unravel', 'Unravel', 'e_ghost', 'Hex', 15, 460, 5, 3, 2, '200% damage and Weakens the enemy for 3 turns.', { effect: { status: 'weak', turns: 3, target: 'enemy' } }),
+  s('nightfall', 'Nightfall', 'moon', 'Hex', 22, 820, 6, 6, 3.2, '320% damage that ignores armor.', { effect: { pierce: true } }),
 
   s('mark', 'Hunter’s Mark', 'marked', 'Shadow', 2, 120, 5, 0, 0.5, '50% damage. The enemy is Marked for 3 turns.', { effect: { status: 'marked', turns: 3, target: 'enemy' } }),
   s('venom', 'Venomstrike', 'poison', 'Shadow', 4, 170, 3, 0, 1.1, '110% damage and Poisons the enemy for 4 turns.', { effect: { status: 'poison', turns: 4, target: 'enemy' } }),
@@ -28,13 +28,13 @@ export const SKILLS: SkillDef[] = [
 
   s('mend', 'Blood Mend', 'heart', 'Sanguine', 1, 0, 4, 2, 0, 'Trade 2 sanity to restore 15% of your health (+8).', { effect: { heal: 8, healPct: 15 } }),
   s('leech', 'Leech Rite', 'c_heartbottle', 'Sanguine', 5, 180, 4, 2, 1.2, '120% damage and heal for half of it.', { effect: { leech: 0.5 } }),
-  s('bloodpact', 'Blood Pact', 'bleed', 'Sanguine', 11, 400, 4, 0, 3, 'Sacrifice 12% of your max health for 300% damage.', { hpCost: 12 }),
-  s('transfuse', 'Transfusion', 'c_holywater', 'Sanguine', 16, 550, 7, 4, 0, 'Restore 35% health and cleanse every ailment.', { effect: { healPct: 35, cleanse: true } }),
+  s('bloodpact', 'Blood Pact', 'bleed', 'Sanguine', 11, 400, 4, 0, 3, 'Spend 12% of your max health for 300% damage.', { hpCost: 12 }),
+  s('transfuse', 'Transfusion', 'c_clearwater', 'Sanguine', 16, 550, 7, 4, 0, 'Restore 35% health and cleanse every ailment.', { effect: { healPct: 35, cleanse: true } }),
 
   s('still', 'Still Mind', 'sanity', 'Discipline', 2, 90, 4, 0, 0, 'Restore 9 sanity (+15% of maximum) and cleanse Weakness.', { effect: { sanity: 9, sanityPct: 15, cleanse: true } }),
-  s('hymn', 'Ashen Hymn', 'holy', 'Discipline', 4, 160, 5, 0, 0, 'Cleanse yourself and gain a Ward for 2 turns.', { effect: { status: 'ward', turns: 2, target: 'self', cleanse: true } }),
+  s('cadence', 'Ashen Cadence', 'sigil', 'Discipline', 4, 160, 5, 0, 0, 'Cleanse yourself and gain a Ward for 2 turns.', { effect: { status: 'ward', turns: 2, target: 'self', cleanse: true } }),
   s('stillness', 'Iron Stillness', 'shield', 'Discipline', 13, 350, 6, 0, 0, 'Gain a Ward for 3 turns and restore 20% of your sanity.', { effect: { status: 'ward', turns: 3, target: 'self', sanityPct: 20 } }),
-  s('litany', 'Litany of Noon', 'sun', 'Discipline', 19, 650, 8, 0, 0, 'Cleanse, restore 25% health and 25% sanity.', { effect: { healPct: 25, sanityPct: 25, cleanse: true } }),
+  s('noonsong', 'Noonsong', 'sun', 'Discipline', 19, 650, 8, 0, 0, 'Cleanse, restore 25% health and 25% sanity.', { effect: { healPct: 25, sanityPct: 25, cleanse: true } }),
 
   s('collapse', 'Collapse', 'weak', 'Astral', 9, 280, 4, 2, 1.5, '150% damage and Weakens the enemy for 3 turns.', { effect: { status: 'weak', turns: 3, target: 'enemy' } }),
   s('starfall', 'Starfall', 'star', 'Astral', 17, 500, 5, 3, 1.1, 'Two blazing strikes of 110% damage each.', { hits: 2 }),
@@ -56,12 +56,12 @@ export const TALENTS: TalentDef[] = [
   t('stalwart', 'Stalwart', 'o_spiked', 'Steel', 5, '+2 Vigor and +4 thorns.', { vigor: 2, thorns: 4 }),
   t('warlord', 'Warlord’s Presence', 'crown', 'Steel', 6, '+6 damage and +6% critical chance.', { damage: 6, crit: 6 }),
 
-  t('lucid', 'Lucid Dreamer', 'sanity', 'Occult', 1, '+10 max sanity.', { maxSanity: 10 }),
-  t('ironwill', 'Iron Will', 'ward', 'Occult', 2, 'Take 1 less sanity damage from every source. +1 Will.', { will: 1 }),
-  t('wellspring', 'Wellspring', 'c_flask', 'Occult', 3, 'Restore sanity after every victory.'),
-  t('abyss', 'Abyssal Pact', 'e_dread', 'Occult', 4, 'Below 30% sanity, deal 35% more damage.'),
-  t('deepmind', 'Deep Mind', 'eye', 'Occult', 5, '+14 max sanity and +2 Will.', { maxSanity: 14, will: 2 }),
-  t('voidtouched', 'Void-Touched', 'moon', 'Occult', 6, 'Skills cost 1 less sanity. +4 damage.', { damage: 4 }),
+  t('lucid', 'Lucid Dreamer', 'sanity', 'Hex', 1, '+10 max sanity.', { maxSanity: 10 }),
+  t('ironwill', 'Iron Will', 'ward', 'Hex', 2, 'Take 1 less sanity damage from every source. +1 Will.', { will: 1 }),
+  t('wellspring', 'Wellspring', 'c_flask', 'Hex', 3, 'Restore sanity after every victory.'),
+  t('abyss', 'Abyssal Pact', 'e_dread', 'Hex', 4, 'Below 30% sanity, deal 35% more damage.'),
+  t('deepmind', 'Deep Mind', 'eye', 'Hex', 5, '+14 max sanity and +2 Will.', { maxSanity: 14, will: 2 }),
+  t('voidtouched', 'Void-Touched', 'moon', 'Hex', 6, 'Skills cost 1 less sanity. +4 damage.', { damage: 4 }),
 
   t('keen', 'Keen Eye', 'marked', 'Shadow', 1, '+9% critical chance.', { crit: 9 }),
   t('scavenger', 'Scavenger', 'gold', 'Shadow', 2, '+40% gold and better loot chances. +10 luck.', { luck: 10 }),
@@ -72,10 +72,10 @@ export const TALENTS: TalentDef[] = [
 
   t('hardy', 'Hearth-Hardy', 'campfire', 'Ash', 1, '+8 max health and +6 max sanity.', { maxHp: 8, maxSanity: 6 }),
   t('embertouch', 'Ember Touch', 'burn', 'Ash', 2, 'Burning deals 50% more damage.'),
-  t('zeal', 'Ashen Zeal', 'holy', 'Ash', 3, 'Heal for 3% of the damage you deal.', { lifesteal: 3 }),
-  t('martyr', 'Martyr’s Resolve', 'c_holywater', 'Ash', 4, 'Once per fight, survive a lethal blow with 1 health.'),
+  t('zeal', 'Ashen Zeal', 'sigil', 'Ash', 3, 'Heal for 3% of the damage you deal.', { lifesteal: 3 }),
+  t('lastbreath', 'Last Breath', 'c_clearwater', 'Ash', 4, 'Once per fight, survive a lethal blow with 1 health.'),
   t('phoenixblood', 'Phoenixblood', 'j_embers', 'Ash', 5, 'Regenerate 3% of your health every combat turn.'),
   t('sunward', 'Sunward Heart', 'sun', 'Ash', 6, '+2 Vigor, Will and Cunning; +6 luck.', { vigor: 2, will: 2, cunning: 2, luck: 6 }),
 ];
 export const TALENT_MAP = new Map(TALENTS.map(x => [x.id, x]));
-export const TREES = ['Steel', 'Occult', 'Shadow', 'Ash'] as const;
+export const TREES = ['Steel', 'Hex', 'Shadow', 'Ash'] as const;

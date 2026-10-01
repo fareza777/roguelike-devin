@@ -121,24 +121,24 @@ export function cleanse(s: GameState) {
   if (s.corruption <= 0 || s.gold < cost) return;
   s.gold -= cost;
   s.corruption--;
-  push(s, 'The temple’s fire burns a little of the dark out of you.', 'good');
+  push(s, 'The wardhouse’s fire burns a little of the dark out of you.', 'good');
   clampVitals(s);
   save(s);
 }
-export const blessCost = (s: GameState) => 40 + s.level * 9;
-export function buyBlessing(s: GameState, kind: 1 | 2 | 3) {
-  const cost = blessCost(s);
+export const sigilCost = (s: GameState) => 40 + s.level * 9;
+export function buySigil(s: GameState, kind: 1 | 2 | 3) {
+  const cost = sigilCost(s);
   if (s.gold < cost) return;
   s.gold -= cost;
-  s.flags.pending_bless = kind;
-  push(s, 'A blessing settles on you. It will manifest when you next enter a dungeon.', 'good');
+  s.flags.pending_sigil = kind;
+  push(s, 'A sigil settles on your skin. It will wake when you next enter a dungeon.', 'good');
   save(s);
 }
-export function pray(s: GameState) {
-  if (s.flags[`prayed_${s.day}`]) return false;
-  s.flags[`prayed_${s.day}`] = 1;
+export function quietHour(s: GameState) {
+  if (s.flags[`quiet_${s.day}`]) return false;
+  s.flags[`quiet_${s.day}`] = 1;
   s.sanity = Math.min(stats(s).maxSanity, s.sanity + Math.round(stats(s).maxSanity * 0.35));
-  push(s, 'You pray in the quiet. Some of the whispering stops.', 'good');
+  push(s, 'You sit in the quiet. Some of the whispering stops.', 'good');
   save(s);
   return true;
 }

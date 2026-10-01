@@ -63,7 +63,7 @@ export function startFight(s: GameState, token: string, rank: Enemy['rank'], o: 
   s.cooldowns = {};
   s.companionCharge = 0;
   s.fx = [];
-  s.flags.martyr_used = 0;
+  s.flags.lastbreath_used = 0;
   if (o.sneak) s.enemy.status.marked = 2;
   s.log.unshift({ tone: rank === 'normal' ? 'bad' : 'epic', text: o.sneak ? `You catch ${s.enemy.name} unaware.` : `${s.enemy.name} ${rank === 'boss' ? 'rises to meet you' : 'blocks your path'}.` });
   showOverlay(s, 'combat');
@@ -115,7 +115,7 @@ function companionAct(s: GameState) {
   const trust = s.flags.companion_trust ? 1.3 : 1;
   const L = s.level;
   if (s.companion === 'Moth') { const d = Math.round((5 + L * 1.6) * trust); dealDirect(s, d); applyStatus(e.status, 'bleed', 2); push(s, `Moth tears at ${e.name} for ${d}.`, 'good') }
-  else if (s.companion === 'Sister Cask') { const d = Math.round((9 + L * 2.4) * trust); dealDirect(s, d, 'crit'); push(s, `Sister Cask’s arquebus roars: ${d} damage.`, 'good') }
+  else if (s.companion === 'Marshal Cask') { const d = Math.round((9 + L * 2.4) * trust); dealDirect(s, d, 'crit'); push(s, `Marshal Cask’s arquebus roars: ${d} damage.`, 'good') }
   else if (s.companion === 'Nix') { const g = rand(5, 10) + L * 2; s.gold += g; dealDirect(s, Math.round((3 + L * 0.8) * trust)); push(s, `Nix steals ${g} gold and pecks an eye.`, 'good') }
 }
 
@@ -165,7 +165,7 @@ function enemyAct(s: GameState) {
     s.hp = Math.max(0, s.hp - d);
     fxAdd(s, 'player', d ? `−${d}` : 'BLOCK', d ? 'dmg' : 'miss');
     if (d > 0 && st.thorns) { const t = Math.round(st.thorns * (1 + s.level / 8)); dealDirect(s, t, 'status'); push(s, `Thorns bite back for ${t}.`, 'good') }
-    if (s.hp <= 0 && s.talents.includes('martyr') && !s.flags.martyr_used) { s.hp = 1; s.flags.martyr_used = 1; push(s, 'Martyr’s Resolve holds you together.', 'epic') }
+    if (s.hp <= 0 && s.talents.includes('lastbreath') && !s.flags.lastbreath_used) { s.hp = 1; s.flags.lastbreath_used = 1; push(s, 'Last Breath holds you together.', 'epic') }
   };
   const dodged = () => { if (Math.random() * 100 < st.dodge) { fxAdd(s, 'player', 'DODGE', 'miss'); push(s, `You slip ${e.name}’s attack.`, 'good'); return true } return false };
   const intent = e.intent;
@@ -404,7 +404,7 @@ export function revive(s: GameState) {
   s.day++;
   s.screen = 'town';
   s.ret = 'town';
-  push(s, `Mother Ilse’s people drag you back from the dark. You lost ${lost} gold.`, 'bad');
+  push(s, `The Lantern Court’s runners drag you back from the dark. You lost ${lost} gold.`, 'bad');
   save(s);
 }
 

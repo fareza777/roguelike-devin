@@ -123,7 +123,7 @@ function build(): WorldMap {
     ['veyrgard', 'lanternrest'], ['lanternrest', 'emberhollow'], ['veyrgard', 'hangedman'], ['hangedman', 'saltmere'], ['veyrgard', 'dunmarrow'],
     ['dunmarrow', 'gravemarrow'], ['veyrgard', 'frostgate'], ['frostgate', 'hollowreach'], ['veyrgard', 'solenne'], ['solenne', 'meridian'],
     ['saltmere', 'wickhaven'], ['veyrgard', 'undercroft'], ['veyrgard', 'rookery'], ['saltmere', 'catacombs'], ['emberhollow', 'ashwood'],
-    ['emberhollow', 'hearthcrypt'], ['gravemarrow', 'quarry'], ['hollowreach', 'pass'], ['emberhollow', 'sanctum'], ['gravemarrow', 'foundry'],
+    ['emberhollow', 'hearthcrypt'], ['gravemarrow', 'quarry'], ['hollowreach', 'pass'], ['emberhollow', 'archive'], ['gravemarrow', 'foundry'],
     ['hollowreach', 'barrows'], ['hollowreach', 'rimeglass'], ['wickhaven', 'seacaves'], ['gravemarrow', 'ribcage'], ['solenne', 'undercity'],
     ['emberhollow', 'hollowhill'],
   ];

@@ -468,7 +468,7 @@ export class MapView {
       case 'chest': this.token(e.done ? 'chest_open' : 'chest', sx, sy, ts * 0.72, { bg: 'rgba(30,20,8,0.9)', ring: e.done ? '#6a5a40' : '#f0c060', glow: e.done ? undefined : 'rgba(255,200,90,0.75)', color: e.done ? '#8a7a5a' : '#ffe0a0', alpha: a, pulse: e.done ? 0 : 0.05 }); break;
       case 'trap': this.token('spikes', sx, sy, ts * 0.6, { bg: 'rgba(40,6,6,0.85)', ring: '#c03028', color: '#ff9a88', alpha: a }); break;
       case 'event': this.token('quest', sx, sy, ts * 0.66, { bg: 'rgba(24,10,36,0.9)', ring: '#b07af0', glow: 'rgba(176,122,240,0.9)', color: '#e6d2ff', alpha: a, pulse: 0.08 }); break;
-      case 'shrine': this.token('altar', sx, sy, ts * 0.78, { bg: 'rgba(30,24,6,0.9)', ring: '#ffd870', glow: 'rgba(255,215,110,0.85)', color: '#ffeab0', alpha: a, pulse: 0.05 }); break;
+      case 'waystone': this.token('plinth', sx, sy, ts * 0.78, { bg: 'rgba(30,24,6,0.9)', ring: '#ffd870', glow: 'rgba(255,215,110,0.85)', color: '#ffeab0', alpha: a, pulse: 0.05 }); break;
       case 'camp': { this.token('campfire', sx, sy, ts * 0.78, { bg: 'rgba(30,12,4,0.9)', ring: '#ff9a40', glow: `rgba(255,140,60,${0.6 + Math.sin(this.time * 9) * 0.25})`, color: '#ffc880', alpha: a }); break }
       case 'fountain': this.token('fountain', sx, sy, ts * 0.76, { bg: 'rgba(6,20,30,0.9)', ring: '#60c0e8', glow: 'rgba(90,190,240,0.8)', color: '#c0ecff', alpha: a, pulse: 0.04 }); break;
       case 'lore': this.token('lore', sx, sy, ts * 0.66, { bg: 'rgba(20,16,8,0.9)', ring: accent, glow: 'rgba(240,220,160,0.6)', color: '#f4e6c0', alpha: a }); break;
@@ -496,7 +496,7 @@ export class MapView {
       c.fillStyle = ch === '#' || ch === 'S' ? '#1c1c24' : ch === '>' ? '#ffd9a0' : ch === '<' ? '#bcd6ff' : ch === '+' || ch === 'L' ? '#9a6a30' : '#5a5a68';
       c.fillRect(x0 + i * px, y0 + j * px, px, px);
     }
-    f.ents.forEach(e => { if (e.done || e.hidden || f.seen[e.y * f.w + e.x] !== '1') return; if (e.k === 'chest' || e.k === 'shrine' || e.k === 'camp' || e.k === 'exit' || e.k === 'questitem' || e.k === 'boss') { c.fillStyle = e.k === 'boss' ? '#ff5040' : accent; c.fillRect(x0 + e.x * px, y0 + e.y * px, px, px) } });
+    f.ents.forEach(e => { if (e.done || e.hidden || f.seen[e.y * f.w + e.x] !== '1') return; if (e.k === 'chest' || e.k === 'waystone' || e.k === 'camp' || e.k === 'exit' || e.k === 'questitem' || e.k === 'boss') { c.fillStyle = e.k === 'boss' ? '#ff5040' : accent; c.fillRect(x0 + e.x * px, y0 + e.y * px, px, px) } });
     c.fillStyle = '#ffe9a0';
     c.fillRect(x0 + s.run!.px * px - 0.5, y0 + s.run!.py * px - 0.5, px + 1, px + 1);
     c.restore();

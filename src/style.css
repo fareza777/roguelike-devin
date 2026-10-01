@@ -65,7 +65,7 @@
 .room-icon{font-size:2.3rem;width:62px;height:62px;border-radius:50%;display:grid;place-items:center;border:1px solid #4e4943;background:#0a0909}
 .room small{color:#8f857c;font-size:.8rem}
 .room-elite .room-icon{border-color:#a46fd1;color:#cfa6f0}.room-boss .room-icon{border-color:#d5a04a;color:#f0c46a;box-shadow:0 0 22px #d5a04a55}
-.room-shrine .room-icon{color:#e7c98f}.room-camp .room-icon{color:#8fb0d8}.room-cache .room-icon{color:#b7985f}.room-fight .room-icon{color:#d86a5f}
+.room-waystone .room-icon{color:#e7c98f}.room-camp .room-icon{color:#8fb0d8}.room-cache .room-icon{color:#b7985f}.room-fight .room-icon{color:#d86a5f}
 .chips{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:6px 0}
 .chip{font-size:.68rem;font-family:Cinzel;padding:3px 7px;border:1px solid #4e4943;background:#0e0c0c;letter-spacing:.05em}
 .status-bleed{border-color:#9f2c27;color:#e37a70}.status-burn{border-color:#b65b23;color:#f09a58}.status-stun{border-color:#bfae52;color:#e8d97a}

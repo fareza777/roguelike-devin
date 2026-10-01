@@ -7,7 +7,7 @@ import { onEntrance, onExit, dungeonProgress } from '../engine/dungeon';
 import { QUEST_LIMIT, availableQuests, claimable, cond } from '../engine/quests';
 import { currentStep } from '../engine/story';
 import {
-  SUPPLY_PRICE, blessCost, canSell, cleanseCost, innCost, roundCost, sellPrice, shopStock, schoolsHere, skillPrice,
+  SUPPLY_PRICE, sigilCost, canSell, cleanseCost, innCost, roundCost, sellPrice, shopStock, schoolsHere, skillPrice,
 } from '../engine/town';
 import { canFastTravel, currentPoi, objectiveTarget, travelCost } from '../engine/world';
 import { TERRAIN_NAME, tileAt } from '../engine/worldgen';
@@ -61,7 +61,7 @@ export function dungeon(s: GameState, ui: UI) {
   const potion = s.inventory.some(i => { const u = item(i)?.use; return !!u && (u.hp || u.hpPct) && !u.damage });
   const light = s.inventory.some(i => !!item(i)?.use?.light);
   return `<section class="explore dungeon">
-    ${locBar(esc(p.name), `Depth ${p.floor}/${p.floors} · Recommended Lv ${p.def.lvl} · ${s.run!.keys ? `${icon('key')}×${s.run!.keys} · ` : ''}${s.run!.blessing ? `Blessed · ` : ''}${s.run!.torch > 0 ? `Torch ${s.run!.torch}` : 'Dim light'}`, p.def.mainBoss ? esc(step.title) : undefined)}
+    ${locBar(esc(p.name), `Depth ${p.floor}/${p.floors} · Recommended Lv ${p.def.lvl} · ${s.run!.keys ? `${icon('key')}×${s.run!.keys} · ` : ''}${s.run!.sigil ? `Sigil · ` : ''}${s.run!.torch > 0 ? `Torch ${s.run!.torch}` : 'Dim light'}`, p.def.mainBoss ? esc(step.title) : undefined)}
     <div class="mapwrap"><div class="canvas-host" id="mapmount" data-static></div>${logCaption(s, ui)}</div>
     <div class="deck">
       ${dpad(`<button class="dcenter" data-act="searchDungeon" aria-label="Search">${icon('secret')}</button>`)}
@@ -78,7 +78,7 @@ export function dungeon(s: GameState, ui: UI) {
 const REGION_FX: Record<string, string> = { ashwood: 'embers', north: 'snow', coast: 'rain', bone: 'dust', south: 'motes', heartland: 'dust', swamp: 'motes' };
 const SERVICE_META: Record<string, { ic: string; label: string; go: string }> = {
   inn: { ic: 'inn', label: 'Inn & Tavern', go: 'inn' }, shop: { ic: 'shop', label: 'Market', go: 'shop' }, smithy: { ic: 'smith', label: 'Smithy', go: 'smithy' },
-  temple: { ic: 'temple', label: 'Temple', go: 'temple' }, board: { ic: 'notice', label: 'Notice Board', go: 'board' }, trainer: { ic: 'skills', label: 'Trainer', go: 'skills' },
+  wardhouse: { ic: 'wardhouse', label: 'Wardhouse', go: 'wardhouse' }, board: { ic: 'notice', label: 'Notice Board', go: 'board' }, trainer: { ic: 'skills', label: 'Trainer', go: 'skills' },
 };
 
 export function town(s: GameState) {
@@ -87,7 +87,7 @@ export function town(s: GameState) {
   const ready = claimable(s, t.id).length;
   const avail = availableQuests(s, t.id).length;
   const sub = (id: string) => ({
-    inn: `Rest · ${innCost(s)} gold${t.services.includes('tavern') ? ' · rumors' : ''}`, shop: 'Buy, sell, supplies', smithy: 'Reinforce your gear', temple: s.corruption ? `Purge corruption · ${cleanseCost(s)}g` : 'Blessings & prayer',
+    inn: `Rest · ${innCost(s)} gold${t.services.includes('tavern') ? ' · rumors' : ''}`, shop: 'Buy, sell, supplies', smithy: 'Reinforce your gear', wardhouse: s.corruption ? `Purge corruption · ${cleanseCost(s)}g` : 'Sigils & quiet hour',
     board: ready ? `${ready} ready to claim` : avail ? `${avail} contract${avail > 1 ? 's' : ''} available` : 'No new contracts', trainer: (TOWN_TRAIN(t.id)).join(' · '),
   } as Record<string, string>)[id];
   const services = t.services.filter(x => x !== 'tavern');
@@ -167,17 +167,17 @@ export function inn(s: GameState, ui: UI) {
   </section>`;
 }
 
-export function temple(s: GameState) {
+export function wardhouse(s: GameState) {
   const cost = cleanseCost(s);
-  const bc = blessCost(s);
-  const prayed = s.flags[`prayed_${s.day}`];
-  const pending = s.flags.pending_bless;
+  const bc = sigilCost(s);
+  const rested = s.flags[`quiet_${s.day}`];
+  const pending = s.flags.pending_sigil;
   const B: [number, string, string, string][] = [[1, 'w_blade', 'Blades', 'Bonus damage on your next expedition.'], [2, 'shield', 'Warding', 'Bonus armor on your next expedition.'], [3, 'eye', 'the Open Eye', '+10% critical chance on your next expedition.']];
-  return `<section class="page-in"><div class="page-head"><h2>${icon('temple')}The Temple</h2><p class="muted">The fire here is honest. It burns what should not be.</p></div>
+  return `<section class="page-in"><div class="page-head"><h2>${icon('wardhouse')}The Wardhouse</h2><p class="muted">The fire here is honest. It burns what should not be.</p></div>
     <div class="panel feature"><span class="fi">${icon('corruption')}</span><div><h3>Purge corruption</h3><p>${s.corruption ? `You carry ${s.corruption} corruption. Each point costs 3 sanity and adds 4% damage.` : 'You are untainted.'}</p></div><button class="btn primary" data-act="cleanse" ${s.corruption <= 0 || s.gold < cost ? 'disabled' : ''}>${cost}${icon('gold')}</button></div>
-    <div class="panel feature"><span class="fi">${icon('holy')}</span><div><h3>Quiet prayer</h3><p>Once a day, restore a third of your sanity for free.</p></div><button class="btn" data-act="pray" ${prayed ? 'disabled' : ''}>${prayed ? 'Prayed today' : 'Pray'}</button></div>
-    <h3 class="sec-h">Blessings ${pending ? `<small class="muted">· Active: ${['', 'Blades', 'Warding', 'the Open Eye'][pending]}</small>` : ''}</h3>
-    <div class="svc-grid">${B.map(([k, ic, name, desc]) => `<button class="svc ${pending === k ? 'on' : ''}" data-bless="${k}" ${s.gold < bc ? 'disabled' : ''}><span class="si">${icon(ic)}</span><span class="st2"><b>Blessing of ${name}</b><small>${desc}</small></span><span class="price">${bc}${icon('gold')}</span></button>`).join('')}</div>
+    <div class="panel feature"><span class="fi">${icon('sigil')}</span><div><h3>Quiet hour</h3><p>Once a day, restore a third of your sanity for free.</p></div><button class="btn" data-act="quiet" ${rested ? 'disabled' : ''}>${rested ? 'Rested today' : 'Rest the mind'}</button></div>
+    <h3 class="sec-h">Sigils ${pending ? `<small class="muted">· Active: ${['', 'Blades', 'Warding', 'the Open Eye'][pending]}</small>` : ''}</h3>
+    <div class="svc-grid">${B.map(([k, ic, name, desc]) => `<button class="svc ${pending === k ? 'on' : ''}" data-sigil="${k}" ${s.gold < bc ? 'disabled' : ''}><span class="si">${icon(ic)}</span><span class="st2"><b>Sigil of ${name}</b><small>${desc}</small></span><span class="price">${bc}${icon('gold')}</span></button>`).join('')}</div>
   </section>`;
 }
 

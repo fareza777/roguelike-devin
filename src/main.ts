@@ -72,7 +72,7 @@ function moodFor(cur: Screen): Mood {
   if (cur === 'combat') return 'combat';
   if (cur === 'death') return 'off';
   if (cur === 'ending') return 'noon';
-  if (cur === 'dungeon') { const t = s.run ? DUNGEON_MAP.get(s.run.dungeon)?.theme : ''; return t === 'noon' || t === 'sanctum' ? 'noon' : 'dungeon' }
+  if (cur === 'dungeon') { const t = s.run ? DUNGEON_MAP.get(s.run.dungeon)?.theme : ''; return t === 'noon' || t === 'archive' ? 'noon' : 'dungeon' }
   if (cur === 'world' || cur === 'map') return (s.world.y > 34 && G.gateOpen(s, 'G')) ? 'noon' : 'world';
   if (cur === 'dialogue' || cur === 'event' || cur === 'reward') return s.ret === 'dungeon' ? 'dungeon' : s.ret === 'world' ? 'world' : 'town';
   return 'town';
@@ -103,7 +103,7 @@ function view(cur: Screen): string {
     case 'skills': return E.trainer(s);
     case 'board': return E.board(s);
     case 'inn': return E.inn(s, ui);
-    case 'temple': return E.temple(s);
+    case 'wardhouse': return E.wardhouse(s);
     case 'death': return P.death(s);
     case 'ending': return P.ending(s);
   }
@@ -364,7 +364,7 @@ const actions: Record<string, () => void> = {
     G.clearSave(); s = G.fresh(meta.settings.difficulty); ui.confirmDelete = false; ui.prevScreen = 'title'; screen = 'title'; toastMsg('Chronicle erased.');
   },
   share: async () => {
-    const text = s.ending && ENDINGS[s.ending] ? `I reached the ${ENDINGS[s.ending].title} ending in Dreadmarch: The Black Meridian.` : 'Cross a shattered continent, break the seals and decide what morning means. Dreadmarch: The Black Meridian.';
+    const text = s.ending && ENDINGS[s.ending] ? `I reached the ${ENDINGS[s.ending].title} ending in Dreadmarch: The Black Meridian.` : 'Traverse a shattered continent, break the seals and decide what morning means. Dreadmarch: The Black Meridian.';
     const r = await shareGame(text);
     if (r === 'copied') toastMsg('Link copied to clipboard.');
     if (r === 'failed') toastMsg('Sharing is unavailable here.');
@@ -405,7 +405,7 @@ const actions: Record<string, () => void> = {
   sellJunk: () => { const n = G.sellAllJunk(s); play(n ? 'coin' : 'error'); render() },
   rest: () => { G.rest(s); play('heal'); toastMsg('You wake rested. Health and sanity restored.') },
   cleanse: () => { const c = s.corruption; G.cleanse(s); if (s.corruption < c) { play('heal'); toastMsg('Corruption purged.') } else render() },
-  pray: () => { if (G.pray(s)) { play('heal'); toastMsg('The whispering quiets.') } else render() },
+  quiet: () => { if (G.quietHour(s)) { play('heal'); toastMsg('The whispering quiets.') } else render() },
   round: () => { const t = G.buyRound(s); if (t) { ui.tavernText = t; play('coin') } render() },
   listen: () => { ui.tavernText = G.rumor(s); play('page'); render() },
 };
@@ -449,7 +449,7 @@ const handlers: [string, (v: string, el: HTMLElement) => void][] = [
   ['loadout', v => { G.toggleLoadout(s, v); play('click'); render() }],
   ['accept', v => { G.acceptQuest(s, v); play('quest'); render() }],
   ['claim', v => act(() => G.claimQuest(s, v))],
-  ['bless', v => { G.buyBlessing(s, Number(v) as 1 | 2 | 3); play('heal'); toastMsg('A blessing settles on you.') }],
+  ['sigil', v => { G.buySigil(s, Number(v) as 1 | 2 | 3); play('heal'); toastMsg('A sigil settles on your skin.') }],
   ['travel', v => act(() => G.fastTravel(s, v))],
   ['stat', v => { G.spendStat(s, v as Stat); play('level'); render() }],
   ['talent', v => { G.learnTalent(s, v); play('level'); render() }],
