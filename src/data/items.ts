@@ -1,3 +1,4 @@
+import { PACKS } from './regions';
 import type { Bonus, ItemDef, ItemUse, Rarity, Slot } from '../types';
 
 type SecSpec = [keyof Bonus, number, number];
@@ -118,6 +119,7 @@ const gear = (id: string, name: string, icon: string, slot: Slot, rarity: Rarity
   ({ id, name, icon, slot, rarity, tier, desc, price: Math.round(PRICE[tier] * 2.2 * (rarity === 'relic' ? 2 : 1.4) / 10) * 10, bonus, unique: true, ...extra });
 
 export const SETS: Record<string, { name: string; two: Bonus; four: Bonus; blurb: string }> = {
+  ...Object.assign({}, ...PACKS.map(p => p.sets)),
   drowned: { name: 'Drowned Regalia', two: { maxSanity: 10, will: 2 }, four: { maxSanity: 12, will: 3, dodge: 6 }, blurb: 'The Widow’s bridal wardrobe. It is still wet.' },
   ember: { name: 'Ember Raiment', two: { damage: 4, crit: 5 }, four: { damage: 6, crit: 8, thorns: 4 }, blurb: 'Woven from the Hart’s shed forest.' },
   marrow: { name: 'Marrowbound', two: { armor: 6, maxHp: 20 }, four: { armor: 8, maxHp: 30, thorns: 6, vigor: 3 }, blurb: 'Bone-plate cut by miners who wanted to be remembered.' },
@@ -256,7 +258,7 @@ const tokens: ItemDef[] = [
 const consumables: ItemDef[] = CONSUMABLES.map(x => ({ id: x.id, name: x.name, icon: x.icon, slot: 'consumable', rarity: x.rarity, tier: x.tier, desc: x.desc, price: x.price, bonus: {}, use: x.use }));
 const junk: ItemDef[] = JUNK.map(x => ({ id: x.id, name: x.name, icon: x.icon, slot: 'junk', rarity: x.tier >= 4 ? 'epic' : x.tier >= 2 ? 'rare' : 'common', tier: x.tier, desc: x.desc, price: x.price, bonus: {} }));
 
-export const ITEMS: ItemDef[] = [...generated, ...uniques, ...consumables, ...junk, ...tokens];
+export const ITEMS: ItemDef[] = [...generated, ...uniques, ...consumables, ...junk, ...tokens, ...PACKS.flatMap(p => p.items)];
 export const ITEM_MAP = new Map(ITEMS.map(i => [i.id, i]));
 export const ITEM_COUNT = ITEMS.length;
 export { slug };

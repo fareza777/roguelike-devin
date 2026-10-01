@@ -101,12 +101,13 @@ export interface DNode { id: string; who?: string; text: string; eff?: Eff[]; ch
 export interface SceneDef { id: string; art?: string; nodes: DNode[] }
 export interface Speaker { name: string; title?: string; icon: string; color?: string; look?: string }
 
-export type Theme = 'crypt' | 'flooded' | 'forest' | 'ember' | 'bone' | 'mine' | 'ice' | 'noon' | 'cave' | 'ruin' | 'swamp' | 'archive';
+export type Theme = 'crypt' | 'flooded' | 'forest' | 'ember' | 'bone' | 'mine' | 'ice' | 'noon' | 'cave' | 'ruin' | 'swamp' | 'archive' | 'glass' | 'gear' | 'thorn' | 'aurora' | 'deep' | 'reef';
 
 export interface DungeonDef {
   id: string; name: string; subtitle: string; desc: string; art: string; theme: Theme; floors: number; lvl: number;
   enemies: string[]; elite: string; boss: string; size: [number, number]; pos: [number, number]; gate?: string;
-  intro?: string; clear?: string; mainBoss?: boolean; tags?: string[]; icon?: string; secretItem?: string;
+  /** Story condition that must hold before the dungeon can be entered (arc steps). */
+  cond?: Cond; intro?: string; clear?: string; mainBoss?: boolean; tags?: string[]; icon?: string; secretItem?: string;
 }
 
 export interface NpcDef {
@@ -128,7 +129,7 @@ export interface LandmarkDef {
   lvl: number; cond?: Cond; hint?: string; art?: string;
 }
 
-export interface QuestGoal { type: 'kill' | 'killTag' | 'clear' | 'fetch' | 'talk' | 'events' | 'level' | 'lore' | 'reach' | 'elites'; target?: string; count: number; label: string }
+export interface QuestGoal { type: 'kill' | 'killTag' | 'clear' | 'fetch' | 'talk' | 'events' | 'level' | 'lore' | 'reach' | 'elites' | 'regalia'; target?: string; count: number; label: string }
 export interface QuestDef {
   id: string; title: string; giver: string; town: string; text: string; done?: string; goal: QuestGoal;
   reward: { gold: number; xp: number; items?: string[]; flag?: string }; cond?: Cond; item?: string; region?: string; bounty?: boolean;

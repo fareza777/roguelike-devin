@@ -2,9 +2,10 @@ import { ENEMY_MAP } from '../data/enemies';
 import { DUNGEON_MAP, LANDMARK_MAP, MAP_H, MAP_W, TOWN_MAP } from '../data/world';
 import { floorOf, visibleSet } from '../engine/dungeon';
 import { cond } from '../engine/quests';
-import { gateOpen, isExplored, objectiveTarget } from '../engine/world';
+import { gateOpen, isExplored, objectiveTargets } from '../engine/world';
+import { foeUrl } from '../art/mount';
 import { getWorld, worldIdx } from '../engine/worldgen';
-import { stats } from '../engine/core';
+import { stats, zoneAt } from '../engine/core';
 import { iconPath } from '../icons';
 import { hash2 } from '../rng';
 import type { Ent, GameState } from '../types';
@@ -130,6 +131,26 @@ export class MapView {
     this.icon(name, cx, cy, size * 0.66, o.color ?? '#f1e6d0', o.alpha ?? 1);
   }
 
+  private sprites = new Map<string, HTMLImageElement>();
+  /** A round portrait token for a creature, drawn from the procedural creature art. */
+  private foeToken(def: { id: string; name: string; tags: string[]; role: string; look?: string }, rank: 'normal' | 'elite' | 'boss', cx: number, cy: number, size: number, o: { bg?: string; ring?: string; glow?: string; alpha?: number; pulse?: number }) {
+    const c = this.ctx;
+    const url = foeUrl(def, rank, 96, 84);
+    let img = this.sprites.get(url);
+    if (!img) { img = new Image(); img.src = url; this.sprites.set(url, img) }
+    const pulse = o.pulse ? 1 + Math.sin(this.time * 4) * o.pulse : 1;
+    c.save();
+    c.globalAlpha = o.alpha ?? 1;
+    if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = size * 0.5 * pulse }
+    c.beginPath(); c.arc(cx, cy, size * 0.5 * pulse, 0, Math.PI * 2); c.fillStyle = o.bg ?? 'rgba(10,8,8,0.82)'; c.fill();
+    c.shadowBlur = 0;
+    c.save(); c.beginPath(); c.arc(cx, cy, size * 0.5 * pulse, 0, Math.PI * 2); c.clip();
+    if (img.complete && img.naturalWidth) c.drawImage(img, cx - size * 0.62, cy - size * 0.56, size * 1.24, size * 1.08);
+    c.restore();
+    if (o.ring) { c.lineWidth = Math.max(1.5, size * 0.07); c.strokeStyle = o.ring; c.beginPath(); c.arc(cx, cy, size * 0.5 * pulse, 0, Math.PI * 2); c.stroke() }
+    c.restore();
+  }
+
   private text(t: string, x: number, y: number, size = 11, color = '#f0e6d2', align: CanvasTextAlign = 'center') {
     const c = this.ctx;
     c.font = `600 ${size}px Cinzel, Georgia, serif`;
@@ -218,6 +239,13 @@ export class MapView {
       case 'w': for (let k = 0; k < 2; k++) { const yy = py(0.3 + k * 0.4); c.strokeStyle = 'rgba(120,190,220,0.22)'; c.lineWidth = 1.2; c.beginPath(); for (let x = 0; x <= 6; x++) { const xx = sx + (x / 6) * ts; const y2 = yy + Math.sin(t * 1.8 + (i * 6 + x) * 0.9 + k) * 1.6; if (x) c.lineTo(xx, y2); else c.moveTo(xx, y2) } c.stroke() } break;
       case 'r': c.fillStyle = 'rgba(0,0,0,0.16)'; for (let k = 0; k < 4; k++) c.fillRect(px(hash2(i, j, 40 + k)), py(hash2(i, j, 50 + k)), 3, 2); c.strokeStyle = 'rgba(40,30,16,0.35)'; c.strokeRect(sx + 0.5, sy + 0.5, ts - 1, ts - 1); break;
       case 'B': c.strokeStyle = 'rgba(20,10,0,0.6)'; c.lineWidth = 1.2; for (let k = 1; k < 5; k++) { c.beginPath(); c.moveTo(sx, sy + (k / 5) * ts); c.lineTo(sx + ts, sy + (k / 5) * ts); c.stroke() } break;
+      case 's': for (let k = 0; k < 4; k++) { c.fillStyle = 'rgba(255,230,170,0.16)'; c.fillRect(px(hash2(i, j, 20 + k)), py(hash2(i, j, 30 + k)), 2, 1.5) } c.strokeStyle = 'rgba(80,50,10,0.18)'; c.lineWidth = 1; c.beginPath(); c.moveTo(px(0), py(0.6)); c.quadraticCurveTo(px(0.5), py(0.45), px(1), py(0.62)); c.stroke(); break;
+      case 'y': { const a = 0.35 + Math.sin(t * 2.2 + i * 5 + j * 3) * 0.3; c.fillStyle = `rgba(255,205,150,${h > 0.5 ? a : a * 0.4})`; c.beginPath(); c.moveTo(px(0.5), py(0.12)); c.lineTo(px(0.72), py(0.52)); c.lineTo(px(0.5), py(0.9)); c.lineTo(px(0.28), py(0.52)); c.closePath(); c.fill(); c.strokeStyle = 'rgba(255,240,220,0.35)'; c.stroke(); break }
+      case 'K': this.icon('m_deadtree', px(0.5), py(0.52), ts * 0.9, '#0a1408'); c.strokeStyle = 'rgba(120,200,80,0.35)'; c.lineWidth = 1; for (let k = 0; k < 3; k++) { const a = hash2(i, j, 20 + k); c.beginPath(); c.moveTo(px(a), py(0.95)); c.lineTo(px(a) + (a - 0.5) * 6, py(0.55)); c.stroke() } break;
+      case 'u': c.strokeStyle = 'rgba(255,190,90,0.22)'; c.lineWidth = 1.2; c.beginPath(); c.arc(px(0.5), py(0.5), ts * 0.3, t * 0.4 + i, t * 0.4 + i + 4.5); c.stroke(); if (h > 0.7) { c.beginPath(); c.arc(px(0.5), py(0.5), ts * 0.12, 0, 7); c.stroke() } break;
+      case 'e': for (let k = 0; k < 3; k++) { c.fillStyle = 'rgba(255,200,110,0.12)'; c.fillRect(px(hash2(i, j, 20 + k)), py(hash2(i, j, 30 + k)), 3, 1.5) } break;
+      case 'i': { const a = 0.18 + Math.sin(t * 1.4 + i * 0.7 + j * 0.4) * 0.12; c.fillStyle = h > 0.5 ? `rgba(90,255,200,${a})` : `rgba(150,140,255,${a})`; c.fillRect(sx, sy, ts, ts); break }
+      case 'l': if (h > 0.62) { const a = 0.45 + Math.sin(t * 2 + i * 3 + j) * 0.3; c.fillStyle = `rgba(90,240,200,${a})`; c.beginPath(); c.arc(px(hash2(i, j, 5)), py(hash2(i, j, 6)), 1.8, 0, 7); c.fill() } break;
       case 'M': case 'O': this.icon('m_mountain', px(0.5), py(0.52), ts * 1.05, ch === 'M' ? '#2b2b34' : '#5a5540'); break;
       case 'N': this.icon('m_mountain', px(0.5), py(0.52), ts * 1.05, '#8ea4bc'); break;
       case 'Z': {
@@ -266,12 +294,12 @@ export class MapView {
       const a = Math.max(0, Math.min(1, (d - 3.5) / 3.5)) * 0.5;
       if (a > 0.01) { c.fillStyle = `rgba(2,3,6,${a})`; c.fillRect(sx, sy, ts + 0.5, ts + 0.5) }
     }
-    const obj = objectiveTarget(s);
+    const objs = objectiveTargets(s);
     wm.poi.forEach((poi, idx) => {
       const i = idx % MAP_W, j = Math.floor(idx / MAP_W);
       if (i < i0 || i > i1 || j < j0 || j > j1) return;
       const sx = (i - this.camL) * ts + ts / 2, sy = (j - this.camT) * ts + ts / 2;
-      const isObj = obj && obj.id === poi.id;
+      const isObj = objs.find(o => o.id === poi.id);
       if (poi.kind === 'town') {
         if (!s.world.known.includes(poi.id)) return;
         const t = TOWN_MAP.get(poi.id)!;
@@ -294,21 +322,25 @@ export class MapView {
       }
       if (isObj) {
         const r = ts * (0.75 + Math.sin(this.time * 3) * 0.12);
-        c.strokeStyle = 'rgba(255,215,110,0.9)'; c.lineWidth = 2; c.beginPath(); c.arc(sx, sy, r, 0, 7); c.stroke();
+        c.strokeStyle = isObj.kind === 'main' ? 'rgba(255,215,110,0.9)' : 'rgba(122,255,208,0.9)'; c.lineWidth = 2; c.beginPath(); c.arc(sx, sy, r, 0, 7); c.stroke();
       }
     });
-    if (obj && !s.world.known.includes(obj.id)) {
+    for (const obj of objs) {
+      if (s.world.known.includes(obj.id)) continue;
       const [ox, oy] = this.screenOf(obj.pos[0] + 0.5, obj.pos[1] + 0.5);
-      if (ox > 0 && oy > 0 && ox < this.w && oy < this.h) this.token('quest', ox, oy, ts * 0.9, { ring: '#ffd870', glow: 'rgba(255,215,110,0.9)', color: '#ffe9a8', pulse: 0.08 });
+      const col = obj.kind === 'main' ? '#ffd870' : '#7affd0';
+      if (ox > 0 && oy > 0 && ox < this.w && oy < this.h) this.token('quest', ox, oy, ts * 0.9, { ring: col, glow: col, color: '#fff4d0', pulse: 0.08 });
     }
     if (this.path.length) { c.fillStyle = 'rgba(255,225,150,0.55)'; this.path.forEach(([i, j]) => { const [sx, sy] = this.screenOf(i + 0.5, j + 0.5); c.beginPath(); c.arc(sx, sy, ts * 0.1, 0, 7); c.fill() }) }
     this.drawHero(dx + 0.5, dy + 0.5, s.world.facing, true);
     c.restore();
-    const zone = s.world.y > 30 ? 'mote' : s.world.y < 13 ? 'snow' : s.world.x > 46 ? 'ember' : 'dust';
+    const biome = zoneAt(s.world.x, s.world.y).biome;
+    const zone = ({ noon: 'mote', snow: 'snow', aurora: 'snow', ash: 'ember', thorn: 'spore', deep: 'spore', swamp: 'spore', sea: 'drip', brass: 'ember' } as Record<string, string>)[biome] ?? 'dust';
     this.drawParticles(dt, zone, 0.7);
     this.vignette(0.55);
     this.sanityFx(s);
-    if (obj) this.compass(obj.pos);
+    const lead = objs.find(o => o.kind === 'main') ?? objs[0];
+    if (lead) this.compass(lead.pos);
   }
 
   private compass(target: [number, number]) {
@@ -455,14 +487,14 @@ export class MapView {
       case 'enemy': {
         const def = ENEMY_MAP.get(e.enemy!)!;
         const elite = e.rank === 'elite';
-        this.token(def.icon, sx, sy + bob, ts * (elite ? 0.98 : 0.86), { bg: 'rgba(26,6,6,0.92)', ring: elite ? '#b07af0' : '#d8483a', glow: elite ? 'rgba(176,122,240,0.9)' : 'rgba(255,60,40,0.65)', color: elite ? '#e6d2ff' : '#ffd8cc', pulse: e.awake ? 0.06 : 0.0, alpha: a });
+        this.foeToken(def, elite ? 'elite' : 'normal', sx, sy + bob, ts * (elite ? 1.0 : 0.9), { bg: 'rgba(26,6,6,0.92)', ring: elite ? '#b07af0' : '#d8483a', glow: elite ? 'rgba(176,122,240,0.9)' : 'rgba(255,60,40,0.65)', pulse: e.awake ? 0.06 : 0.0, alpha: a });
         if (!e.awake) this.text('z', sx + ts * 0.36, sy - ts * 0.38 + Math.sin(this.time * 2 + e.id) * 2, 12, '#b8c4e8');
         else this.text('!', sx + ts * 0.36, sy - ts * 0.4, 13, '#ff8070');
         break;
       }
       case 'boss': {
         const def = ENEMY_MAP.get(e.enemy!)!;
-        this.token(def.icon, sx, sy + bob, ts * 1.28, { bg: 'rgba(30,20,4,0.94)', ring: '#f0b850', glow: 'rgba(255,190,70,0.95)', color: '#ffe8b0', pulse: 0.07, alpha: a });
+        this.foeToken(def, 'boss', sx, sy + bob, ts * 1.3, { bg: 'rgba(30,20,4,0.94)', ring: '#f0b850', glow: 'rgba(255,190,70,0.95)', pulse: 0.07, alpha: a });
         break;
       }
       case 'chest': this.token(e.done ? 'chest_open' : 'chest', sx, sy, ts * 0.72, { bg: 'rgba(30,20,8,0.9)', ring: e.done ? '#6a5a40' : '#f0c060', glow: e.done ? undefined : 'rgba(255,200,90,0.75)', color: e.done ? '#8a7a5a' : '#ffe0a0', alpha: a, pulse: e.done ? 0 : 0.05 }); break;
@@ -519,14 +551,14 @@ export function drawFullMap(cv: HTMLCanvasElement, s: GameState, time: number): 
   c.fillStyle = '#050506';
   c.fillRect(0, 0, W, H);
   const wm = getWorld();
-  const MC: Record<string, string> = { p: '#46583a', f: '#2e4a34', F: '#3a2c26', a: '#4a3f36', h: '#5a5440', b: '#6e654c', n: '#c4d0dc', x: '#38493c', c: '#54401f', w: '#173a4c', r: '#b09a68', B: '#8a6a3a', M: '#5a5a66', N: '#e0e8f0', O: '#a09a7c', Z: '#4a3a10', G: '#c03028', H: '#8a3a8a' };
+  const MC: Record<string, string> = { p: '#46583a', f: '#2e4a34', F: '#3a2c26', a: '#4a3f36', h: '#5a5440', b: '#6e654c', n: '#c4d0dc', x: '#38493c', c: '#54401f', w: '#173a4c', r: '#b09a68', B: '#8a6a3a', M: '#5a5a66', N: '#e0e8f0', O: '#a09a7c', Z: '#4a3a10', G: '#c03028', H: '#8a3a8a', s: '#9a7e4a', y: '#6a3a52', K: '#1f3a22', u: '#4a3c28', i: '#a8c4d8', l: '#1a3a40', e: '#6a5a3a' };
   for (let j = 0; j < MAP_H; j++) for (let i = 0; i < MAP_W; i++) {
     const ex = isExplored(s, i, j);
     c.fillStyle = ex ? MC[wm.tiles[worldIdx(i, j)]] ?? '#333' : '#0b0c0f';
     c.fillRect(ox + i * scale, oy + j * scale, scale + 0.6, scale + 0.6);
   }
   const hits: MapHit[] = [];
-  const obj = objectiveTarget(s);
+  const objs = objectiveTargets(s);
   const icon = (name: string, cx: number, cy: number, sz: number, color: string) => {
     const p = iconPath(name);
     if (!p) return;
@@ -547,9 +579,9 @@ export function drawFullMap(cv: HTMLCanvasElement, s: GameState, time: number): 
     }
     hits.push({ id: poi.id, kind: poi.kind, x: cx, y: cy });
   });
-  if (obj) {
+  for (const obj of objs) {
     const cx = ox + (obj.pos[0] + 0.5) * scale, cy = oy + (obj.pos[1] + 0.5) * scale;
-    c.strokeStyle = `rgba(255,215,110,${0.6 + Math.sin(time * 4) * 0.3})`; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy, scale * (1.8 + Math.sin(time * 3) * 0.3), 0, 7); c.stroke();
+    c.strokeStyle = obj.kind === 'main' ? `rgba(255,215,110,${0.6 + Math.sin(time * 4) * 0.3})` : `rgba(122,255,208,${0.6 + Math.sin(time * 4) * 0.3})`; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy, scale * (1.8 + Math.sin(time * 3) * 0.3), 0, 7); c.stroke();
   }
   const px = ox + (s.world.x + 0.5) * scale, py = oy + (s.world.y + 0.5) * scale;
   c.fillStyle = 'rgba(255,220,140,0.3)'; c.beginPath(); c.arc(px, py, scale * (1.6 + Math.sin(time * 5) * 0.3), 0, 7); c.fill();

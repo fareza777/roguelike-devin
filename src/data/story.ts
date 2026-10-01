@@ -1,14 +1,16 @@
+import { PACKS } from './regions';
 import type { ActDef, MainStep, Speaker } from '../types';
 
 export const ACTS: ActDef[] = [
-  { id: 0, title: 'Prologue · The Final City', blurb: 'A key, a captain, and a road south.' },
-  { id: 1, title: 'Act I · The Drowned Bell', blurb: 'Saltmere tolls for those who never came back.' },
-  { id: 2, title: 'Act II · A Forest That Remembers', blurb: 'Ashwood burns, and the fire has a leash.' },
-  { id: 3, title: 'Act III · Marrow and Stone', blurb: 'Beneath the quarry, a Titan’s bones and a Titan’s light.' },
-  { id: 4, title: 'Act IV · The Southward Army', blurb: 'Sixty years in the snow, waiting for a command.' },
-  { id: 5, title: 'Act V · The Blind Seer', blurb: 'Veyrgard falls dark. Ilse shows her face.' },
-  { id: 6, title: 'Act VI · The City That Never Set', blurb: 'Solenne is dreaming. The dream must end.' },
-  { id: 7, title: 'Act VII · Behind Noon', blurb: 'The throne is waiting. It has your face.' },
+  { id: 0, title: 'Prologue · The Final City', blurb: 'A key, a captain, and a road south.', part: 1 },
+  { id: 1, title: 'Act I · The Drowned Bell', blurb: 'Saltmere tolls for those who never came back.', part: 1 },
+  { id: 2, title: 'Act II · A Forest That Remembers', blurb: 'Ashwood burns, and the fire has a leash.', part: 1 },
+  { id: 3, title: 'Act III · Marrow and Stone', blurb: 'Beneath the quarry, a Titan’s bones and a Titan’s light.', part: 1 },
+  { id: 4, title: 'Act IV · The Southward Army', blurb: 'Sixty years in the snow, waiting for a command.', part: 1 },
+  { id: 5, title: 'Act V · The Blind Seer', blurb: 'Veyrgard falls dark. Ilse shows her face.', part: 1 },
+  { id: 6, title: 'Part II · The Six Crowns', blurb: 'Six Regents ruled and failed. Each left a crown in the ruin of their realm.', part: 2 },
+  { id: 7, title: 'Act VII · The City That Never Set', blurb: 'Solenne is dreaming. The dream must end.', part: 3 },
+  { id: 8, title: 'Act VIII · Behind Noon', blurb: 'The throne is waiting. It has your face.', part: 3 },
 ];
 
 const m = (id: string, act: number, title: string, obj: string, text: string, at?: string): MainStep => ({ id, act, title, obj, text, at });
@@ -34,17 +36,20 @@ export const MAIN: MainStep[] = [
   m('m18', 5, 'The Lanterns Fail', 'Return to Veyrgard. The city is under siege.', 'With four Wardens gone, the lanterns of Veyrgard gutter. The Dreadmarch is at the gates.', 'veyrgard'),
   m('m19', 5, 'What the Archivist Found', 'Speak with Archivist Pell at the Collegium.', 'The siege is broken, for now. Pell has been waiting for you with a map he is afraid to show.', 'veyrgard'),
   m('m20', 5, 'The Blind Seer’s Face', 'Confront Seer Ilse in the Lantern Hall.', 'You know enough now. It is time to ask her the only question that matters.', 'veyrgard'),
-  m('m21', 6, 'South of Noon', 'Travel to Solenne, the city that never set.', 'The mist south of Veyrgard has parted. Solenne is waiting, and it has been waiting for a very long time.', 'solenne'),
-  m('m22', 6, 'The Looping City', 'Speak with Lady Aurelia Sol, Steward of the Noon Court.', 'The people of Solenne are frozen in the ninth day of noon. Their Steward will explain, politely, for the ninth-thousandth time.', 'solenne'),
-  m('m23', 6, 'The Fifth Seal', 'Enter the Undercity of Noon and face the Herald.', 'Beneath Solenne waits the fifth seal, and the one who has announced the King for sixty years.', 'undercity'),
-  m('m24', 6, 'The Open Gate', 'Return to Lady Aurelia in Solenne.', 'The Herald has fallen. Time in Solenne is beginning to move.', 'solenne'),
-  m('m25', 7, 'The Black Meridian', 'Enter the Black Meridian and face the King Behind Noon.', 'The road to the wound is open. Everything you have learned will be tested by the throne.', 'meridian'),
-  m('m26', 7, 'What Morning Means', 'Decide what morning means.', 'The King is on his knees. The throne is empty. Someone must decide.', 'meridian'),
-  m('m27', 7, 'Epilogue', 'The chronicle is complete. Roam freely, finish your contracts, or begin another chronicle.', 'The story is told. The world goes on.', 'veyrgard'),
+  { id: 'r00', act: 6, title: 'The Six Regalia', obj: 'Recover the Regalia of the six fallen Regents.', text: 'Ilse has named six realms where a Regent ruled, and failed, and left a crown behind. Brasshaven, Mirewick, Tidewatch, Cogspire, Skerrig and Lumen Hollow each hold a thread of the story.', goal: { type: 'regalia', count: 6, label: 'Recover the six Regalia' }, done: 's_regalia_all' },
+  m('r01', 6, 'The Crowns Return', 'Return to Seer Ilse in Veyrgard.', 'You carry the six Regalia. Ilse will want to see them, and you will want to see her face when she does.', 'veyrgard'),
+  m('m21', 7, 'South of Noon', 'Travel to Solenne, the city that never set.', 'The mist south of Veyrgard has parted. Solenne is waiting, and it has been waiting for a very long time.', 'solenne'),
+  m('m22', 7, 'The Looping City', 'Speak with Lady Aurelia Sol, Steward of the Noon Court.', 'The people of Solenne are frozen in the ninth day of noon. Their Steward will explain, politely, for the ninth-thousandth time.', 'solenne'),
+  m('m23', 7, 'The Fifth Seal', 'Enter the Undercity of Noon and face the Herald.', 'Beneath Solenne waits the fifth seal, and the one who has announced the King for sixty years.', 'undercity'),
+  m('m24', 7, 'The Open Gate', 'Return to Lady Aurelia in Solenne.', 'The Herald has fallen. Time in Solenne is beginning to move.', 'solenne'),
+  m('m25', 8, 'The Black Meridian', 'Enter the Black Meridian and face the King Behind Noon.', 'The road to the wound is open. Everything you have learned will be tested by the throne.', 'meridian'),
+  m('m26', 8, 'What Morning Means', 'Decide what morning means.', 'The King is on his knees. The throne is empty. Someone must decide.', 'meridian'),
+  m('m27', 8, 'Epilogue', 'The chronicle is complete. Roam freely, finish your contracts, or begin another chronicle.', 'The story is told. The world goes on.', 'veyrgard'),
 ];
 export const MAIN_INDEX = new Map(MAIN.map((x, i) => [x.id, i]));
 
 export const SPEAKERS: Record<string, Speaker> = {
+  ...Object.assign({}, ...PACKS.map(p => p.speakers)),
   narrator: { name: '', icon: 'eclipse' },
   you: { name: '{name}', icon: 'hero', color: '#e7c98f' },
   ilse: { name: 'Seer Ilse', title: 'The Blind Seer', icon: 'e_seer', color: '#f0d8a8' },
@@ -73,6 +78,11 @@ export const SPEAKERS: Record<string, Speaker> = {
 };
 
 export const ENDINGS: Record<string, { title: string; icon: string; text: string; epilogue: string }> = {
+  common: {
+    title: 'THE COMMON DAWN', icon: 'sun',
+    text: 'You wear all six crowns at once. They do not weigh. They listen. You hold Ilse’s hand and the King’s, and you ask the Morning her question first. She answers. It is not a word. It is a color nobody has seen, and then everyone has.',
+    epilogue: 'Dawn comes slowly, and it comes for everyone: the glass of the Wastes goes clear, the thorns of Mirewick bloom, the tides turn, the clocks of Cogspire stop to listen, the aurora folds into a plain pale sky, and the Underdeep learns the word for light. Veyrgard’s lanterns are carried out into the street and left burning in daylight, because nobody wants to be the one to put them out. Somewhere, a child asks what to do now. Nobody has an order for her. It turns out that is the whole point.',
+  },
   crown: {
     title: 'THE NEW NOON', icon: 'crown',
     text: 'You sit. The throne is warm, and the Morning stirs beneath you like a great animal deciding whether to trust your hand. You murmur the first word that comes to you: morning. And morning obeys.',

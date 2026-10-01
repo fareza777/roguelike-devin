@@ -160,6 +160,8 @@ export function travelCost(s: GameState, townId: string) {
 export function canFastTravel(s: GameState, townId: string) {
   if (!s.world.visited.includes(townId) || (s.screen !== 'world' && s.screen !== 'map') || s.town === townId) return false;
   if (townId === 'solenne' && !gateOpen(s, 'G')) return false;
+  // islands are reached by ferry only, and you cannot walk off one
+  if (TOWN_MAP.get(townId)?.ferryOnly || zoneAt(s.world.x, s.world.y).biome === 'sea') return false;
   return travelCost(s, townId).supplies <= s.supplies;
 }
 

@@ -61,7 +61,7 @@ export function acceptQuest(s: GameState, id: string, silent = false): boolean {
   return true;
 }
 
-export type QEvent = { type: 'kill'; enemy: string; tags: string[] } | { type: 'elite' } | { type: 'clear'; id: string } | { type: 'events' } | { type: 'lore' } | { type: 'level' } | { type: 'reach'; id: string } | { type: 'talk'; id: string } | { type: 'fetch' };
+export type QEvent = { type: 'kill'; enemy: string; tags: string[] } | { type: 'elite' } | { type: 'clear'; id: string } | { type: 'events' } | { type: 'lore' } | { type: 'level' } | { type: 'reach'; id: string } | { type: 'talk'; id: string } | { type: 'fetch' } | { type: 'regalia' };
 
 /** 1 when the event advances this goal by one step, 0 otherwise (level goals are handled separately). */
 function goalHit(g: QuestGoal, ev: QEvent): number {
@@ -81,6 +81,7 @@ function goalHit(g: QuestGoal, ev: QEvent): number {
 function trackGoal(s: GameState, key: string, g: QuestGoal, ev: QEvent): boolean {
   const cur = s.flags[key] ?? 0;
   if (g.type === 'level') { s.flags[key] = Math.min(g.count, s.level); return s.level >= g.count }
+  if (g.type === 'regalia') { s.flags[key] = Math.min(g.count, regaliaCount(s)); return regaliaCount(s) >= g.count }
   const next = Math.min(g.count, cur + goalHit(g, ev));
   s.flags[key] = next;
   return next >= g.count;

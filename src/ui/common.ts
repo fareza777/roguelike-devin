@@ -5,7 +5,7 @@ import type { Bonus, GameState, ItemDef, Screen, Slot, Status } from '../types';
 
 export interface UI {
   creationStep: number; introPanel: number; onboardStep: number; prevScreen: Screen;
-  charTab: 'attributes' | 'talents' | 'skills'; journalTab: 'story' | 'contracts' | 'lore' | 'bestiary' | 'atlas' | 'endings';
+  charTab: 'attributes' | 'talents' | 'skills' | 'path'; journalTab: 'story' | 'crowns' | 'contracts' | 'lore' | 'bestiary' | 'atlas' | 'endings';
   shopTab: 'buy' | 'sell'; shopCat: 'all' | 'weapon' | 'armor' | 'trinket' | 'consumable' | 'junk';
   invFilter: 'all' | 'gear' | 'consumable' | 'junk'; sheet: { id: string; from: 'bag' | 'equip' | 'shop'; slot?: Slot } | null;
   mapSel: string | null; confirmDelete: boolean; toast: string | null; fxSeq: number; logSeq: number; tavernText: string | null; confirmLeave: boolean;

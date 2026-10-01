@@ -1,3 +1,4 @@
+import { PACKS } from './regions';
 import type { Cond, DChoice, DNode, Eff, SceneDef } from '../types';
 
 const flag = (k: string, v = 1): Eff => ({ t: 'flag', k, v });
@@ -20,7 +21,7 @@ type Extra = Partial<Omit<DNode, 'who' | 'text'>>;
 type Spec = [who: string, text: string, extra?: Extra];
 const sc = (id: string, art: string, specs: Spec[]): SceneDef => ({ id, art, nodes: specs.map(([who, text, x], i) => ({ id: x?.id ?? String(i), who, text, ...x })) });
 
-export const SCENES: SceneDef[] = [
+const CORE_SCENES: SceneDef[] = [
   sc('s_ilse_intro', 'lantern_hall', [
     ['narrator', 'The Lantern Hall is warm the way a mouth is warm. Lanterns gutter along the hall. On the dais an old woman in white sits with her back very straight, and where her eyes should be there is a strip of black silk.'],
     ['ilse', '“You are late, Wayfarer. Or I am early. Time has been unreliable since the sun died.”'],
@@ -289,7 +290,7 @@ export const SCENES: SceneDef[] = [
     ['ilse', '“The Meridian fails. The sky closes over Veyrgard like a lid. You will have chosen it. I will not blame you. I will be unable to watch.”', { id: '8', next: '11' }],
     ['ilse', '“Volunteers. Sentenced volunteers. They served, and they were rewarded with the only kind of death that I could afford them.”', { id: '9', next: '11' }],
     ['ilse', 'For one moment, the light in her sockets flickers, and something young looks out. “She is a child, Wayfarer. A child who has been asleep for three hundred years. I do not wish to wake her. It would hurt too much.”', { id: '10', next: '11' }],
-    ['ilse', '“The fifth seal is beneath Solenne. Break it, and the way opens. The mist will part for you now.” She lifts one hand, and somewhere in the south, a golden wall shudders. “One more thing, child. Whatever you decide, I love you. I do not lie about that.”', { id: '11', eff: [unlock('solenne'), main('m21'), xpL(0.5), san(-5)] }],
+    ['ilse', '“Before the fifth seal, the crowns. Six Regents ruled and failed, before me and after, and each left a Regalia in the ruin of their realm: a lens, a scepter, a compass, a key, a mantle, a ring. The throne divides whoever sits it. The Regalia, worn together, hold a person in one piece.” She lifts one hand, and across the map, six small lights wake. “Go. Take your time. Time is the only thing I have left to give you. One more thing, child. Whatever you decide, I love you. I do not lie about that.”', { id: '11', eff: [unlock('brasshaven'), unlock('mirewick'), unlock('tidewatch'), unlock('cogspire'), unlock('skerrig'), unlock('lumenhollow'), main('r00'), xpL(0.5), san(-5)] }],
   ]),
 
   sc('s_solenne_arrive', 'solenne', [
@@ -352,10 +353,13 @@ export const SCENES: SceneDef[] = [
     ['narrator', 'The throne waits. The Morning hums. Your friends’ hands and your enemies’ hands are all held out toward you. There are only five things you can do.', { id: 'choice', choices: [
       ch('Sit upon the throne, and rule as Regent.', undefined, { eff: [end('crown')] }),
       ch('Take Ilse’s hand and the King’s. Rule together.', undefined, { cond: { corruption: 4, not: 'leash_cut' }, eff: [end('pact')] }),
+      ch('Wear all six crowns and ask the Morning to decide with you.', 's_common', { cond: { regalia: 6, all: ['mercy_widow', 'mercy_hart', 'mercy_grist', 'mercy_vhal'] } }),
       ch('Shatter the eclipse.', 's_shatter'),
       ch('Ask the Morning what she wants. Free her.', 's_free', { cond: { all: ['mercy_widow', 'mercy_hart', 'mercy_grist', 'mercy_vhal'] } }),
       ch('Turn your back. Walk home.', undefined, { eff: [end('return')] })] }],
     ['ilse', '“Child. Don’t.” The light in her sockets flares white. “I will stop you. I love you. I will stop you.”', { id: 's_shatter', eff: [fight('ilse', [end('shatter')], 'boss')] }],
+    ['narrator', 'You set the six Regalia on yourself one by one: the Lens-Crown, the Sickle-Scepter, the Tide-Compass, the Hour-Key, the Frost-Mantle, the Ledger-Ring. They do not weigh. They listen. Behind you, in the doorway, four people you mercy-buried stand without stirring, because you asked them to be here.', { id: 's_common', next: 's_common2' }],
+    ['ilse', '“You are not supposed to be able to do this,” she says, and her voice has never sounded so young. “Nobody can hold that much of what we were.” The pale light in her sockets goes out, and her eyes are only eyes, brown, and wet. “Decide with her. Please. Ask her first.”', { id: 's_common2', eff: [end('common')] }],
     ['narrator', 'You kneel, place your palms on the cold arms of the throne, and, for the first time in three hundred years, somebody asks. A very small voice, deep under everything, says: “Let me go.”', { id: 's_free', next: 's_free2' }],
     ['ilse', '“NO.” It is the only time she has raised her voice. “Not after everything! I will not lose you both!”', { id: 's_free2', eff: [fight('ilse', [end('dawn')], 'boss')] }],
   ]),
@@ -363,6 +367,19 @@ export const SCENES: SceneDef[] = [
   sc('s_ilse_end', 'lantern_hall', [
     ['ilse', '“It is done, Wayfarer. Whatever you chose, it is done. Sit with me a moment. I have not spoken to anyone in a very long time who was not afraid.”'],
     ['ilse', '“I was not always what you saw. Once I was a girl who wanted very much to be kind. Somewhere in the second century, I forgot how. I hope you remember.”'],
+  ]),
+
+  sc('s_regalia_all', 'lantern_hall', [
+    ['narrator', 'The sixth Regalia settles into your pack with a sound like a closing door. Across the map, six old lights go out at once. In Veyrgard, a blind woman sits very still in a hall of lanterns and says, to no one, “Oh. There you are.”'],
+  ]),
+  sc('s_ilse_hint', 'lantern_hall', [
+    ['ilse', '“Six crowns,” Ilse says, “and six places to find them. The Lens-Queen waits in the glass wastes east of Emberhollow. The Gardener tends a hedge that eats roads, beyond Brasshaven to the south. Captain Corall keeps the tides from a ship that will not sink; take the ferry from Saltmere. The Clockwright winds a city made of hours, far south-east. The Winter Queen has not moved in three hundred years, beyond the Frozen North. And in the Underdeep, below the bone country, the Archivist keeps a ledger with your name in it.”'],
+    ['ilse', '“Do them in any order you can survive. The Glasswastes first, if you are wise. The Underdeep last, if you are sensible.”'],
+  ]),
+  sc('s_ilse_crowns', 'lantern_hall', [
+    ['narrator', 'You lay the six Regalia on the dais, one by one. The Lens-Crown. The Sickle-Scepter. The Tide-Compass. The Hour-Key. The Frost-Mantle. The Ledger-Ring. The Lantern Hall holds its breath.'],
+    ['ilse', '“Eleven of us sat that throne,” Ilse says softly. “Only six left a crown behind. The others were not so careful, or so lucky.” She runs a thumb along the Lens-Crown, and the light behind the silk shivers. “You have done what I could not. You have done what I never asked anyone to do. I am so proud of you that I am afraid.”'],
+    ['ilse', '“The mist south of Veyrgard has parted. The fifth seal is beneath Solenne. Go. Take every crown with you. If the Meridian wants you divided, it will find you harder than it hoped.”', { eff: [unlock('solenne'), main('m21'), xpL(0.6), gold(1000)] }],
   ]),
 
   sc('g_widow', 'bellhouse', [
@@ -395,4 +412,5 @@ export const SCENES: SceneDef[] = [
   ]),
 ];
 
+export const SCENES: SceneDef[] = [...CORE_SCENES, ...PACKS.flatMap(p => p.scenes)];
 export const SCENE_MAP = new Map(SCENES.map(s => [s.id, s]));

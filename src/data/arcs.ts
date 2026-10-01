@@ -1,6 +1,6 @@
 import type { ArcDef } from '../types';
+import { PACKS } from './regions';
 
 /** Region arcs (the Regalia hunt). Filled by the region packs in ./regions. */
-export const ARCS: ArcDef[] = [];
-export const ARC_MAP = new Map<string, ArcDef>();
-export const registerArcs = (list: ArcDef[]) => { list.forEach(a => { ARCS.push(a); ARC_MAP.set(a.id, a) }) };
+export const ARCS: ArcDef[] = PACKS.map(p => p.arc);
+export const ARC_MAP = new Map<string, ArcDef>(ARCS.map(a => [a.id, a]));

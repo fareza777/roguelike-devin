@@ -1,3 +1,4 @@
+import { PACKS } from './regions';
 import type { Choice, Eff, Stat, StoryEvent } from '../types';
 
 const gr = (lo: number, hi: number): Eff => ({ t: 'goldR', lo, hi });
@@ -22,7 +23,7 @@ const c = (label: string, text: string, eff: Eff[], o: Partial<Choice> = {}): Ch
 const ck = (stat: Stat, dc?: number) => ({ stat, dc });
 const E = (id: string, title: string, icon: string, tags: string, text: string, choices: Choice[]): StoryEvent => ({ id, title, icon, text, tags: tags.split(' '), choices });
 
-export const EVENTS: StoryEvent[] = [
+const CORE_EVENTS: StoryEvent[] = [
   E('well', 'The Well That Knows You', 'well', 'crypt any', 'At a junction drowned ankle-deep, a stone well whispers your childhood name. A silver coin spins on its black surface without sinking.', [
     c('Take the coin', 'Reach into the water.', [gr(20, 36), rand(0.3, [san(-4), log('Something in the water grips your wrist.', 'bad')])]),
     c('Answer the voice', 'Tell it who you have become.', [san(10), xp(0.15), log('Your resolve hardens.', 'good')], { check: ck('will'), fail: [san(-6), log('The voice laughs inside you.', 'bad')] }),
@@ -220,4 +221,5 @@ export const LANDMARK_EVENTS: StoryEvent[] = [
     c('Leave it be', 'It belongs to Solenne.', leave)]),
 ];
 
+export const EVENTS: StoryEvent[] = [...CORE_EVENTS, ...PACKS.flatMap(p => p.events)];
 export const EVENT_MAP = new Map([...EVENTS, ...LANDMARK_EVENTS].map(e => [e.id, e]));

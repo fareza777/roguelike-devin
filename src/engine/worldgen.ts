@@ -1,4 +1,5 @@
 import { DUNGEONS, GATE_MERIDIAN, GATE_SOLENNE, LANDMARKS, MAP_H, MAP_W, TOWNS, ZONES } from '../data/world';
+import { PACKS } from '../data/regions';
 import { hash2 } from '../rng';
 
 export interface Poi { kind: 'town' | 'dungeon' | 'landmark'; id: string }
@@ -20,9 +21,9 @@ function vnoise(x: number, y: number, seed: number) {
 const fbm = (x: number, y: number, seed: number) => vnoise(x / 4, y / 4, seed) * 0.55 + vnoise(x / 2, y / 2, seed + 7) * 0.3 + vnoise(x, y, seed + 13) * 0.15;
 
 export const IMPASSABLE = new Set(['w', 'M', 'N', 'O', 'Z']);
-export const COST: Record<string, number> = { r: 0.4, B: 0.6, p: 1, a: 1.2, f: 2, F: 2.2, h: 1.6, b: 1.3, n: 1.6, x: 2.4, c: 1.5, w: 14, M: 30, N: 30, O: 30, G: 1, H: 1 };
-export const ENC: Record<string, number> = { r: 0.25, B: 0.25, p: 1, a: 1.3, f: 1.4, F: 1.6, h: 1.1, b: 1.3, n: 1.4, x: 1.7, c: 1.9 };
-export const TERRAIN_NAME: Record<string, string> = { r: 'Road', B: 'Bridge', p: 'Plains', a: 'Ashen Fields', f: 'Forest', F: 'Ash Forest', h: 'Hills', b: 'Bone Badlands', n: 'Snowfield', x: 'Marsh', c: 'Scorched Ground', w: 'Water', M: 'Mountains', N: 'Ice Peaks', O: 'Bone Ridge', Z: 'Noon Mist', G: 'Sealed Gate', H: 'Sealed Gate' };
+export const COST: Record<string, number> = { r: 0.4, B: 0.6, p: 1, a: 1.2, f: 2, F: 2.2, h: 1.6, b: 1.3, n: 1.6, x: 2.4, c: 1.5, w: 14, M: 30, N: 30, O: 30, G: 1, H: 1, s: 1.3, y: 1.7, K: 2.2, u: 1, i: 1.4, l: 1.3, e: 1.1 };
+export const ENC: Record<string, number> = { r: 0.25, B: 0.25, p: 1, a: 1.3, f: 1.4, F: 1.6, h: 1.1, b: 1.3, n: 1.4, x: 1.7, c: 1.9, s: 1.3, y: 1.8, K: 1.8, u: 1.2, i: 1.5, l: 1.5, e: 1.2 };
+export const TERRAIN_NAME: Record<string, string> = { r: 'Road', B: 'Bridge', p: 'Plains', a: 'Ashen Fields', f: 'Forest', F: 'Ash Forest', h: 'Hills', b: 'Bone Badlands', n: 'Snowfield', x: 'Marsh', c: 'Scorched Ground', w: 'Water', M: 'Mountains', N: 'Ice Peaks', O: 'Bone Ridge', Z: 'Noon Mist', G: 'Sealed Gate', H: 'Sealed Gate', s: 'Dune Sand', y: 'Glass Shards', K: 'Thornwood', u: 'Brass Plain', i: 'Aurora Ice', l: 'Glow-Cave Floor', e: 'Tarnished Earth' };
 
 function biomeAt(x: number, y: number): string {
   let best = ZONES[0], bd = Infinity;
@@ -42,7 +43,13 @@ function baseTerrain(x: number, y: number): string {
     case 'ash': return n > 0.4 ? 'F' : 'a';
     case 'bone': return n2 > 0.8 ? 'O' : n > 0.66 ? 'h' : 'b';
     case 'snow': return n2 > 0.72 ? 'N' : 'n';
-    case 'noon': return 'c';
+    case 'noon': return y > 47 ? 'w' : 'c';
+    case 'sand': return n2 > 0.74 ? 'y' : n > 0.66 ? 'h' : 's';
+    case 'thorn': return n2 > 0.7 ? 'f' : n > 0.8 ? 'x' : 'K';
+    case 'sea': return 'w';
+    case 'aurora': return n2 > 0.76 ? 'N' : n > 0.5 ? 'i' : 'n';
+    case 'brass': return n2 > 0.78 ? 'h' : n > 0.66 ? 'e' : 'u';
+    case 'deep': return n2 > 0.8 ? 'M' : 'l';
     default: return 'p';
   }
 }
@@ -96,6 +103,15 @@ function build(): WorldMap {
   for (let x = 20; x <= 44; x++) tiles[idx(x, 33)] = 'Z';
   for (let y = 33; y < H; y++) { tiles[idx(20, y)] = 'Z'; tiles[idx(44, y)] = 'Z' }
   for (let x = 21; x <= 43; x++) tiles[idx(x, 42)] = 'Z';
+  for (let x = 20; x <= 44; x++) tiles[idx(x, 48)] = 'Z';
+  for (let y = 42; y <= 48; y++) { tiles[idx(20, y)] = 'Z'; tiles[idx(44, y)] = 'Z' }
+  for (const z of ZONES) for (const isl of z.islands ?? []) {
+    for (let y = Math.floor(isl.at[1] - isl.r - 2); y <= Math.ceil(isl.at[1] + isl.r + 2); y++) for (let x = Math.floor(isl.at[0] - isl.r - 2); x <= Math.ceil(isl.at[0] + isl.r + 2); x++) {
+      if (!inb(x, y)) continue;
+      const d = Math.hypot((x - isl.at[0]) * 0.9, (y - isl.at[1]) * 1.15);
+      if (d < isl.r * (0.82 + fbm(x, y, 41) * 0.5)) tiles[idx(x, y)] = fbm(x + 9, y, 5) > 0.62 ? 'f' : fbm(x, y + 3, 6) > 0.55 ? 'p' : 's';
+    }
+  }
   tiles[idx(GATE_SOLENNE[0], GATE_SOLENNE[1])] = 'G';
   tiles[idx(GATE_MERIDIAN[0], GATE_MERIDIAN[1])] = 'H';
 
@@ -119,6 +135,7 @@ function build(): WorldMap {
 
   const pos = (id: string) => { const p = points.find(q => q.id === id)!; return idx(p.x, p.y) };
   const roadCost = (ch: string) => (ch === 'Z' ? Infinity : COST[ch] ?? 1);
+  const seaPoi = (id: string) => { const q = points.find(z => z.id === id)!; return ZONES.some(z => z.biome === 'sea' && z.islands?.some(i => Math.hypot(i.at[0] - q.x, i.at[1] - q.y) < i.r + 3)) };
   const links: [string, string][] = [
     ['veyrgard', 'lanternrest'], ['lanternrest', 'emberhollow'], ['veyrgard', 'hangedman'], ['hangedman', 'saltmere'], ['veyrgard', 'dunmarrow'],
     ['dunmarrow', 'gravemarrow'], ['veyrgard', 'frostgate'], ['frostgate', 'hollowreach'], ['veyrgard', 'solenne'], ['solenne', 'meridian'],
@@ -126,9 +143,11 @@ function build(): WorldMap {
     ['emberhollow', 'hearthcrypt'], ['gravemarrow', 'quarry'], ['hollowreach', 'pass'], ['emberhollow', 'archive'], ['gravemarrow', 'foundry'],
     ['hollowreach', 'barrows'], ['hollowreach', 'rimeglass'], ['wickhaven', 'seacaves'], ['gravemarrow', 'ribcage'], ['solenne', 'undercity'],
     ['emberhollow', 'hollowhill'],
+    ...PACKS.flatMap(pk => pk.links),
   ];
   links.forEach(([a, b]) => {
-    const path = astar(tiles, pos(a), pos(b), roadCost);
+    const dry = seaPoi(a) || seaPoi(b);
+    const path = astar(tiles, pos(a), pos(b), ch => (dry && ch === 'w' ? Infinity : roadCost(ch)));
     path.forEach(i => { const ch = tiles[i]; if (ch === 'w') tiles[i] = 'B'; else if (ch !== 'G' && ch !== 'H' && ch !== 'Z') tiles[i] = 'r' });
   });
 
@@ -148,7 +167,7 @@ function build(): WorldMap {
     }
   }
   points.forEach(p => {
-    if (reach[idx(p.x, p.y)]) return;
+    if (reach[idx(p.x, p.y)] || seaPoi(p.id)) return;
     const path = astar(tiles, idx(p.x, p.y), pos('veyrgard'), ch => (ch === 'Z' ? Infinity : ch === 'w' ? 12 : COST[ch] ?? 1));
     path.forEach(i => { const ch = tiles[i]; if (ch === 'w') tiles[i] = 'B'; else if (IMPASSABLE.has(ch) && ch !== 'Z') tiles[i] = 'r' });
   });
@@ -157,7 +176,7 @@ function build(): WorldMap {
 }
 
 function biomeGround(b: string): string {
-  return ({ plains: 'p', coast: 'p', swamp: 'x', ash: 'a', bone: 'b', snow: 'n', noon: 'c' } as Record<string, string>)[b] ?? 'p';
+  return ({ plains: 'p', coast: 'p', swamp: 'x', ash: 'a', bone: 'b', snow: 'n', noon: 'c', sand: 's', thorn: 'K', sea: 's', aurora: 'i', brass: 'u', deep: 'l' } as Record<string, string>)[b] ?? 'p';
 }
 
 let cache: WorldMap | null = null;

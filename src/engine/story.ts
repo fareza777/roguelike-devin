@@ -95,6 +95,7 @@ export function runEffects(s: GameState, effs: Eff[]): EffResult {
           if (item(`reg_${e.id}`)) { addItem(s, `reg_${e.id}`); r.items.push(`reg_${e.id}`) }
           note(`Regalia recovered${arc ? `: ${arc.title}` : ''}`);
           push(s, `Regalia recovered (${ARCS.filter(a => flag(s, `regalia_${a.regalia}`) > 0).length}/${ARCS.length})`, 'epic');
+          questEvent(s, { type: 'regalia' });
           break;
         }
         case 'recruit': if (!s.companions.includes(e.id)) { s.companions.push(e.id); s.flags[`comp_${e.id.toLowerCase()}`] = 1; note(`${e.id} joins you`); push(s, `${e.id} can now travel with you. Swap companions at any inn.`, 'epic') } break;

@@ -45,7 +45,7 @@ export function title(meta: Meta) {
         <div class="menu-row"><button class="btn" data-act="share">${icon('share')}Share</button><button class="btn" data-act="rate">${icon('star')}Rate</button></div>
       </div>
       ${hasLegacySave() ? '<p class="warn">A chronicle from an older version cannot be continued. Begin anew.</p>' : ''}
-      <p class="muted fine">Plays offline · Optional rewarded ads · No gacha${meta.endings.length ? ` · Endings found: ${meta.endings.length}/5` : ''}</p>
+      <p class="muted fine">Plays offline · Optional rewarded ads · No gacha${meta.endings.length ? ` · Endings found: ${meta.endings.length}/6` : ''}</p>
     </div></div>`;
 }
 

@@ -227,7 +227,7 @@ export const SCENES: Record<string, SceneSpec> = {
   },
 };
 
-const THEME_SCENE: Record<string, string> = { crypt: 'hearthcrypt', flooded: 'bellhouse', forest: 'ashwood', ember: 'hearthcrypt', bone: 'quarry', mine: 'foundry', ice: 'rimeglass', noon: 'undercity', cave: 'seacaves', ruin: 'heartland', swamp: 'hollowhill', archive: 'archive' };
+const THEME_SCENE: Record<string, string> = { glass: 'glasswastes', gear: 'orrery', thorn: 'thornwick', aurora: 'aurora', deep: 'underdeep', reef: 'tidewatch', crypt: 'hearthcrypt', flooded: 'bellhouse', forest: 'ashwood', ember: 'hearthcrypt', bone: 'quarry', mine: 'foundry', ice: 'rimeglass', noon: 'undercity', cave: 'seacaves', ruin: 'heartland', swamp: 'hollowhill', archive: 'archive' };
 const cache = new Map<string, SceneSpec>();
 /** Resolve an art key: a named preset, `dg:<theme>`, or fall back to the roadside. */
 export function sceneSpec(key: string): SceneSpec {
@@ -246,10 +246,11 @@ export function sceneSpec(key: string): SceneSpec {
   return spec;
 }
 /** Which backdrop an event gets, by its first matching tag. */
-export const EVENT_BG: Record<string, string> = { crypt: 'hearthcrypt', sea: 'bellhouse', flooded: 'bellhouse', forest: 'ashwood', fire: 'ashwood', bone: 'quarry', ice: 'pass', noon: 'solenne', swamp: 'hollowhill', mine: 'foundry', wild: 'heartland', any: 'heartland' };
+export const EVENT_BG: Record<string, string> = { sand: 'glasswastes', thorn: 'thornwick', brass: 'orrery', snow: 'pass', glass: 'glasswastes', gear: 'orrery', thorn: 'thornwick', aurora: 'aurora', deep: 'underdeep', reef: 'tidewatch', crypt: 'hearthcrypt', sea: 'bellhouse', flooded: 'bellhouse', forest: 'ashwood', fire: 'ashwood', bone: 'quarry', ice: 'pass', noon: 'solenne', swamp: 'hollowhill', mine: 'foundry', wild: 'heartland', any: 'heartland' };
 export function eventArtKey(tags: string[] | undefined, motif: string, art?: string): string {
   if (art) return art;
-  const bg = (tags ?? ['any']).map(t => EVENT_BG[t]).find(Boolean) ?? 'heartland';
+  const specific = (tags ?? []).filter(t => t !== 'wild' && t !== 'any');
+  const bg = specific.map(t => EVENT_BG[t]).find(Boolean) ?? (tags ?? ['any']).map(t => EVENT_BG[t]).find(Boolean) ?? 'heartland';
   const glow = SCENES[bg]?.sky.glow?.c ?? '#ffb860';
   return `ev:${motif}|${bg}|${glow}`;
 }

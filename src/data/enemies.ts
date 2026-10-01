@@ -1,10 +1,11 @@
+import { PACKS } from './regions';
 import type { EnemyDef, IntentKind as K, Role, Status } from '../types';
 
 const e = (id: string, name: string, icon: string, role: Role, tags: string, moves: K[], lore: string, o: Partial<EnemyDef> = {}): EnemyDef =>
   ({ id, name, icon, role, tags: tags.split(' ').filter(Boolean), moves, lore, ...o });
 const aff = (s: Status) => ({ afflict: s });
 
-export const ENEMIES: EnemyDef[] = [
+const CORE_ENEMIES: EnemyDef[] = [
   e('ratswarm', 'Cellar Rat Swarm', 'e_rat', 'swarm', 'beast', ['attack', 'attack', 'afflict'], 'A single, furious animal that happens to have four hundred mouths.', aff('poison')),
   e('bandit', 'Roadside Cutthroat', 'e_bandit', 'skirmisher', 'human', ['attack', 'attack', 'heavy'], 'Robs the dead first. It saves time.'),
   e('wolf', 'Starved Wolf', 'e_wolf', 'skirmisher', 'beast', ['attack', 'afflict', 'attack'], 'Grey ribs, gold eyes. It has learned that people are easier than deer.', aff('bleed')),
@@ -122,9 +123,11 @@ export const ENEMIES: EnemyDef[] = [
   e('nixraven', 'Nix, the Unlucky', 'e_raven', 'caster', 'beast elite', ['afflict', 'dread', 'attack', 'afflict'], 'Was a wayfarer once. Was a great many things once.', { ...aff('weak'), dread: 4 }),
 ];
 
+export const ENEMIES: EnemyDef[] = [...CORE_ENEMIES, ...PACKS.flatMap(p => p.enemies)];
 export const ENEMY_MAP = new Map(ENEMIES.map(x => [x.id, x]));
 
 export const BOSS_LOOT: Record<string, string[]> = {
+  ...Object.assign({}, ...PACKS.map(p => p.bossLoot)),
   oldsentinel: ['u_roe_sabre'], rookking: ['u_corvin_knife'], saltbeard: ['u_ysolde_compass'], widow: ['u_widow_staff', 'set_drowned_head'],
   huntsman: ['u_tamsin_ring'], hart: ['u_hart_blade', 'set_ember_body'], crone: ['u_last_candle'], unburntkeeper: ['u_briar'], grist: ['u_grist_scythe', 'set_marrow_body'],
   hollowtitan: ['set_marrow_hands'], moltenregent: ['u_dagna_hammer'], vhal: ['u_vhal_blade', 'set_frost_body'], barrowking: ['set_frost_head'],

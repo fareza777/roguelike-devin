@@ -5,7 +5,7 @@ import { areaLevel, clamp, clampVitals, hooks, pick, push, rand, scaleSan, stats
 import { BLOCKING_ENTS, WALKABLE, computeFov, genFloor } from './dungeongen';
 import { commit, enqueue } from './flow';
 import { addItem, goldFor, rollConsumable, rollGear } from './loot';
-import { questEvent, hasItem } from './quests';
+import { cond, questEvent, hasItem } from './quests';
 import { locationTriggers, openEvent, openEventById } from './story';
 
 export const STEPS_PER_SUPPLY = 14;
@@ -48,6 +48,7 @@ export function enterDungeon(s: GameState, id: string): boolean {
   const def = DUNGEON_MAP.get(id);
   if (!def) return false;
   if (def.gate && s.main < (MAIN_INDEX.get(def.gate) ?? 0)) { push(s, `${def.name} is sealed to you. The story has not led you here yet.`, 'bad'); return false }
+  if (def.cond && !cond(s, def.cond)) { push(s, `${def.name} is sealed to you. The story has not led you here yet.`, 'bad'); return false }
   const sigil = ['', 'blade', 'ward', 'eye'][s.flags.pending_sigil ?? 0] || null;
   s.flags.pending_sigil = 0;
   s.run = { dungeon: id, floor: 0, seed: rand(1, 1 << 30), px: 0, py: 0, floors: [], keys: 0, steps: 0, sigil, found: [], gold: 0, kills: 0, light: 0, torch: 0, bossDown: false, facing: 0 };

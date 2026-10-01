@@ -514,6 +514,7 @@ const handlers: [string, (v: string, el: HTMLElement) => void][] = [
   ['learn', v => { G.learn(s, v); play('quest'); render() }],
   ['loadout', v => { G.toggleLoadout(s, v); play('click'); render() }],
   ['companion', v => { G.swapCompanion(s, v); play('heal'); render() }],
+  ['ascend', v => { if (G.ascend(s, v)) { play('level'); toastMsg('You ascend. Something old turns over inside you.') } else play('error') }],
   ['rankup', v => { if (G.rankUp(s, v)) play('level'); else play('error'); render() }],
   ['sail', v => act(() => G.sail(s, v))],
   ['accept', v => { G.acceptQuest(s, v); play('quest'); render() }],

@@ -1,3 +1,4 @@
+import './regions';
 import { sceneSpec } from './catalog';
 import { creatureSpec, drawCreature } from './creatures';
 import { drawPersona, personaFor } from './figures';

@@ -1,10 +1,11 @@
+import { PACKS } from './regions';
 import type { QuestDef, QuestGoal } from '../types';
 
 const g = (type: QuestGoal['type'], count: number, label: string, target?: string): QuestGoal => ({ type, count, label, target });
 const q = (id: string, town: string, giver: string, title: string, text: string, goal: QuestGoal, reward: QuestDef['reward'], o: Partial<QuestDef> = {}): QuestDef =>
   ({ id, town, giver, title, text, goal, reward, ...o });
 
-export const QUESTS: QuestDef[] = [
+const CORE_QUESTS: QuestDef[] = [
   q('q_undercroft', 'veyrgard', 'Quartermaster Hollis', 'Clear the Undercroft', 'The watchtower’s dead have stopped standing down. Put the Last Sentinel to rest so the barracks can be used again.', g('clear', 1, 'Defeat the Last Sentinel', 'undercroft'), { gold: 90, xp: 70, items: ['tonic', 'tonic', 'a_body_heavy_0'] }),
   q('q_lore', 'veyrgard', 'Archivist Pell', 'Ink That Moves', 'Recover three fragments of lost lore for the Collegium. Pell does not care where you find them. He does care how quickly.', g('lore', 3, 'Recover lore fragments'), { gold: 100, xp: 80, items: ['vellum', 'u_glass_eye'] }),
   q('q_elite', 'veyrgard', 'Captain Roe', 'Bounty: Named Horrors', 'The Watch pays for the heads of named horrors. Slay three elite foes anywhere.', g('elites', 3, 'Slay elite foes'), { gold: 180, xp: 120, items: ['pitchbomb', 'pitchbomb', 'x_signet_1'] }),
@@ -51,4 +52,5 @@ export const QUESTS: QuestDef[] = [
   q('q_hanged', 'hangedman', 'Hangman Jo', 'Cutthroats on the Road', 'Bandits have been drinking on credit. Jo would prefer they didn’t. Eight of them.', g('kill', 8, 'Slay roadside cutthroats', 'bandit'), { gold: 100, xp: 80, items: ['w_dagger_1', 'tonic'] }),
 ];
 
+export const QUESTS: QuestDef[] = [...CORE_QUESTS, ...PACKS.flatMap(p => p.quests)];
 export const QUEST_MAP = new Map(QUESTS.map(x => [x.id, x]));

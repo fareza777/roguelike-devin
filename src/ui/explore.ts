@@ -234,7 +234,7 @@ export function mapScreen(s: GameState, ui: UI) {
       info = `<div class="mapinfo-in"><span class="mapi">${icon(t.kind === 'city' ? 'm_city' : 'm_town')}</span><div><h3>${esc(t.name)} <small>${esc(t.subtitle)}</small></h3><p>${esc(t.desc)}</p><small class="muted">${visited ? `Fast travel: ${c.supplies} supplies · ${c.days} day${c.days > 1 ? 's' : ''}` : 'Not yet visited. Walk there to unlock fast travel.'}</small></div>
         ${s.screen === 'map' && sel !== s.town ? `<button class="btn primary" data-travel="${sel}" ${can ? '' : 'disabled'}>Travel</button>` : ''}</div>`;
     } else if (d) {
-      const gated = d.gate && s.main < MAIN.findIndex(m => m.id === d.gate);
+      const gated = (d.gate && s.main < MAIN.findIndex(m => m.id === d.gate)) || (d.cond && !cond(s, d.cond));
       info = `<div class="mapinfo-in"><span class="mapi">${icon(d.icon ?? 'm_dungeon')}</span><div><h3>${esc(d.name)} <small>Lv ${d.lvl} · ${d.floors} floors</small></h3><p>${esc(d.desc)}</p><small class="muted">${s.cleared.includes(d.id) ? 'Warden defeated.' : gated ? 'Sealed until the story leads you here.' : `Boss: ${esc(d.boss)}`}</small></div></div>`;
     }
   }

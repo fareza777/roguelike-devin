@@ -12,6 +12,7 @@ export interface GenOpts { bossRespawn: boolean; secretItem?: string; mainCleare
 const THEME_TAGS: Record<string, string[]> = {
   crypt: ['crypt', 'any'], flooded: ['sea', 'crypt', 'any'], forest: ['forest', 'fire', 'any'], ember: ['fire', 'crypt', 'any'], bone: ['bone', 'any'],
   mine: ['bone', 'fire', 'any'], ice: ['ice', 'any'], noon: ['noon', 'any'], cave: ['any'], ruin: ['any'], swamp: ['swamp', 'any'], archive: ['fire', 'noon', 'crypt', 'any'],
+  glass: ['glass', 'noon', 'any'], gear: ['gear', 'any'], thorn: ['thorn', 'forest', 'any'], aurora: ['aurora', 'ice', 'any'], deep: ['deep', 'bone', 'any'], reef: ['reef', 'sea', 'any'],
 };
 export const eventPool = (theme: string) => EVENTS.filter(e => (e.tags ?? ['any']).some(t => (THEME_TAGS[theme] ?? ['any']).includes(t)));
 
