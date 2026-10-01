@@ -1,20 +1,38 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+// Builds src/data/icon-paths.ts from game-icons.net (CC BY 3.0) according to scripts/icons.manifest.json.
+// Usage: GAME_ICONS_DIR=/path/to/clone node scripts/fetch-icons.mjs   (git clone --depth 1 https://github.com/game-icons/icons)
+// Without GAME_ICONS_DIR the svgs are fetched over HTTPS (needs api.github.com + raw.githubusercontent.com).
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const manifest = JSON.parse(readFileSync(resolve(here, 'icons.manifest.json'), 'utf8'));
 const RAW = 'https://raw.githubusercontent.com/game-icons/icons/master/';
+const local = process.env.GAME_ICONS_DIR;
 
-const tree = await (await fetch('https://api.github.com/repos/game-icons/icons/git/trees/master?recursive=1')).json();
 const byName = new Map();
-for (const { path } of tree.tree) {
-  if (!path.endsWith('.svg')) continue;
+const note = (path) => {
+  if (!path.endsWith('.svg')) return;
   const base = path.split('/').pop().replace(/\.svg$/, '');
   const cur = byName.get(base);
   if (!cur || (cur.startsWith('badges/') && !path.startsWith('badges/'))) byName.set(base, path);
+};
+if (local) {
+  const walk = (dir, rel = '') => {
+    for (const f of readdirSync(dir)) {
+      if (f === '.git') continue;
+      const full = join(dir, f);
+      if (statSync(full).isDirectory()) walk(full, `${rel}${f}/`);
+      else note(`${rel}${f}`);
+    }
+  };
+  walk(local);
+} else {
+  const tree = await (await fetch('https://api.github.com/repos/game-icons/icons/git/trees/master?recursive=1')).json();
+  for (const { path } of tree.tree) note(path);
 }
 
+const pathsOf = (svg) => [...svg.matchAll(/<path[^>]*\sd="([^"]+)"/g)].map(m => m[1]).filter(d => !/^M0 0h512v512H0z/i.test(d)).join(' ');
 const out = {};
 const missing = [];
 const cache = new Map();
@@ -26,10 +44,9 @@ async function worker() {
     const path = byName.get(base);
     if (!path) { missing.push(`${alias} -> ${base}`); continue; }
     if (!cache.has(base)) {
-      cache.set(base, fetch(RAW + path).then(r => r.text()).then(svg => {
-        const ds = [...svg.matchAll(/<path[^>]*\sd="([^"]+)"/g)].map(m => m[1]).filter(d => !/^M0 0h512v512H0z/i.test(d));
-        return ds.join(' ');
-      }));
+      cache.set(base, local
+        ? Promise.resolve(pathsOf(readFileSync(join(local, path), 'utf8')))
+        : fetch(RAW + path).then(r => r.text()).then(pathsOf));
     }
     out[alias] = await cache.get(base);
   }

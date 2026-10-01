@@ -28,7 +28,21 @@ function ensure() {
 
 export type Sfx = 'click' | 'hit' | 'crit' | 'hurt' | 'heal' | 'level' | 'win' | 'death' | 'door' | 'step' | 'chest' | 'coin' | 'pickup' | 'trap' | 'stairs' | 'spell' | 'quest' | 'page' | 'bell' | 'enter' | 'error' | 'dodge' | 'equip' | 'buy';
 
+let audible = true;
+export function setAudible(on: boolean) {
+  if (on === audible) return;
+  audible = on;
+  if (!on) {
+    if (layer) { layer.stop(); layer = null }
+    if (ctx && ctx.state === 'running') void ctx.suspend();
+    return;
+  }
+  if (!ctx) return;
+  void ctx.resume().then(() => { if (started && enabled && mood !== 'off') apply() });
+}
+
 export function sfx(kind: Sfx) {
+  if (!audible) return;
   const c = ensure();
   const t = c.currentTime;
   const out = master!;
@@ -172,7 +186,7 @@ function startLayer(m: Exclude<Mood, 'off'>): Layer {
 }
 
 function apply() {
-  if (!started) return;
+  if (!started || !audible) return;
   if (layer) { layer.stop(); layer = null }
   if (enabled && mood !== 'off') layer = startLayer(mood);
 }

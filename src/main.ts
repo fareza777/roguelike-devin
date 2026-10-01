@@ -2,7 +2,9 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/screens.css';
 import './styles/game.css';
-import { sfx, setMood, setMusicEnabled, unlockAudio, type Mood, type Sfx } from './audio';
+import { cancelPendingAds, initAds, maybeInterstitial, onAdsChange, rewardedAvailable, setBanner, showPrivacyOptions, showRewarded } from './ads';
+import { canWatch, type RewardId } from './data/ads';
+import { setAudible, sfx, setMood, setMusicEnabled, unlockAudio, type Mood, type Sfx } from './audio';
 import { DUNGEON_MAP, MAP_H, MAP_W, TOWN_MAP } from './data/world';
 import * as G from './engine/game';
 import { WALKABLE } from './engine/dungeongen';
@@ -28,7 +30,7 @@ let toastTimer = 0;
 const ui: UI = {
   creationStep: 0, introPanel: 0, onboardStep: 0, prevScreen: 'title', charTab: 'attributes', journalTab: 'story', shopTab: 'buy', shopCat: 'all',
   invFilter: 'all', sheet: null, mapSel: null, confirmDelete: false, toast: null, fxSeq: 0, logSeq: 0, tavernText: null, confirmLeave: false,
-  smithTab: 'equipped', typed: '', enterNote: null,
+  smithTab: 'equipped', typed: '', enterNote: null, endSlide: 0,
 };
 const META_SCREENS: Screen[] = ['splash', 'intro', 'onboarding', 'title', 'settings', 'about', 'creation'];
 const FULL: Screen[] = ['splash', 'intro', 'onboarding', 'title', 'settings', 'about', 'creation', 'dialogue', 'event', 'reward', 'death', 'ending', 'combat'];
@@ -41,6 +43,12 @@ let fullInfo = { scale: 1, ox: 0, oy: 0 };
 let typedStarted = '';
 let typeTimer = 0;
 let autoTimer = 0;
+
+const adOk = (id: RewardId) => rewardedAvailable() && canWatch(s, id);
+const BANNER_SCREENS: Screen[] = ['town', 'world', 'dungeon', 'map', 'character', 'inventory', 'journal', 'shop', 'smithy', 'skills', 'board', 'inn', 'wardhouse'];
+let adBusy = false;
+const calm = () => !s.enemy && !s.scene && !s.event && !s.reward && (s.screen === 'town' || s.screen === 'world');
+const breakpoint = () => maybeInterstitial(s, calm);
 
 const current = (): Screen => (META_SCREENS.includes(screen) ? screen : s.screen);
 const persist = () => { if (s.name && s.origin && !(s.screen === 'death' && s.difficulty === 'Doomed')) G.save(s) };
@@ -72,7 +80,7 @@ function moodFor(cur: Screen): Mood {
   if (cur === 'combat') return 'combat';
   if (cur === 'death') return 'off';
   if (cur === 'ending') return 'noon';
-  if (cur === 'dungeon') { const t = s.run ? DUNGEON_MAP.get(s.run.dungeon)?.theme : ''; return t === 'noon' || t === 'sanctum' ? 'noon' : 'dungeon' }
+  if (cur === 'dungeon') { const t = s.run ? DUNGEON_MAP.get(s.run.dungeon)?.theme : ''; return t === 'noon' || t === 'archive' ? 'noon' : 'dungeon' }
   if (cur === 'world' || cur === 'map') return (s.world.y > 34 && G.gateOpen(s, 'G')) ? 'noon' : 'world';
   if (cur === 'dialogue' || cur === 'event' || cur === 'reward') return s.ret === 'dungeon' ? 'dungeon' : s.ret === 'world' ? 'world' : 'town';
   return 'town';
@@ -93,7 +101,7 @@ function view(cur: Screen): string {
     case 'map': return E.mapScreen(s, ui);
     case 'combat': return s.enemy ? P.combat(s, ui) : '';
     case 'event': return s.event ? P.event(s) : '';
-    case 'reward': return s.reward ? P.reward(s) : '';
+    case 'reward': return s.reward ? P.reward(s, adOk('double')) : '';
     case 'dialogue': return s.scene ? P.dialogue(s, ui) : '';
     case 'character': return H.character(s, ui);
     case 'inventory': return H.inventory(s, ui);
@@ -103,9 +111,10 @@ function view(cur: Screen): string {
     case 'skills': return E.trainer(s);
     case 'board': return E.board(s);
     case 'inn': return E.inn(s, ui);
-    case 'temple': return E.temple(s);
-    case 'death': return P.death(s);
-    case 'ending': return P.ending(s);
+    case 'wardhouse': return E.wardhouse(s);
+    case 'harbor': return E.harbor(s);
+    case 'death': return P.death(s, adOk('revive'));
+    case 'ending': return P.ending(s, ui);
   }
 }
 
@@ -133,6 +142,7 @@ function render() {
     setMood(moodFor(cur));
     if (cur === 'world' || cur === 'dungeon') mapView.snap();
   }
+  void setBanner(BANNER_SCREENS.includes(cur));
   afterRender(cur);
 }
 
@@ -191,7 +201,7 @@ function feedback(before: { hp: number; level: number; screen: Screen; gold: num
     else if (s.screen === 'reward') play(before.screen === 'combat' ? 'win' : 'chest');
     else if (s.screen === 'dialogue') play('page');
     else if (s.screen === 'event') play('quest');
-    else if (s.screen === 'ending') play('bell');
+    else if (s.screen === 'ending') { if (before.screen !== 'ending') ui.endSlide = 0; play('bell'); }
   }
   if (s.screen === 'combat') {
     if (s.fx.some(f => f.kind === 'crit')) play('crit');
@@ -204,15 +214,24 @@ function feedback(before: { hp: number; level: number; screen: Screen; gold: num
   else if (s.inventory.length > before.items && (s.screen === 'dungeon')) play('pickup');
 }
 
+let beat = 0;
 function act(fn: () => void, silent = false) {
+  if (beat) return;
   const before = { hp: s.hp, level: s.level, screen: s.screen, gold: s.gold, kills: s.kills, items: s.inventory.length };
   const logHead = s.log[0];
+  G.setDeferEnemy(before.screen === 'combat');
   fn();
+  G.setDeferEnemy(false);
+  const held = G.takeDeferred();
   screen = META_SCREENS.includes(screen) && !META_SCREENS.includes(s.screen) ? s.screen : screen;
   if (s.log[0] !== logHead) ui.logSeq++;
   if (s.fx.length || before.screen === 'combat') ui.fxSeq++;
   if (!silent) feedback(before);
   render();
+  if (held && s.screen === 'combat') {
+    document.querySelector('.combat')?.classList.add('beat');
+    beat = window.setTimeout(() => { beat = 0; G.finishTurn(s); render() }, 720);
+  }
 }
 
 function go(v: string) {
@@ -364,7 +383,7 @@ const actions: Record<string, () => void> = {
     G.clearSave(); s = G.fresh(meta.settings.difficulty); ui.confirmDelete = false; ui.prevScreen = 'title'; screen = 'title'; toastMsg('Chronicle erased.');
   },
   share: async () => {
-    const text = s.ending && ENDINGS[s.ending] ? `I reached the ${ENDINGS[s.ending].title} ending in Dreadmarch: The Black Meridian.` : 'Cross a shattered continent, break the seals and decide what morning means. Dreadmarch: The Black Meridian.';
+    const text = s.ending && ENDINGS[s.ending] ? `I reached the ${ENDINGS[s.ending].title} ending in Dreadmarch: The Black Meridian.` : 'Traverse a shattered continent, break the seals and decide what morning means. Dreadmarch: The Black Meridian.';
     const r = await shareGame(text);
     if (r === 'copied') toastMsg('Link copied to clipboard.');
     if (r === 'failed') toastMsg('Sharing is unavailable here.');
@@ -375,17 +394,23 @@ const actions: Record<string, () => void> = {
   attack: () => act(() => G.attack(s)),
   defend: () => act(() => G.defend(s)),
   flee: () => act(() => G.flee(s)),
-  closeReward: () => act(() => G.closeReward(s)),
+  closeReward: () => { act(() => G.closeReward(s)); breakpoint() },
   sceneNext: () => act(() => { if (typeTimer && ui.typed !== `${s.scene?.id}:${s.scene?.node}`) { skipTyping(); return } G.sceneAdvance(s) }),
   skipType: () => { skipTyping() },
-  revive: () => { G.revive(s); lastScreen = null; screen = 'town'; show('town') },
+  revive: () => { breakpoint(); G.revive(s); lastScreen = null; screen = 'town'; show('town') },
+  adRevive: () => void watchAd('revive', () => { lastScreen = null; show(s.screen) }),
+  adDouble: () => void watchAd('double', () => render()),
+  adSupplies: () => void watchAd('supplies', () => { play('pickup'); toastMsg('A supply cache is yours.') }),
+  adBoost: () => void watchAd('boost', () => { play('level'); toastMsg('Fortune favours you for 30 more minutes.') }),
+  privacy: () => void showPrivacyOptions(),
+  nextEnding: () => { ui.endSlide++; play('page'); render() },
   epilogue: () => {
     if (s.ending && !meta.endings.includes(s.ending)) { meta.endings.push(s.ending); persistMeta() }
     s.screen = 'town'; s.ret = 'town'; s.town = 'veyrgard'; s.enemy = null; s.run = null;
     lastScreen = null; screen = 'town'; G.commit(s); show('town');
   },
 
-  leaveTown: () => act(() => G.leaveTown(s)),
+  leaveTown: () => { act(() => G.leaveTown(s)); breakpoint() },
   enterPoi: () => {
     const poi = G.currentPoi(s);
     if (!poi) return;
@@ -403,12 +428,22 @@ const actions: Record<string, () => void> = {
 
   buySupplies: () => { G.buySupplies(s); play('buy'); render() },
   sellJunk: () => { const n = G.sellAllJunk(s); play(n ? 'coin' : 'error'); render() },
-  rest: () => { G.rest(s); play('heal'); toastMsg('You wake rested. Health and sanity restored.') },
+  rest: () => { G.rest(s); play('heal'); toastMsg('You wake rested. Health and sanity restored.'); breakpoint() },
   cleanse: () => { const c = s.corruption; G.cleanse(s); if (s.corruption < c) { play('heal'); toastMsg('Corruption purged.') } else render() },
-  pray: () => { if (G.pray(s)) { play('heal'); toastMsg('The whispering quiets.') } else render() },
+  quiet: () => { if (G.quietHour(s)) { play('heal'); toastMsg('The whispering quiets.') } else render() },
   round: () => { const t = G.buyRound(s); if (t) { ui.tavernText = t; play('coin') } render() },
   listen: () => { ui.tavernText = G.rumor(s); play('page'); render() },
 };
+
+async function watchAd(id: RewardId, done: () => void) {
+  if (adBusy) return;
+  adBusy = true;
+  cancelPendingAds();
+  const r = await showRewarded();
+  adBusy = false;
+  if (r.ok) { if (G.grantAdReward(s, id)) { persist(); done() } else toastMsg('That bonus is not available right now.') }
+  else toastMsg(r.reason === 'skipped' ? 'Watch the whole video to earn the reward.' : 'No ad is ready yet. Try again in a moment.');
+}
 
 function skipTyping() {
   const el = document.querySelector<HTMLElement>('.d-text[data-typed]');
@@ -421,7 +456,7 @@ function skipTyping() {
   document.querySelector('.d-choices')?.classList.remove('wait');
 }
 
-function afterSplash() { unlockAudio(); screen = !meta.introSeen ? 'intro' : !meta.onboarded ? 'onboarding' : 'title'; render() }
+function afterSplash() { unlockAudio(); void initAds(); screen = !meta.introSeen ? 'intro' : !meta.onboarded ? 'onboarding' : 'title'; render() }
 
 function captureName() {
   const input = document.querySelector<HTMLInputElement>('#heroName');
@@ -447,9 +482,13 @@ const handlers: [string, (v: string, el: HTMLElement) => void][] = [
   ['upgrade', (v, el) => { const ok = G.upgradeItem(s, v, (el.dataset.slot || null) as Slot | null); play(ok !== false ? 'level' : 'error'); render() }],
   ['learn', v => { G.learn(s, v); play('quest'); render() }],
   ['loadout', v => { G.toggleLoadout(s, v); play('click'); render() }],
+  ['companion', v => { G.swapCompanion(s, v); play('heal'); render() }],
+  ['ascend', v => { if (G.ascend(s, v)) { play('level'); toastMsg('You ascend. Something old turns over inside you.') } else play('error') }],
+  ['rankup', v => { if (G.rankUp(s, v)) play('level'); else play('error'); render() }],
+  ['sail', v => act(() => G.sail(s, v))],
   ['accept', v => { G.acceptQuest(s, v); play('quest'); render() }],
   ['claim', v => act(() => G.claimQuest(s, v))],
-  ['bless', v => { G.buyBlessing(s, Number(v) as 1 | 2 | 3); play('heal'); toastMsg('A blessing settles on you.') }],
+  ['sigil', v => { G.buySigil(s, Number(v) as 1 | 2 | 3); play('heal'); toastMsg('A sigil settles on your skin.') }],
   ['travel', v => act(() => G.fastTravel(s, v))],
   ['stat', v => { G.spendStat(s, v as Stat); play('level'); render() }],
   ['talent', v => { G.learnTalent(s, v); play('level'); render() }],
@@ -519,11 +558,17 @@ window.addEventListener('keydown', ev => {
 });
 
 document.addEventListener('pointerdown', () => unlockAudio(), { once: true });
-document.addEventListener('visibilitychange', () => { if (document.hidden) persist() });
-window.addEventListener('pagehide', persist);
+document.addEventListener('visibilitychange', () => {
+  const on = document.visibilityState === 'visible';
+  setAudible(on);
+  if (!on) persist();
+});
+window.addEventListener('pagehide', () => { setAudible(false); persist() });
 attachCanvasInput();
 applySettings();
 render();
+onAdsChange(() => { if (!META_SCREENS.includes(current()) && ['reward', 'death', 'inn'].includes(current())) render() });
+window.setInterval(() => { if (!document.hidden && s.name && !META_SCREENS.includes(screen)) s.playSeconds += 1 }, 1000);
 void nativeReady();
 void TOWN_MAP;
 window.setTimeout(() => { if (screen === 'splash') afterSplash() }, 2800);

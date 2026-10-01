@@ -5,11 +5,50 @@ import type { Bonus, GameState, ItemDef, Screen, Slot, Status } from '../types';
 
 export interface UI {
   creationStep: number; introPanel: number; onboardStep: number; prevScreen: Screen;
-  charTab: 'attributes' | 'talents' | 'skills'; journalTab: 'story' | 'contracts' | 'lore' | 'bestiary' | 'atlas' | 'endings';
+  charTab: 'attributes' | 'talents' | 'skills' | 'path'; journalTab: 'story' | 'crowns' | 'contracts' | 'lore' | 'bestiary' | 'atlas' | 'endings';
   shopTab: 'buy' | 'sell'; shopCat: 'all' | 'weapon' | 'armor' | 'trinket' | 'consumable' | 'junk';
   invFilter: 'all' | 'gear' | 'consumable' | 'junk'; sheet: { id: string; from: 'bag' | 'equip' | 'shop'; slot?: Slot } | null;
   mapSel: string | null; confirmDelete: boolean; toast: string | null; fxSeq: number; logSeq: number; tavernText: string | null; confirmLeave: boolean;
-  smithTab: 'equipped' | 'bag'; typed: string; enterNote: string | null;
+  smithTab: 'equipped' | 'bag'; typed: string; enterNote: string | null; endSlide: number;
+}
+
+/** One painted plate per place. Exact id wins; tags fall back to the nearest place. */
+const PLATES = new Set([
+  'armada', 'ashwood', 'aurora', 'bellhouse', 'brasshaven', 'catacombs', 'cistern', 'cogspire', 'conservatory', 'escapement',
+  'finalindex', 'gildedgardens', 'glasskeep', 'glasswastes', 'gloamstep', 'grist', 'gullrest', 'hart', 'heartbriar', 'hourengine',
+  'inkwell', 'intro_sun', 'kilnhold', 'lantern_hall', 'lanternatoll', 'lowmire', 'lumenhollow', 'meridian', 'mirewick', 'mirrorcourt',
+  'orangery', 'orrery', 'pass', 'prismpalace', 'quarry', 'reefgrottos', 'rimewatch', 'road', 'rookery', 'shardrest', 'skerrig',
+  'solenne', 'splash', 'thornwick', 'tidewatch', 'underdeep', 'unsinking', 'veyrgard', 'vhal', 'whalefall', 'widow',
+]);
+
+const NEAREST: [RegExp, string][] = [
+  [/ilse|seer|lantern_hall/, 'lantern_hall'],
+  [/catacomb|widow/, 'catacombs'],
+  [/crypt|bellhouse|saltmere|salt/, 'bellhouse'],
+  [/armada|unsink|reef|gull|tide|flood|sea|coast|corall/, 'tidewatch'],
+  [/hart|ashwood|ember|forest/, 'ashwood'],
+  [/thorn|mire|hedge|briar|hob/, 'thornwick'],
+  [/grist|quarry|bone|marrow/, 'quarry'],
+  [/cog|orrery|clock|gear|escapement/, 'cogspire'],
+  [/solenne|noon|court|garden|aurelia|gilded|mirror/, 'solenne'],
+  [/glass|brass|lens|shard|dune/, 'glasswastes'],
+  [/frost|rime|aurora|winter|skerr|whale|snow|pass|vhal/, 'pass'],
+  [/deep|lumen|ink|ledger|quill|archive|cave/, 'underdeep'],
+  [/meridian|throne|king/, 'meridian'],
+  [/rook/, 'rookery'],
+  [/veyr|siege|eclipse|intro|city/, 'veyrgard'],
+];
+
+export function stillArt(id?: string): string {
+  if (!id) return '/art/plates/road.jpg';
+  const bare = id.split('/').pop()!.replace(/\.(webp|png|jpe?g)$/i, '').toLowerCase();
+  if (PLATES.has(bare) || /^end-[1-6]$/.test(bare)) return `/art/plates/${bare}.jpg`;
+  const k = id.toLowerCase();
+  for (const [re, name] of NEAREST) if (re.test(k)) return `/art/plates/${name}.jpg`;
+  const pool = [...PLATES];
+  let h = 0;
+  for (const c of k) h = (h + c.charCodeAt(0)) % pool.length;
+  return `/art/plates/${pool[h]}.jpg`;
 }
 
 export const esc = (t: string) => t.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -17,9 +56,9 @@ export const pct = (a: number, b: number) => Math.max(0, Math.min(100, (a / Math
 export const fmt = (s: GameState, t: string) => t.replace(/\{name\}/g, esc(s.name || 'Wayfarer')).replace(/\{companion\}/g, esc(s.companion || 'Companion'));
 
 export const SLOT_ICON: Record<Slot, string> = { weapon: 'w_blade', offhand: 'o_round', head: 'h_heavy', body: 'b_heavy', hands: 'g_heavy', feet: 'f_heavy', ring: 'r_ring', amulet: 'a_gem' };
-export const STATUS_ICON: Record<Status, string> = { bleed: 'bleed', burn: 'burn', stun: 'stun', ward: 'ward', weak: 'weak', marked: 'marked', poison: 'poison' };
+export const STATUS_ICON: Record<Status, string> = { bleed: 'bleed', burn: 'burn', stun: 'stun', ward: 'ward', weak: 'weak', marked: 'marked', poison: 'poison', chill: 'chill', regen: 'regen' };
 
-const STAT_LABEL: Record<keyof Bonus, string> = { damage: 'Damage', armor: 'Armor', vigor: 'Vigor', will: 'Will', cunning: 'Cunning', maxHp: 'Health', maxSanity: 'Sanity', crit: 'Crit %', dodge: 'Dodge %', lifesteal: 'Lifesteal %', thorns: 'Thorns', luck: 'Luck %' };
+const STAT_LABEL: Record<keyof Bonus, string> = { damage: 'Damage', armor: 'Armor', vigor: 'Vigor', will: 'Will', cunning: 'Cunning', maxHp: 'Health', maxSanity: 'Sanity', crit: 'Crit %', dodge: 'Dodge %', lifesteal: 'Lifesteal %', thorns: 'Thorns', luck: 'Luck %', flee: 'Flee %', sight: 'Sight', xpPct: 'XP %', goldPct: 'Gold %', shopPct: 'Shop %', encPct: 'Encumbrance', critDmg: 'Crit damage' };
 export const STAT_KEYS = Object.keys(STAT_LABEL) as (keyof Bonus)[];
 
 export function statChips(b: Bonus) {

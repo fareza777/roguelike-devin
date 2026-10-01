@@ -7,14 +7,17 @@ import { onEntrance, onExit, dungeonProgress } from '../engine/dungeon';
 import { QUEST_LIMIT, availableQuests, claimable, cond } from '../engine/quests';
 import { currentStep } from '../engine/story';
 import {
-  SUPPLY_PRICE, blessCost, canSell, cleanseCost, innCost, roundCost, sellPrice, shopStock, schoolsHere, skillPrice,
+  SUPPLY_PRICE, sigilCost, canSell, cleanseCost, innCost, roundCost, sellPrice, shopStock, schoolsHere, skillPrice,
 } from '../engine/town';
-import { canFastTravel, currentPoi, objectiveTarget, travelCost } from '../engine/world';
+import { canFastTravel, canSail, currentPoi, ferryCost, ferryTargets, objectiveTarget, travelCost } from '../engine/world';
 import { TERRAIN_NAME, tileAt } from '../engine/worldgen';
 import { icon } from '../icons';
 import type { GameState, ItemDef, Slot } from '../types';
-import { UI, compareChips, emptyState, esc, itemIcon, kindName, statChips } from './common';
+import { UI, compareChips, emptyState, esc, itemIcon, kindName, statChips, stillArt } from './common';
 import { locBar } from './shell';
+import { REWARDS, canWatch, watchedToday } from '../data/ads';
+import { rewardedAvailable } from '../ads';
+import { boostLeft } from '../engine/adrewards';
 
 const dirBtn = (d: number, cls: string, label: string) => `<button class="dbtn ${cls}" data-dir="${d}" aria-label="${label}"><svg viewBox="0 0 24 24"><path d="${['M8 4l8 8-8 8', 'M4 8l8 8 8-8', 'M16 4l-8 8 8 8', 'M4 16l8-8 8 8'][d]}"/></svg></button>`;
 const dpad = (mid: string) => `<div class="dpad" role="group" aria-label="Movement">${dirBtn(3, 'up', 'Move up')}${dirBtn(2, 'left', 'Move left')}<div class="dmid">${mid}</div>${dirBtn(0, 'right', 'Move right')}${dirBtn(1, 'down', 'Move down')}</div>`;
@@ -61,7 +64,7 @@ export function dungeon(s: GameState, ui: UI) {
   const potion = s.inventory.some(i => { const u = item(i)?.use; return !!u && (u.hp || u.hpPct) && !u.damage });
   const light = s.inventory.some(i => !!item(i)?.use?.light);
   return `<section class="explore dungeon">
-    ${locBar(esc(p.name), `Depth ${p.floor}/${p.floors} · Recommended Lv ${p.def.lvl} · ${s.run!.keys ? `${icon('key')}×${s.run!.keys} · ` : ''}${s.run!.blessing ? `Blessed · ` : ''}${s.run!.torch > 0 ? `Torch ${s.run!.torch}` : 'Dim light'}`, p.def.mainBoss ? esc(step.title) : undefined)}
+    ${locBar(esc(p.name), `Depth ${p.floor}/${p.floors} · Recommended Lv ${p.def.lvl} · ${s.run!.keys ? `${icon('key')}×${s.run!.keys} · ` : ''}${s.run!.sigil ? `Sigil · ` : ''}${s.run!.torch > 0 ? `Torch ${s.run!.torch}` : 'Dim light'}`, p.def.mainBoss ? esc(step.title) : undefined)}
     <div class="mapwrap"><div class="canvas-host" id="mapmount" data-static></div>${logCaption(s, ui)}</div>
     <div class="deck">
       ${dpad(`<button class="dcenter" data-act="searchDungeon" aria-label="Search">${icon('secret')}</button>`)}
@@ -78,7 +81,7 @@ export function dungeon(s: GameState, ui: UI) {
 const REGION_FX: Record<string, string> = { ashwood: 'embers', north: 'snow', coast: 'rain', bone: 'dust', south: 'motes', heartland: 'dust', swamp: 'motes' };
 const SERVICE_META: Record<string, { ic: string; label: string; go: string }> = {
   inn: { ic: 'inn', label: 'Inn & Tavern', go: 'inn' }, shop: { ic: 'shop', label: 'Market', go: 'shop' }, smithy: { ic: 'smith', label: 'Smithy', go: 'smithy' },
-  temple: { ic: 'temple', label: 'Temple', go: 'temple' }, board: { ic: 'notice', label: 'Notice Board', go: 'board' }, trainer: { ic: 'skills', label: 'Trainer', go: 'skills' },
+  wardhouse: { ic: 'wardhouse', label: 'Wardhouse', go: 'wardhouse' }, harbor: { ic: 'm_ship', label: 'Harbor', go: 'harbor' }, board: { ic: 'notice', label: 'Notice Board', go: 'board' }, trainer: { ic: 'skills', label: 'Trainer', go: 'skills' },
 };
 
 export function town(s: GameState) {
@@ -87,12 +90,12 @@ export function town(s: GameState) {
   const ready = claimable(s, t.id).length;
   const avail = availableQuests(s, t.id).length;
   const sub = (id: string) => ({
-    inn: `Rest · ${innCost(s)} gold${t.services.includes('tavern') ? ' · rumors' : ''}`, shop: 'Buy, sell, supplies', smithy: 'Reinforce your gear', temple: s.corruption ? `Purge corruption · ${cleanseCost(s)}g` : 'Blessings & prayer',
-    board: ready ? `${ready} ready to claim` : avail ? `${avail} contract${avail > 1 ? 's' : ''} available` : 'No new contracts', trainer: (TOWN_TRAIN(t.id)).join(' · '),
+    inn: `Rest · ${innCost(s)} gold${t.services.includes('tavern') ? ' · rumors' : ''}`, shop: 'Buy, sell, supplies', smithy: 'Reinforce your gear', wardhouse: s.corruption ? `Purge corruption · ${cleanseCost(s)}g` : 'Sigils & quiet hour',
+    board: ready ? `${ready} ready to claim` : avail ? `${avail} contract${avail > 1 ? 's' : ''} available` : 'No new contracts', trainer: (TOWN_TRAIN(t.id)).join(' · '), harbor: 'Ferries to distant ports',
   } as Record<string, string>)[id];
   const services = t.services.filter(x => x !== 'tavern');
   return `<section class="town" style="--sky:${t.theme.sky};--glow:${t.theme.glow};--ink:${t.theme.ink}">
-    <div class="banner" style="--art:url('/art/${t.art}')">
+    <div class="banner" style="--art:url('${stillArt(t.art)}')">
       <div class="banner-fx fx-${REGION_FX[t.region] ?? 'dust'}">${Array.from({ length: 14 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</div>
       <div class="banner-text"><small>${t.kind === 'city' ? 'CITY' : 'SETTLEMENT'}</small><h1>${esc(t.name)}</h1><p>${esc(t.subtitle)}</p></div>
     </div>
@@ -162,22 +165,23 @@ export function inn(s: GameState, ui: UI) {
   const tavern = t.services.includes('tavern');
   return `<section class="page-in"><div class="page-head"><h2>${icon('inn')}The Inn</h2><p class="muted">A bed, a fire, and a door that locks. Rest restores health, sanity and clears ailments.</p></div>
     <div class="panel feature"><span class="fi">${icon('inn')}</span><div><h3>A warm bed</h3><p>Sleep until the world stops whispering.</p></div><button class="btn primary" data-act="rest" ${s.gold < cost ? 'disabled' : ''}>Rest · ${cost}${icon('gold')}</button></div>
+    ${adSlot(s)}
     ${tavern ? `<div class="panel feature"><span class="fi">${icon('tavern')}</span><div><h3>The tavern</h3><p>Tongues loosen for those who buy a round. Rumors may point to places you have not yet found.</p></div><button class="btn" data-act="round" ${s.gold < roundCost(s) ? 'disabled' : ''}>Buy a round · ${roundCost(s)}${icon('gold')}</button></div>
     ${ui.tavernText ? `<blockquote class="rumor" data-key="rum-${ui.tavernText.length}">“${esc(ui.tavernText)}”</blockquote>` : '<blockquote class="rumor muted">Rumors are free. Listen at the bar.<button class="btn" data-act="listen">Listen</button></blockquote>'}` : ''}
   </section>`;
 }
 
-export function temple(s: GameState) {
+export function wardhouse(s: GameState) {
   const cost = cleanseCost(s);
-  const bc = blessCost(s);
-  const prayed = s.flags[`prayed_${s.day}`];
-  const pending = s.flags.pending_bless;
+  const bc = sigilCost(s);
+  const rested = s.flags[`quiet_${s.day}`];
+  const pending = s.flags.pending_sigil;
   const B: [number, string, string, string][] = [[1, 'w_blade', 'Blades', 'Bonus damage on your next expedition.'], [2, 'shield', 'Warding', 'Bonus armor on your next expedition.'], [3, 'eye', 'the Open Eye', '+10% critical chance on your next expedition.']];
-  return `<section class="page-in"><div class="page-head"><h2>${icon('temple')}The Temple</h2><p class="muted">The fire here is honest. It burns what should not be.</p></div>
+  return `<section class="page-in"><div class="page-head"><h2>${icon('wardhouse')}The Wardhouse</h2><p class="muted">The fire here is honest. It burns what should not be.</p></div>
     <div class="panel feature"><span class="fi">${icon('corruption')}</span><div><h3>Purge corruption</h3><p>${s.corruption ? `You carry ${s.corruption} corruption. Each point costs 3 sanity and adds 4% damage.` : 'You are untainted.'}</p></div><button class="btn primary" data-act="cleanse" ${s.corruption <= 0 || s.gold < cost ? 'disabled' : ''}>${cost}${icon('gold')}</button></div>
-    <div class="panel feature"><span class="fi">${icon('holy')}</span><div><h3>Quiet prayer</h3><p>Once a day, restore a third of your sanity for free.</p></div><button class="btn" data-act="pray" ${prayed ? 'disabled' : ''}>${prayed ? 'Prayed today' : 'Pray'}</button></div>
-    <h3 class="sec-h">Blessings ${pending ? `<small class="muted">· Active: ${['', 'Blades', 'Warding', 'the Open Eye'][pending]}</small>` : ''}</h3>
-    <div class="svc-grid">${B.map(([k, ic, name, desc]) => `<button class="svc ${pending === k ? 'on' : ''}" data-bless="${k}" ${s.gold < bc ? 'disabled' : ''}><span class="si">${icon(ic)}</span><span class="st2"><b>Blessing of ${name}</b><small>${desc}</small></span><span class="price">${bc}${icon('gold')}</span></button>`).join('')}</div>
+    <div class="panel feature"><span class="fi">${icon('sigil')}</span><div><h3>Quiet hour</h3><p>Once a day, restore a third of your sanity for free.</p></div><button class="btn" data-act="quiet" ${rested ? 'disabled' : ''}>${rested ? 'Rested today' : 'Rest the mind'}</button></div>
+    <h3 class="sec-h">Sigils ${pending ? `<small class="muted">· Active: ${['', 'Blades', 'Warding', 'the Open Eye'][pending]}</small>` : ''}</h3>
+    <div class="svc-grid">${B.map(([k, ic, name, desc]) => `<button class="svc ${pending === k ? 'on' : ''}" data-sigil="${k}" ${s.gold < bc ? 'disabled' : ''}><span class="si">${icon(ic)}</span><span class="st2"><b>Sigil of ${name}</b><small>${desc}</small></span><span class="price">${bc}${icon('gold')}</span></button>`).join('')}</div>
   </section>`;
 }
 
@@ -228,10 +232,25 @@ export function mapScreen(s: GameState, ui: UI) {
       info = `<div class="mapinfo-in"><span class="mapi">${icon(t.kind === 'city' ? 'm_city' : 'm_town')}</span><div><h3>${esc(t.name)} <small>${esc(t.subtitle)}</small></h3><p>${esc(t.desc)}</p><small class="muted">${visited ? `Fast travel: ${c.supplies} supplies · ${c.days} day${c.days > 1 ? 's' : ''}` : 'Not yet visited. Walk there to unlock fast travel.'}</small></div>
         ${s.screen === 'map' && sel !== s.town ? `<button class="btn primary" data-travel="${sel}" ${can ? '' : 'disabled'}>Travel</button>` : ''}</div>`;
     } else if (d) {
-      const gated = d.gate && s.main < MAIN.findIndex(m => m.id === d.gate);
+      const gated = (d.gate && s.main < MAIN.findIndex(m => m.id === d.gate)) || (d.cond && !cond(s, d.cond));
       info = `<div class="mapinfo-in"><span class="mapi">${icon(d.icon ?? 'm_dungeon')}</span><div><h3>${esc(d.name)} <small>Lv ${d.lvl} · ${d.floors} floors</small></h3><p>${esc(d.desc)}</p><small class="muted">${s.cleared.includes(d.id) ? 'Warden defeated.' : gated ? 'Sealed until the story leads you here.' : `Boss: ${esc(d.boss)}`}</small></div></div>`;
     }
   }
   return `<section class="page-in mapscreen"><div class="fullmap-host" id="fullmount" data-static></div><div class="panel mapinfo">${info}</div></section>`;
 }
 
+export function harbor(s: GameState) {
+  const t = TOWN_MAP.get(s.town!)!;
+  const dests = ferryTargets(s, t.id);
+  return `<section class="page-in"><div class="page-head"><h2>${icon('m_ship')}Harbor of ${esc(t.name)}</h2><p class="muted">Ferrymen who ask no questions, for a price. Sailing takes a day or more.</p></div>
+    <div class="list">${dests.map(d => { const cost = ferryCost(t.id, d.id); return `<div class="irow"><span class="iicon r-rare">${icon(d.kind === 'city' ? 'm_city' : 'm_town')}</span><div class="imain"><div class="iname"><b>${esc(d.name)}</b><em class="cnt">${s.world.visited.includes(d.id) ? 'visited' : 'unvisited'}</em></div><small class="idesc">${esc(d.subtitle)}</small></div><div class="iact"><button class="btn buy" data-sail="${d.id}" ${canSail(s, d.id) ? '' : 'disabled'}>${cost}${icon('gold')}</button></div></div>` }).join('') || emptyState('m_ship', 'No ships sail from here yet.')}</div></section>`;
+}
+
+/** Optional rewarded offers shown at the inn. Hidden when no ad can be played. */
+function adSlot(s: GameState) {
+  if (!rewardedAvailable()) return '<div id="adslot-inn"></div>';
+  const mins = Math.ceil(boostLeft(s) / 60000);
+  const row = (id: 'supplies' | 'boost', act: string, ic: string, extra = '') => canWatch(s, id)
+    ? `<div class="panel feature ad-offer"><span class="fi">${icon(ic)}</span><div><h3>${REWARDS[id].name}${extra}</h3><p>${REWARDS[id].text}</p></div><button class="btn ad" data-act="${act}">Watch · ${REWARDS[id].cap - watchedToday(s, id)} left today</button></div>` : '';
+  return `<div id="adslot-inn"><h3 class="sec-h">Optional offers</h3>${row('supplies', 'adSupplies', 'supplies')}${row('boost', 'adBoost', 'star', mins > 0 ? ` <small>· ${mins} min active</small>` : '')}</div>`;
+}

@@ -1,10 +1,11 @@
+import { PACKS } from './regions';
 import type { QuestDef, QuestGoal } from '../types';
 
 const g = (type: QuestGoal['type'], count: number, label: string, target?: string): QuestGoal => ({ type, count, label, target });
 const q = (id: string, town: string, giver: string, title: string, text: string, goal: QuestGoal, reward: QuestDef['reward'], o: Partial<QuestDef> = {}): QuestDef =>
   ({ id, town, giver, title, text, goal, reward, ...o });
 
-export const QUESTS: QuestDef[] = [
+const CORE_QUESTS: QuestDef[] = [
   q('q_undercroft', 'veyrgard', 'Quartermaster Hollis', 'Clear the Undercroft', 'The watchtower’s dead have stopped standing down. Put the Last Sentinel to rest so the barracks can be used again.', g('clear', 1, 'Defeat the Last Sentinel', 'undercroft'), { gold: 90, xp: 70, items: ['tonic', 'tonic', 'a_body_heavy_0'] }),
   q('q_lore', 'veyrgard', 'Archivist Pell', 'Ink That Moves', 'Recover three fragments of lost lore for the Collegium. Pell does not care where you find them. He does care how quickly.', g('lore', 3, 'Recover lore fragments'), { gold: 100, xp: 80, items: ['vellum', 'u_glass_eye'] }),
   q('q_elite', 'veyrgard', 'Captain Roe', 'Bounty: Named Horrors', 'The Watch pays for the heads of named horrors. Slay three elite foes anywhere.', g('elites', 3, 'Slay elite foes'), { gold: 180, xp: 120, items: ['pitchbomb', 'pitchbomb', 'x_signet_1'] }),
@@ -14,7 +15,7 @@ export const QUESTS: QuestDef[] = [
   q('q_watchbones', 'veyrgard', 'Captain Roe', 'Bones of the Watch', 'Half the Watch’s graves have been emptied. Put ten of the returned dead back where they belong.', g('killTag', 10, 'Slay undead', 'undead'), { gold: 140, xp: 100, items: ['salts', 'a_head_heavy_1'] }),
   q('q_wells', 'veyrgard', 'Cartographer Venn', 'A Map of Wells', 'Venn wants a sketch of the old well west of the city. It is rumoured to know you. Go and let it.', g('reach', 1, 'Visit the old well', 'oldwell'), { gold: 70, xp: 60, items: ['pitchtorch', 'pitchtorch', 'smokepellet'] }),
 
-  q('q_widow_ring', 'saltmere', 'Brother Osk', 'The Widow’s Ring', 'The Widow lost her wedding ring in the sea caves of Wickhaven. If it were returned to her grave, she might finally rest.', g('fetch', 1, 'Find the Widow’s ring in the Sea Caves', 'seacaves'), { gold: 100, xp: 120, items: ['u_osk_bell'] }, { item: 'tok_widow' }),
+  q('q_widow_ring', 'saltmere', 'Osk Tallow', 'The Widow’s Ring', 'The Widow lost her wedding ring in the sea caves of Wickhaven. If it were returned to her grave, she might finally rest.', g('fetch', 1, 'Find the Widow’s ring in the Sea Caves', 'seacaves'), { gold: 100, xp: 120, items: ['u_osk_bell'] }, { item: 'tok_widow' }),
   q('q_eels', 'saltmere', 'Ysolde Marrek', 'Eel Bounty', 'Crypt eels are eating the nets, the boats, and one unlucky fisherman. Kill six.', g('kill', 6, 'Slay crypt eels', 'eel'), { gold: 130, xp: 90, items: ['widowvenom', 'w_dagger_1'] }),
   q('q_tidegrasp', 'saltmere', 'Ysolde Marrek', 'The Harbour Beast', 'Something huge has been dragging the pilings under. It has only ever surfaced as an arm.', g('kill', 1, 'Slay Tidegrasp', 'tidegrasp'), { gold: 220, xp: 150, items: ['x_links_1', 'restorative'] }),
   q('q_saltbeard', 'saltmere', 'Ysolde Marrek', 'A Ghost in the Bay', 'Captain Saltbeard’s ship has moored off Wickhaven again. Sink it, permanently.', g('clear', 1, 'Defeat Captain Saltbeard’s Ghost', 'seacaves'), { gold: 260, xp: 190, items: ['a_body_medium_1', 'lullaby'] }),
@@ -22,10 +23,10 @@ export const QUESTS: QuestDef[] = [
   q('q_brine', 'saltmere', 'Corvin Vale', 'A Favour for Corvin', 'Brine hags have been undercutting Corvin’s market in drowned names. Corvin would be very grateful if there were fewer of them.', g('kill', 4, 'Slay brine hags', 'brinehag'), { gold: 170, xp: 120, items: ['stillwater', 'x_band_1'] }),
 
   q('q_hart_locket', 'emberhollow', 'Old Cinderwife', 'The Huntsman’s Guilt', 'Osric buried his brother’s locket somewhere in the Hearth Crypt. If it were laid on the Hart’s cairn, both brothers might be forgiven.', g('fetch', 1, 'Find Hartwyn’s locket in the Hearth Crypt', 'hearthcrypt'), { gold: 160, xp: 180, items: ['u_tamsin_ring'] }, { item: 'tok_hart' }),
-  q('q_embers', 'emberhollow', 'Bram', 'Embers for the Hearth', 'The Hearth wants fresh fire. Slay eight of the creatures of flame in Ashwood.', g('killTag', 8, 'Slay fire-creatures', 'fire'), { gold: 200, xp: 160, items: ['holywater', 'x_gemring_2'] }),
-  q('q_stags', 'emberhollow', 'Tamsin Aldwyn', 'The Hart’s Fawns', 'Emberstags trample Covenant fields. Cull four.', g('kill', 4, 'Slay emberstags', 'emberstag'), { gold: 180, xp: 140, items: ['w_spear_2', 'stew'] }),
+  q('q_embers', 'emberhollow', 'Bram', 'Embers for the Hearth', 'The Hearth wants fresh fire. Slay eight of the creatures of flame in Ashwood.', g('killTag', 8, 'Slay fire-creatures', 'fire'), { gold: 200, xp: 160, items: ['clearwater', 'x_gemring_2'] }),
+  q('q_stags', 'emberhollow', 'Tamsin Aldwyn', 'The Hart’s Fawns', 'Emberstags trample Compact fields. Cull four.', g('kill', 4, 'Slay emberstags', 'emberstag'), { gold: 180, xp: 140, items: ['w_spear_2', 'stew'] }),
   q('q_hollowhill', 'emberhollow', 'Tamsin Aldwyn', 'The Lantern Crone', 'A witch’s lantern has been luring foresters into the Hollow Hill. Extinguish it.', g('clear', 1, 'Defeat the Lantern Crone', 'hollowhill'), { gold: 320, xp: 240, items: ['a_body_cloth_2', 'lucid'] }),
-  q('q_sanctum', 'emberhollow', 'Bram', 'The Unburnt', 'One saint survived the fire that took the old sanctum. She has been angry ever since. End it kindly.', g('clear', 1, 'Defeat the Unburnt Saint', 'sanctum'), { gold: 360, xp: 260, items: ['u_halo'] }),
+  q('q_archive', 'emberhollow', 'Bram', 'The Unburnt', 'One keeper survived the fire that took the old archive. She has been angry ever since. End it kindly.', g('clear', 1, 'Defeat the Unburnt Keeper', 'archive'), { gold: 360, xp: 260, items: ['u_briar'] }),
   q('q_thornstalker', 'emberhollow', 'Old Cinderwife', 'Walking Wood', 'The trees have started following the woodcutters home. Fell five thornstalkers.', g('kill', 5, 'Fell thornstalkers', 'thornstalker'), { gold: 190, xp: 150, items: ['w_axe_2', 'antidote'] }),
 
   q('q_grist_lamp', 'gravemarrow', 'Grubb the Tallyman', 'Names in the Walls', 'Foreman Grist’s lamp, inscribed with every miner’s name, is somewhere in the Titan’s Ribcage. Bring it back.', g('fetch', 1, 'Find Grist’s lamp in the Titan’s Ribcage', 'ribcage'), { gold: 240, xp: 260, items: ['x_signet_3'] }, { item: 'tok_grist' }),
@@ -51,4 +52,5 @@ export const QUESTS: QuestDef[] = [
   q('q_hanged', 'hangedman', 'Hangman Jo', 'Cutthroats on the Road', 'Bandits have been drinking on credit. Jo would prefer they didn’t. Eight of them.', g('kill', 8, 'Slay roadside cutthroats', 'bandit'), { gold: 100, xp: 80, items: ['w_dagger_1', 'tonic'] }),
 ];
 
+export const QUESTS: QuestDef[] = [...CORE_QUESTS, ...PACKS.flatMap(p => p.quests)];
 export const QUEST_MAP = new Map(QUESTS.map(x => [x.id, x]));

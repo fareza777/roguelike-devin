@@ -1,9 +1,11 @@
+import { ARCS, ARC_MAP } from '../data/arcs';
 import { EVENT_MAP } from '../data/events';
 import { SCENE_MAP } from '../data/scenes';
+import { LOADOUT_MAX } from '../data/skills';
 import { MAIN, MAIN_INDEX, SPEAKERS } from '../data/story';
 import { TOWN_MAP, TOWNS, TRIGGERS } from '../data/world';
 import type { Choice, DChoice, DNode, Eff, GameState, NpcDef, SceneDef, Speaker, Stat, StoryEvent } from '../types';
-import { areaLevel, clampVitals, hooks, item, pick, push, rand, save, scaleAmt, scaleSan, stats, type EffResult } from './core';
+import { areaLevel, clampVitals, flag, hooks, item, pick, push, rand, save, scaleAmt, scaleSan, stats, type EffResult } from './core';
 import { closeOverlay, enqueue, showOverlay } from './flow';
 import { addItem, addLore, gainXp, removeItem, rollConsumable, rollGear } from './loot';
 import { acceptQuest, cond, questEvent } from './quests';
@@ -20,13 +22,28 @@ export const currentStep = (s: GameState) => MAIN[Math.min(s.main, MAIN.length -
 export function unlockLoc(s: GameState, id: string) { if (!s.world.known.includes(id)) s.world.known.push(id) }
 
 export function setMain(s: GameState, id: string) {
-  const idx = MAIN_INDEX.get(id);
+  let idx = MAIN_INDEX.get(id);
   if (idx === undefined || idx <= s.main) return;
+  // optional-looking prep steps ('p..') are mandatory: a jump never skips over one
+  for (let i = s.main + 1; i < idx; i++) if (MAIN[i].id.startsWith('p')) { idx = i; break }
   s.main = idx;
+  s.flags._mg = 0;
   const step = MAIN[idx];
   if (step.at) unlockLoc(s, step.at);
   push(s, `Main quest: ${step.title}`, 'epic');
 }
+hooks.setMain = setMain;
+
+export function setArc(s: GameState, id: string, to: number) {
+  const arc = ARC_MAP.get(id);
+  if (!arc || to <= flag(s, `arc_${id}`)) return;
+  s.flags[`arc_${id}`] = to;
+  s.flags[`_ag_${id}`] = 0;
+  const st = arc.steps[to - 1];
+  if (st) { if (st.at) unlockLoc(s, st.at); push(s, `${arc.title}: ${st.title}`, 'epic') }
+  else push(s, `${arc.title} is complete.`, 'epic');
+}
+hooks.setArc = setArc;
 
 const luck = (s: GameState) => 1 + stats(s).luck / 100 + (s.talents.includes('scavenger') ? 0.15 : 0);
 
@@ -68,11 +85,23 @@ export function runEffects(s: GameState, effs: Eff[]): EffResult {
         case 'log': push(s, e.text, e.tone ?? 'plain'); note(e.text); break;
         case 'end': s.ending = e.id; s.main = MAIN.length - 1; s.flags[`ending_${e.id}`] = 1; enqueue(s, { k: 'ending', id: e.id }, true); r.ended = true; break;
         case 'goto': r.goto = e.node; break;
-        case 'bless': if (s.run) s.run.blessing = e.k; else s.flags.pending_bless = ['blade', 'ward', 'eye'].indexOf(e.k) + 1; note(`Blessing: ${e.k === 'blade' ? 'Blades' : e.k === 'ward' ? 'Warding' : 'the Open Eye'}`); break;
+        case 'sigil': if (s.run) s.run.sigil = e.k; else s.flags.pending_sigil = ['blade', 'ward', 'eye'].indexOf(e.k) + 1; note(`Sigil: ${e.k === 'blade' ? 'Blades' : e.k === 'ward' ? 'Warding' : 'the Open Eye'}`); break;
         case 'key': if (s.run) s.run.keys += e.n; note(`+${e.n} key`); break;
         case 'reveal': if (s.run) { const f = s.run.floors[s.run.floor]; if (f) f.seen = '1'.repeat(f.w * f.h); note('The floor is revealed to you.') } break;
         case 'companion': s.companion = e.name; break;
         case 'scene': enqueue(s, { k: 'scene', id: e.id }); break;
+        case 'arc': setArc(s, e.id, e.to); break;
+        case 'regalia': {
+          s.flags[`regalia_${e.id}`] = 1;
+          const arc = ARCS.find(a => a.regalia === e.id);
+          if (item(`reg_${e.id}`)) { addItem(s, `reg_${e.id}`); r.items.push(`reg_${e.id}`) }
+          note(`Regalia recovered${arc ? `: ${arc.title}` : ''}`);
+          push(s, `Regalia recovered (${ARCS.filter(a => flag(s, `regalia_${a.regalia}`) > 0).length}/${ARCS.length})`, 'epic');
+          questEvent(s, { type: 'regalia' });
+          break;
+        }
+        case 'recruit': if (!s.companions.includes(e.id)) { s.companions.push(e.id); s.flags[`comp_${e.id.toLowerCase()}`] = 1; note(`${e.id} joins you`); push(s, `${e.id} can now travel with you. Swap companions at any inn.`, 'epic') } break;
+        case 'learn': if (!s.skills.includes(e.id)) { s.skills.push(e.id); if (s.loadout.length < LOADOUT_MAX) s.loadout.push(e.id); note(`Skill learned: ${e.id}`) } break;
       }
     }
   };

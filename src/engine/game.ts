@@ -12,6 +12,7 @@ export * from './loot';
 export * from './quests';
 export * from './story';
 export * from './town';
+export * from './adrewards';
 export * from './world';
 export { getWorld, tileAt as worldTile, poiAt, TERRAIN_NAME } from './worldgen';
 
@@ -30,7 +31,7 @@ export function setup(s: GameState) {
   s.screen = 'town';
   s.ret = 'town';
   s.town = 'veyrgard';
-  push(s, 'Mother Ilse’s summons found you at dawn. There was no dawn.', 'epic');
+  push(s, 'Seer Ilse’s summons found you at dawn. There was no dawn.', 'epic');
   save(s);
 }
 

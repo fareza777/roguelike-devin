@@ -14,7 +14,13 @@ export const THEMES: Record<Theme, ThemePal> = {
   cave: { floor: '#2d2924', floor2: '#26221e', wall: '#100e0c', wallTop: '#443d35', wallFace: '#1b1713', accent: '#c9a45c', ambient: 'rgba(16,10,4,0.42)', particle: 'dust', light: '255,210,140' },
   ruin: { floor: '#332d28', floor2: '#2a2521', wall: '#141110', wallTop: '#4d4238', wallFace: '#211b17', accent: '#c9a45c', ambient: 'rgba(20,12,6,0.4)', particle: 'dust', light: '255,205,140' },
   swamp: { floor: '#28362c', floor2: '#213026', wall: '#0e1610', wallTop: '#385040', wallFace: '#15211a', accent: '#a8c878', ambient: 'rgba(6,26,12,0.44)', particle: 'spore', light: '210,255,170' },
-  sanctum: { floor: '#2e202b', floor2: '#271b24', wall: '#120b11', wallTop: '#4d3349', wallFace: '#20131d', accent: '#e07acb', ambient: 'rgba(30,6,28,0.44)', particle: 'ember', light: '255,190,240' },
+  glass: { floor: '#3a2c36', floor2: '#322530', wall: '#150d14', wallTop: '#6a4a5e', wallFace: '#25171f', accent: '#ffcf9a', ambient: 'rgba(40,14,24,0.38)', particle: 'mote', light: '255,214,170' },
+  gear: { floor: '#35291d', floor2: '#2d2318', wall: '#130d07', wallTop: '#5f4524', wallFace: '#241a0e', accent: '#ffb44a', ambient: 'rgba(34,18,2,0.42)', particle: 'ember', light: '255,196,110' },
+  thorn: { floor: '#223022', floor2: '#1c291c', wall: '#08120a', wallTop: '#2f4a2a', wallFace: '#0f1d0e', accent: '#b6e07a', ambient: 'rgba(4,24,8,0.46)', particle: 'spore', light: '230,255,170' },
+  aurora: { floor: '#243448', floor2: '#1e2c40', wall: '#081018', wallTop: '#3d6a7e', wallFace: '#112230', accent: '#7affc8', ambient: 'rgba(4,28,40,0.4)', particle: 'snow', light: '180,255,230' },
+  deep: { floor: '#1d2a30', floor2: '#17232a', wall: '#070d10', wallTop: '#2f4a52', wallFace: '#0e1a1f', accent: '#5af0d0', ambient: 'rgba(0,22,26,0.5)', particle: 'spore', light: '150,255,225' },
+  reef: { floor: '#1c3238', floor2: '#172b30', wall: '#071317', wallTop: '#2c5560', wallFace: '#0e2228', accent: '#ff9a7a', ambient: 'rgba(2,26,32,0.46)', particle: 'drip', light: '255,200,170' },
+  archive: { floor: '#2e202b', floor2: '#271b24', wall: '#120b11', wallTop: '#4d3349', wallFace: '#20131d', accent: '#e07acb', ambient: 'rgba(30,6,28,0.44)', particle: 'ember', light: '255,190,240' },
 };
 
 export const TERRAIN: Record<string, { base: string; alt: string }> = {
@@ -36,6 +42,13 @@ export const TERRAIN: Record<string, { base: string; alt: string }> = {
   Z: { base: '#2a2008', alt: '#1e1604' },
   G: { base: '#3a2c10', alt: '#2c210c' },
   H: { base: '#2c1a2c', alt: '#221422' },
+  s: { base: '#8a6f3e', alt: '#7d6336' },
+  y: { base: '#5a3548', alt: '#4d2d3d' },
+  K: { base: '#1c2a1a', alt: '#172314' },
+  u: { base: '#3a3022', alt: '#33291c' },
+  l: { base: '#16262a', alt: '#12212a' },
+  i: { base: '#98b4c8', alt: '#8aa8bd' },
+  e: { base: '#6a5a3a', alt: '#5f5033' },
 };
 
-export const RARITY_COLOR: Record<string, string> = { common: '#9a9285', rare: '#5f9be0', epic: '#b07af0', relic: '#f0b850' };
+export const RARITY_COLOR: Record<string, string> = { common: '#9a9285', rare: '#5f9be0', epic: '#b07af0', relic: '#f0b850', mythic: '#ff6a8a' };

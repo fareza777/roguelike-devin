@@ -2,7 +2,8 @@ import { COMPANIONS, INTRO, ORIGINS, PATHS, TIPS } from '../data/story';
 import { hasLegacySave, load } from '../engine/core';
 import { icon } from '../icons';
 import type { GameState, Meta } from '../types';
-import { UI, esc } from './common';
+import { UI, esc, stillArt } from './common';
+import { privacyOptionsRequired } from '../ads';
 
 export const VERSION_LABEL = '3.0.0';
 export const INTRO_LENGTH = INTRO.length;
@@ -15,7 +16,7 @@ export function splash() {
 
 export function intro(ui: UI) {
   const p = INTRO[ui.introPanel];
-  return `<div class="intro"><div class="intro-art kenburns" data-key="ia-${ui.introPanel}" style="background-image:url('/art/${p.art}')"></div><div class="intro-shade"></div>
+  return `<div class="intro"><img class="intro-art" src="${stillArt(p.art)}" alt=""><div class="intro-shade"></div>
     <div class="intro-text" data-key="it-${ui.introPanel}">${p.lines.map((l, i) => `<p class="reveal" style="animation-delay:${0.5 + i * 1.7}s">${l}</p>`).join('')}</div>
     <div class="intro-nav"><div class="dots">${INTRO.map((_, i) => `<i class="${i === ui.introPanel ? 'on' : ''}"></i>`).join('')}</div>
       <button class="btn" data-act="skipIntro">Skip</button><button class="btn primary" data-act="nextIntro">${ui.introPanel === INTRO.length - 1 ? 'Begin' : 'Next'}</button></div></div>`;
@@ -48,7 +49,7 @@ export function title(meta: Meta) {
         <div class="menu-row"><button class="btn" data-act="share">${icon('share')}Share</button><button class="btn" data-act="rate">${icon('star')}Rate</button></div>
       </div>
       ${hasLegacySave() ? '<p class="warn">A chronicle from an older version cannot be continued. Begin anew.</p>' : ''}
-      <p class="muted fine">Offline · No ads · No gacha${meta.endings.length ? ` · Endings found: ${meta.endings.length}/5` : ''}</p>
+      <p class="muted fine">Plays offline · Optional rewarded ads · No gacha${meta.endings.length ? ` · Endings found: ${meta.endings.length}/6` : ''}</p>
     </div></div>`;
 }
 
@@ -67,6 +68,7 @@ export function settings(meta: Meta, ui: UI, inGame: boolean) {
     <div class="setting"><div><b>Difficulty</b><small>Applies to new chronicles. Doomed: +20% enemy damage, death erases the save.</small></div><div class="seg">${(['Wayfarer', 'Doomed'] as const).map(v => `<button class="${st.difficulty === v ? 'on' : ''}" data-diff="${v}">${v.toUpperCase()}</button>`).join('')}</div></div>
     <div class="grid2 section">
       <button class="btn" data-act="replayIntro">${icon('journal')}Replay intro</button><button class="btn" data-act="replayTutorial">${icon('lore')}Replay tutorial</button>
+      ${privacyOptionsRequired() ? `<button class="btn" data-act="privacy">${icon('settings')}Ad privacy options</button>` : ''}
       ${inGame ? `<button class="btn" data-act="toTitle">${icon('back')}Main menu</button>` : ''}
       <button class="btn danger" data-act="deleteSave" ${load() ? '' : 'disabled'}>${ui.confirmDelete ? 'Tap again to erase' : 'Erase save'}</button>
     </div>
@@ -77,15 +79,15 @@ export function settings(meta: Meta, ui: UI, inGame: boolean) {
 export function about() {
   return `<div class="page bg-splash"><div class="panel page-card center">
     ${eclipse('small')}<h2>Dreadmarch: The Black Meridian</h2><p class="muted">Version ${VERSION_LABEL}</p>
-    <p>A dark-fantasy roguelike RPG of grim choices, grid exploration, tactical combat and slow madness. Cross a shattered continent, break the seals, and decide what morning means.</p>
+    <p>A dark-fantasy roguelike RPG of grim choices, grid exploration, tactical combat and slow madness. Traverse a shattered continent, break the seals, and decide what morning means.</p>
     <div class="section left"><h3>Credits</h3><p>Design, writing and code: the Dreadmarch team.<br>Typefaces: Cinzel and Crimson Pro (SIL Open Font License).<br>Icons by Lorc, Delapouite, Skoll, Willdabeast, Sbed and others from game-icons.net, licensed CC BY 3.0. Painted art created for Dreadmarch.</p></div>
-    <div class="section left"><h3>Privacy</h3><p>Dreadmarch runs fully offline. No accounts, ads, trackers or analytics. Your chronicle is stored only on this device.</p></div>
+    <div class="section left"><h3>Privacy</h3><p>Dreadmarch plays fully offline and your chronicle is stored only on this device. There are no accounts and no analytics. The app shows Google AdMob ads (a banner, occasional full-screen ads and optional rewarded videos); AdMob may use an advertising ID according to your consent choices. Rewarded ads are always optional.</p></div>
     <div class="grid2 section"><button class="btn" data-act="share">${icon('share')}Share the game</button><button class="btn" data-act="rate">${icon('star')}Rate on Play Store</button></div>
     <div class="row-end"><span></span><button class="btn primary" data-go="title">Back</button></div>
   </div></div>`;
 }
 
-const CREATE_ICONS = [['c_bandage', 'shield', 'archive'], ['w_blade', 'burn', 'w_dagger'], ['e_hound', 'e_nun', 'e_raven']];
+const CREATE_ICONS = [['c_bandage', 'shield', 'archive'], ['w_blade', 'burn', 'w_dagger'], ['e_hound', 'e_veiled', 'e_raven']];
 export function creation(s: GameState, ui: UI, meta: Meta) {
   const sets = [ORIGINS, PATHS, COMPANIONS];
   const key = (['origin', 'path', 'companion'] as const)[ui.creationStep];

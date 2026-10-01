@@ -1,18 +1,18 @@
 import { ITEMS } from '../data/items';
-import { QUEST_MAP } from '../data/quests';
-import { SKILL_MAP, LOADOUT_MAX, TALENTS, TALENT_MAP } from '../data/skills';
+import { ASCENSION_MAP, ASCENSIONS, MAX_RANK, SKILL_MAP, LOADOUT_MAX, TALENTS, TALENT_MAP, rankCost } from '../data/skills';
+import { COMPANION_MAP, STARTER_COMPANIONS } from '../data/companions';
 import { DUNGEONS, TOWN_MAP, TOWN_SCHOOLS } from '../data/world';
 import { hashStr, mulberry32, shuffle } from '../rng';
 import type { GameState, ItemDef, Rarity, Slot, Stat } from '../types';
 import { MAX_UPGRADE, SLOTS, baseItem, canUpgrade, clampVitals, item, pick, push, save, splitId, stats, upgradeCost } from './core';
 import { commit, enqueue } from './flow';
 import { addItem, gainXp } from './loot';
-import { claimable } from './quests';
+import { claimable, questDef } from './quests';
 
 export const SUPPLY_PRICE = 16;
 const GEAR = ITEMS.filter(x => !x.unique && x.slot !== 'consumable' && x.slot !== 'junk');
 const CONS = ITEMS.filter(x => x.slot === 'consumable');
-const RARITY_OK: Record<Rarity, number> = { common: 0, rare: 2, epic: 3, relic: 9 };
+const RARITY_OK: Record<Rarity, number> = { common: 0, rare: 2, epic: 3, relic: 9, mythic: 9 };
 
 export function innCost(s: GameState) {
   const t = s.town ? TOWN_MAP.get(s.town) : null;
@@ -46,10 +46,13 @@ export function shopStock(s: GameState, townId: string): ItemDef[] {
 export const sellPrice = (def: ItemDef) => (def.unique && def.slot === 'junk' ? 0 : def.slot === 'junk' ? Math.round(def.price * 0.85) : Math.max(1, Math.floor(def.price * 0.4)));
 export const canSell = (id: string) => { const d = item(id); return !!d && sellPrice(d) > 0 };
 
+/** Price after the Haggler discount. */
+export const buyPrice = (s: GameState, def: ItemDef) => Math.max(1, Math.round(def.price * (1 - stats(s).shopPct / 100)));
 export function buy(s: GameState, id: string): boolean {
   const def = item(id);
-  if (!def || s.gold < def.price) return false;
-  s.gold -= def.price;
+  const price = def ? buyPrice(s, def) : 0;
+  if (!def || s.gold < price) return false;
+  s.gold -= price;
   addItem(s, id);
   push(s, `Bought ${def.name}.`, 'good');
   save(s);
@@ -121,30 +124,70 @@ export function cleanse(s: GameState) {
   if (s.corruption <= 0 || s.gold < cost) return;
   s.gold -= cost;
   s.corruption--;
-  push(s, 'The temple’s fire burns a little of the dark out of you.', 'good');
+  push(s, 'The wardhouse’s fire burns a little of the dark out of you.', 'good');
   clampVitals(s);
   save(s);
 }
-export const blessCost = (s: GameState) => 40 + s.level * 9;
-export function buyBlessing(s: GameState, kind: 1 | 2 | 3) {
-  const cost = blessCost(s);
+export const sigilCost = (s: GameState) => 40 + s.level * 9;
+export function buySigil(s: GameState, kind: 1 | 2 | 3) {
+  const cost = sigilCost(s);
   if (s.gold < cost) return;
   s.gold -= cost;
-  s.flags.pending_bless = kind;
-  push(s, 'A blessing settles on you. It will manifest when you next enter a dungeon.', 'good');
+  s.flags.pending_sigil = kind;
+  push(s, 'A sigil settles on your skin. It will wake when you next enter a dungeon.', 'good');
   save(s);
 }
-export function pray(s: GameState) {
-  if (s.flags[`prayed_${s.day}`]) return false;
-  s.flags[`prayed_${s.day}`] = 1;
+export function quietHour(s: GameState) {
+  if (s.flags[`quiet_${s.day}`]) return false;
+  s.flags[`quiet_${s.day}`] = 1;
   s.sanity = Math.min(stats(s).maxSanity, s.sanity + Math.round(stats(s).maxSanity * 0.35));
-  push(s, 'You pray in the quiet. Some of the whispering stops.', 'good');
+  push(s, 'You sit in the quiet. Some of the whispering stops.', 'good');
   save(s);
   return true;
 }
 
 export function schoolsHere(s: GameState) { return (s.town && TOWN_SCHOOLS[s.town]) || [] }
 export function skillPrice(id: string) { return SKILL_MAP.get(id)?.price ?? 0 }
+export const rankUpCost = (s: GameState, id: string) => { const sk = SKILL_MAP.get(id); const r = s.skillRanks[id] ?? 1; return sk && r < MAX_RANK ? rankCost(sk, r + 1) : 0 };
+export function rankUp(s: GameState, id: string) {
+  const cost = rankUpCost(s, id);
+  if (!cost || !s.skills.includes(id) || s.gold < cost) return false;
+  s.gold -= cost;
+  s.skillRanks[id] = (s.skillRanks[id] ?? 1) + 1;
+  push(s, `${SKILL_MAP.get(id)!.name} reaches rank ${s.skillRanks[id]}.`, 'good');
+  save(s);
+  return true;
+}
+
+export const ascensionsFor = (s: GameState) => ASCENSIONS.filter(a => a.path === s.path);
+export function canAscend(s: GameState, id: string) {
+  const a = ASCENSION_MAP.get(id);
+  if (!a || a.path !== s.path || s.level < a.level || s.ascensions.includes(id)) return false;
+  if (s.ascensions.some(x => ASCENSION_MAP.get(x)?.tier === a.tier)) return false;
+  return a.tier === 1 || s.ascensions.some(x => ASCENSION_MAP.get(x)?.tier === 1);
+}
+export function ascend(s: GameState, id: string) {
+  if (!canAscend(s, id)) return false;
+  const a = ASCENSION_MAP.get(id)!;
+  s.ascensions.push(id);
+  if (a.skill && !s.skills.includes(a.skill)) { s.skills.push(a.skill); if (s.loadout.length < LOADOUT_MAX) s.loadout.push(a.skill) }
+  s.hp += a.bonus.maxHp ?? 0;
+  s.sanity += a.bonus.maxSanity ?? 0;
+  clampVitals(s);
+  push(s, `You ascend as a ${a.name}.`, 'epic');
+  save(s);
+  return true;
+}
+
+export const ownedCompanions = (s: GameState) => [...new Set([...STARTER_COMPANIONS.filter(n => n === s.companion || s.companions.includes(n)), ...s.companions, ...(s.companion && s.companion !== 'None' ? [s.companion] : [])])].filter(n => COMPANION_MAP.has(n));
+export function swapCompanion(s: GameState, name: string) {
+  if (!ownedCompanions(s).includes(name) && name !== 'None') return;
+  s.companion = name;
+  s.companionCharge = 0;
+  push(s, name === 'None' ? 'You walk alone.' : `${name} falls in at your side.`, 'good');
+  save(s);
+}
+
 export function learn(s: GameState, id: string) {
   const sk = SKILL_MAP.get(id);
   if (!sk || s.skills.includes(id) || s.gold < sk.price || s.level < sk.level) return;
@@ -214,10 +257,11 @@ export function buyRound(s: GameState): string | null {
 
 export function claimQuest(s: GameState, id: string) {
   const q = s.quests.find(x => x.id === id);
-  const def = QUEST_MAP.get(id);
+  const def = questDef(s, id);
   if (!q || !q.done || !def || def.town !== s.town) return;
   s.quests = s.quests.filter(x => x.id !== id);
   s.completedQuests.push(id);
+  delete s.dynQuests[id];
   if (def.reward.flag) s.flags[def.reward.flag] = 1;
   const items = def.reward.items ?? [];
   s.gold += def.reward.gold;

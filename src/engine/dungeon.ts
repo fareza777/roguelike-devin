@@ -5,7 +5,7 @@ import { areaLevel, clamp, clampVitals, hooks, pick, push, rand, scaleSan, stats
 import { BLOCKING_ENTS, WALKABLE, computeFov, genFloor } from './dungeongen';
 import { commit, enqueue } from './flow';
 import { addItem, goldFor, rollConsumable, rollGear } from './loot';
-import { questEvent, hasItem } from './quests';
+import { cond, questEvent, hasItem } from './quests';
 import { locationTriggers, openEvent, openEventById } from './story';
 
 export const STEPS_PER_SUPPLY = 14;
@@ -48,9 +48,10 @@ export function enterDungeon(s: GameState, id: string): boolean {
   const def = DUNGEON_MAP.get(id);
   if (!def) return false;
   if (def.gate && s.main < (MAIN_INDEX.get(def.gate) ?? 0)) { push(s, `${def.name} is sealed to you. The story has not led you here yet.`, 'bad'); return false }
-  const bless = ['', 'blade', 'ward', 'eye'][s.flags.pending_bless ?? 0] || null;
-  s.flags.pending_bless = 0;
-  s.run = { dungeon: id, floor: 0, seed: rand(1, 1 << 30), px: 0, py: 0, floors: [], keys: 0, steps: 0, blessing: bless, found: [], gold: 0, kills: 0, light: 0, torch: 0, bossDown: false, facing: 0 };
+  if (def.cond && !cond(s, def.cond)) { push(s, `${def.name} is sealed to you. The story has not led you here yet.`, 'bad'); return false }
+  const sigil = ['', 'blade', 'ward', 'eye'][s.flags.pending_sigil ?? 0] || null;
+  s.flags.pending_sigil = 0;
+  s.run = { dungeon: id, floor: 0, seed: rand(1, 1 << 30), px: 0, py: 0, floors: [], keys: 0, steps: 0, sigil, found: [], gold: 0, kills: 0, light: 0, torch: 0, bossDown: false, facing: 0 };
   s.status = {};
   s.town = null;
   loadFloor(s, 0, 'down');
@@ -95,18 +96,18 @@ function changeFloor(s: GameState, delta: 1 | -1) {
 
 const ch = (label: string, text: string, eff: Eff[], o: Partial<Choice> = {}): Choice => ({ label, text, eff, ...o });
 const done: Eff = { t: 'flag', k: '__done' };
-const SHRINE: StoryEvent = { id: 'shrine', title: 'A Forgotten Shrine', icon: 'holy', text: 'A saint with no name is carved into the wall. Fresh candles burn at her feet, though no one has been here for a century. She offers one blessing for this expedition.', choices: [
-  ch('Blessing of Blades', 'Bonus damage until you leave this place.', [{ t: 'bless', k: 'blade' }, done]),
-  ch('Blessing of Warding', 'Bonus armor until you leave this place.', [{ t: 'bless', k: 'ward' }, done]),
-  ch('Blessing of the Open Eye', '+10% critical chance and restore some sanity.', [{ t: 'bless', k: 'eye' }, { t: 'san', n: 5 }, done]),
-  ch('Leave it be', 'Not every gift is free.', [{ t: 'log', text: 'You leave the shrine in peace.' }])] };
+const WAYSTONE: StoryEvent = { id: 'waystone', title: 'A Forgotten Waystone', icon: 'sigil', text: 'A hooded figure with no face is carved into the wall. Fresh candles burn at its feet, though no one has been here for a century. It offers one sigil for this expedition.', choices: [
+  ch('Sigil of Blades', 'Bonus damage until you leave this place.', [{ t: 'sigil', k: 'blade' }, done]),
+  ch('Sigil of Warding', 'Bonus armor until you leave this place.', [{ t: 'sigil', k: 'ward' }, done]),
+  ch('Sigil of the Open Eye', '+10% critical chance and restore some sanity.', [{ t: 'sigil', k: 'eye' }, { t: 'san', n: 5 }, done]),
+  ch('Leave it be', 'Not every gift is free.', [{ t: 'log', text: 'You leave the waystone in peace.' }])] };
 const CAMP: StoryEvent = { id: 'camp', title: 'A Safe Hollow', icon: 'campfire', text: 'A dry hollow sheltered from the dark. Old ashes suggest others rested here. None of them left.', choices: [
   ch('Make camp', 'Spend 1 supply: restore 45% health and sanity.', [{ t: 'hpPct', n: 45 }, { t: 'san', n: 6 }, { t: 'rand', p: 0.12, eff: [{ t: 'log', text: 'Something found you in your sleep.', tone: 'bad' }, { t: 'fight', enemy: '@normal' }] }, done], { cost: { supplies: 1 } }),
   ch('Scavenge the ashes', 'Search the belongings of those who stayed.', [{ t: 'supplies', n: 2 }, { t: 'consumable' }, done], { check: { stat: 'cunning' }, fail: [{ t: 'log', text: 'The ashes stir. They were not ashes.', tone: 'bad' }, { t: 'fight', enemy: '@normal' }, done] }),
   ch('Press on', 'Rest is for the living.', [{ t: 'log', text: 'You leave the hollow.' }])] };
 const FOUNTAIN: StoryEvent = { id: 'fountain', title: 'A Still Fountain', icon: 'fountain', text: 'A stone fountain gurgles in the dark. The water is clear and very cold, and it shows you a sky you have never seen.', choices: [
   ch('Drink', 'Restore health and sanity.', [{ t: 'hpPct', n: 30 }, { t: 'san', n: 10 }, done]),
-  ch('Bottle some', 'A vial for later.', [{ t: 'item', id: 'holywater' }, done]),
+  ch('Bottle some', 'A vial for later.', [{ t: 'item', id: 'clearwater' }, done]),
   ch('Leave it', 'Suspicious water is a kind of wisdom.', [{ t: 'log', text: 'You leave the fountain alone.' }])] };
 const PRISONER: StoryEvent = { id: 'prisoner', title: 'A Prisoner in Chains', icon: 'prisoner', text: 'A gaunt figure hangs in manacles, murmuring. “Please,” they say. “I know things. I know where things are.”', choices: [
   ch('Free them', 'Vigor to break the chains.', [{ t: 'loot', min: 'rare' }, { t: 'goldR', lo: 30, hi: 60 }, { t: 'xpL', m: 0.1 }, done], { check: { stat: 'vigor' }, fail: [{ t: 'hp', n: -6 }, { t: 'log', text: 'The chains hold. So does the pain.', tone: 'bad' }] }),
@@ -229,7 +230,7 @@ function interact(s: GameState, e: Ent) {
   switch (e.k) {
     case 'enemy': case 'boss': engage(s, e, !e.awake && e.k === 'enemy'); return;
     case 'chest': openChest(s, e); return;
-    case 'shrine': openEvent(s, SHRINE); return;
+    case 'waystone': openEvent(s, WAYSTONE); return;
     case 'camp': openEvent(s, CAMP); return;
     case 'fountain': openEvent(s, FOUNTAIN); return;
     case 'prisoner': openEvent(s, PRISONER); return;

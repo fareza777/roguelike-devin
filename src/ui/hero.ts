@@ -6,7 +6,12 @@ import { ACTS, ENDINGS, LORE, MAIN } from '../data/story';
 import { DUNGEONS, TOWNS } from '../data/world';
 import { SLOTS, SLOT_LABEL, item, stats } from '../engine/core';
 import { canUse } from '../engine/combat';
-import { canLearnTalent } from '../engine/town';
+import { ascensionsFor, canAscend, canLearnTalent, ownedCompanions } from '../engine/town';
+import { ARCS } from '../data/arcs';
+import { COMPANION_MAP } from '../data/companions';
+import { ZONES } from '../data/world';
+import { arcDone, arcStep, ascensionAvailable, regaliaCount } from '../engine/quests';
+import { statChips as chips } from './common';
 import { currentStep } from '../engine/story';
 import { icon } from '../icons';
 import type { GameState, ItemDef, Meta } from '../types';
@@ -28,15 +33,16 @@ export function character(s: GameState, ui: UI) {
     <div class="hero-card panel">${XP_RING(s)}<div class="hc-main"><h2>${esc(s.name)}</h2><p class="muted">${esc(s.origin)} · ${esc(s.path)} · ${s.difficulty}</p>
       ${barHtml('xp', s.xp, s.xpNext, `LEVEL ${s.level} · ${s.xp} / ${s.xpNext} XP`)}
       <div class="chips"><span class="chip">${icon('e_hound')}<b>${esc(s.companion)}</b></span>${s.flags.companion_trust ? '<span class="chip gold-c"><b>Bonded</b></span>' : ''}${s.corruption ? `<span class="chip status-burn">${icon('corruption')}<b>Corrupted ${s.corruption}</b></span>` : ''}</div></div></div>
-    <div class="tabs"><button class="${ui.charTab === 'attributes' ? 'on' : ''}" data-chartab="attributes">Attributes${s.statPoints ? ` <em class="dot">${s.statPoints}</em>` : ''}</button><button class="${ui.charTab === 'talents' ? 'on' : ''}" data-chartab="talents">Talents${s.talentPoints ? ` <em class="dot">${s.talentPoints}</em>` : ''}</button><button class="${ui.charTab === 'skills' ? 'on' : ''}" data-chartab="skills">Skills</button></div>
+    <div class="tabs scroll"><button class="${ui.charTab === 'attributes' ? 'on' : ''}" data-chartab="attributes">Attributes${s.statPoints ? ` <em class="dot">${s.statPoints}</em>` : ''}</button><button class="${ui.charTab === 'talents' ? 'on' : ''}" data-chartab="talents">Talents${s.talentPoints ? ` <em class="dot">${s.talentPoints}</em>` : ''}</button><button class="${ui.charTab === 'skills' ? 'on' : ''}" data-chartab="skills">Skills</button><button class="${ui.charTab === 'path' ? 'on' : ''}" data-chartab="path">Path${ascensionAvailable(s) ? ' <em class="dot">!</em>' : ''}</button></div>
     ${ui.charTab === 'attributes' ? `${s.statPoints ? `<p class="callout">${s.statPoints} attribute point${s.statPoints > 1 ? 's' : ''} to spend.</p>` : ''}
       <div class="grid3">${attr('vigor', 'Vigor', 'Health & damage', 'heart')}${attr('will', 'Will', 'Sanity & burning', 'sanity')}${attr('cunning', 'Cunning', 'Crit, dodge, checks', 'eye')}</div>
       <div class="panel statgrid">${gridStats.map(([k, v]) => `<span><em>${k}</em><b>${v}</b></span>`).join('')}</div>${setInfo(s)}`
     : ui.charTab === 'talents' ? `<p class="muted">${s.talentPoints} talent point${s.talentPoints === 1 ? '' : 's'} available. Each tier requires the one above it.</p><div class="trees">${trees}</div>`
+    : ui.charTab === 'path' ? pathTab(s)
     : `<h3 class="sec-h">Combat loadout <small class="muted">${s.loadout.length}/${LOADOUT_MAX}</small></h3>
       <div class="loadout">${Array.from({ length: LOADOUT_MAX }, (_, i) => { const id = s.loadout[i]; const k = id ? SKILL_MAP.get(id) : null; return `<button class="slotbtn ${k ? 'on' : ''}" ${k ? `data-loadout="${id}"` : 'disabled'}>${k ? `${icon(k.icon)}<small>${k.name}</small>` : '<small>Empty</small>'}</button>` }).join('')}</div>
       <p class="muted fine">Tap a learned skill to add or remove it from your loadout. Learn more from trainers in towns.</p>
-      <div class="list">${known.map(k => `<div class="irow ${s.loadout.includes(k.id) ? 'equipped' : ''}" data-loadout="${k.id}"><span class="iicon r-rare">${icon(k.icon)}</span><div class="imain"><div class="iname"><b>${k.name}</b><em class="cnt">${k.school}</em></div><small class="idesc">${k.desc}</small><div class="itag">Cooldown ${k.cooldown}${k.sanityCost ? ` · ${k.sanityCost} sanity` : ''}${k.hpCost ? ` · ${k.hpCost}% health` : ''}</div></div><div class="iact"><span class="badge ${s.loadout.includes(k.id) ? 'on' : ''}">${s.loadout.includes(k.id) ? 'EQUIPPED' : 'TAP TO EQUIP'}</span></div></div>`).join('')}</div>`}
+      <div class="list">${known.map(k => `<div class="irow ${s.loadout.includes(k.id) ? 'equipped' : ''}" data-loadout="${k.id}"><span class="iicon r-rare">${icon(k.icon)}</span><div class="imain"><div class="iname"><b>${k.name}</b><em class="cnt">${k.school} · Rank ${s.skillRanks[k.id] ?? 1}</em></div><small class="idesc">${k.desc}</small><div class="itag">Cooldown ${k.cooldown}${k.sanityCost ? ` · ${k.sanityCost} sanity` : ''}${k.hpCost ? ` · ${k.hpCost}% health` : ''}</div></div><div class="iact"><span class="badge ${s.loadout.includes(k.id) ? 'on' : ''}">${s.loadout.includes(k.id) ? 'EQUIPPED' : 'TAP TO EQUIP'}</span></div></div>`).join('')}</div>`}
   </section>`;
 }
 
@@ -46,7 +52,7 @@ export function inventory(s: GameState, ui: UI) {
   s.inventory.forEach(i => groups.set(i, (groups.get(i) ?? 0) + 1));
   const isGear = (d: ItemDef) => d.slot !== 'consumable' && d.slot !== 'junk';
   const entries = [...groups.entries()].map(([id, n]) => ({ d: item(id)!, n })).filter(g => g.d && (ui.invFilter === 'all' || (ui.invFilter === 'gear' ? isGear(g.d) : g.d.slot === ui.invFilter)))
-    .sort((a, b) => (isGear(b.d) ? 1 : 0) - (isGear(a.d) ? 1 : 0) || ['common', 'rare', 'epic', 'relic'].indexOf(b.d.rarity) - ['common', 'rare', 'epic', 'relic'].indexOf(a.d.rarity) || a.d.name.localeCompare(b.d.name));
+    .sort((a, b) => (isGear(b.d) ? 1 : 0) - (isGear(a.d) ? 1 : 0) || ['common', 'rare', 'epic', 'relic', 'mythic'].indexOf(b.d.rarity) - ['common', 'rare', 'epic', 'relic', 'mythic'].indexOf(a.d.rarity) || a.d.name.localeCompare(b.d.name));
   return `<section class="page-in inv">
     <div class="doll panel">${(SLOTS).map(slot => {
       const id = s.equipment[slot];
@@ -95,10 +101,11 @@ export function journal(s: GameState, ui: UI, meta: Meta) {
     const state = idx.every(i => i < s.main) ? 'done' : idx.some(i => i <= s.main) ? 'now' : 'locked';
     return `<article class="act ${state}"><h3>${state === 'locked' ? `Act ${a.id || 'I'} · ???` : a.title}</h3>${state === 'locked' ? '<p class="muted">The ink has not yet dried.</p>' : `<p class="muted">${a.blurb}</p>${steps.map(m => { const i = MAIN.indexOf(m); return i > s.main ? '' : `<div class="mstep ${i < s.main ? 'done' : 'cur'}"><span class="mi">${i < s.main ? icon('trophy') : icon('quest')}</span><div><b>${m.title}</b><p>${m.text}</p>${i === s.main ? `<p class="obj">▸ ${m.obj}</p>` : ''}</div></div>` }).join('')}`}</article>`;
   }).join('');
-  const tabs: [string, string][] = [['story', 'Story'], ['contracts', 'Contracts'], ['lore', 'Lore'], ['bestiary', 'Bestiary'], ['atlas', 'Atlas'], ['endings', 'Endings']];
+  const tabs: [string, string][] = [['story', 'Story'], ['crowns', 'Crowns'], ['contracts', 'Contracts'], ['lore', 'Lore'], ['bestiary', 'Bestiary'], ['atlas', 'Atlas'], ['endings', 'Endings']];
   return `<section class="page-in journal"><div class="page-head"><h2>${icon('journal')}The Chronicle</h2></div>
     <div class="tabs scroll">${tabs.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-jtab="${k}">${l}</button>`).join('')}</div>
-    ${tab === 'story' ? `<div class="panel objective now"><span class="oi">${icon('quest')}</span><div><small>CURRENT OBJECTIVE · ${esc(ACTS[step.act].title)}</small><h3>${esc(step.title)}</h3><p>${esc(step.obj)}</p>${s.run ? '' : `<button class="btn" data-act="openMap">${icon('world')}Show on the atlas</button>`}</div></div><div class="acts">${acts}</div>` : ''}
+    ${tab === 'story' ? `<div class="panel objective now"><span class="oi">${icon('quest')}</span><div><small>CURRENT OBJECTIVE · ${esc(ACTS[step.act].title)}</small><h3>${esc(step.title)}</h3><p>${esc(step.obj)}</p>${step.goal ? `<div class="bar"><i style="width:${pct(s.flags._mg ?? 0, step.goal.count)}%"></i></div><small class="muted">${esc(step.goal.label)}: ${s.flags._mg ?? 0}/${step.goal.count}</small>` : ''}${s.run ? '' : `<button class="btn" data-act="openMap">${icon('world')}Show on the atlas</button>`}</div></div>${arcObjectives(s)}<div class="acts">${acts}</div>` : ''}
+    ${tab === 'crowns' ? crowns(s) : ''}
     ${tab === 'contracts' ? `<h3 class="sec-h">Active (${s.quests.length})</h3><div class="list">${s.quests.map(q => { const d = QUEST_MAP.get(q.id)!; return `<div class="quest ${q.done ? 'ready' : ''}"><span class="qi">${icon(q.done ? 'trophy' : 'quest')}</span><div class="qm"><b>${esc(d.title)}</b><small>${esc(d.giver)} · ${esc(TOWNS.find(t => t.id === d.town)!.name)}</small><p>${esc(d.text)}</p><div class="bar bar-xp thin"><div class="fill" style="width:${(q.progress / d.goal.count) * 100}%"></div><span>${d.goal.label}: ${q.progress}/${d.goal.count}</span></div></div></div>` }).join('') || emptyState('notice', 'Visit a notice board in any town.')}</div>
       <p class="muted center">Contracts completed: ${s.completedQuests.length} / ${QUESTS.length}</p>` : ''}
     ${tab === 'lore' ? `<p class="muted">${s.lore.length} / ${LORE.length} fragments recovered</p><div class="list">${LORE.map(l => `<article class="lore ${s.lore.includes(l[0]) ? '' : 'locked'}"><h3>${s.lore.includes(l[0]) ? l[0] : 'Unrecovered fragment'}</h3><p>${s.lore.includes(l[0]) ? l[1] : 'The ink moves when you try to read it. Find this fragment in the wilds.'}</p></article>`).join('')}</div>` : ''}
@@ -109,3 +116,34 @@ export function journal(s: GameState, ui: UI, meta: Meta) {
   </section>`;
 }
 
+
+function pathTab(s: GameState) {
+  const asc = ascensionsFor(s);
+  const taken = (id: string) => s.ascensions.includes(id);
+  const rows = [1, 2].map(tier => {
+    const list = asc.filter(a => a.tier === tier);
+    return `<h3 class="sec-h">${tier === 1 ? 'First Ascension' : 'Second Ascension'} <small class="muted">${tier === 1 ? 'level 20' : 'level 40'}</small></h3><div class="list">${list.map(a => `<div class="irow ${taken(a.id) ? 'equipped' : ''}"><span class="iicon r-epic">${icon(a.icon)}</span><div class="imain"><div class="iname"><b>${esc(a.name)}</b><em class="cnt">Level ${a.level}</em></div><small class="idesc">${esc(a.desc)}</small><div class="chips">${chips(a.bonus)}</div></div><div class="iact">${taken(a.id) ? '<span class="badge on">TAKEN</span>' : `<button class="btn buy" data-ascend="${a.id}" ${canAscend(s, a.id) ? '' : 'disabled'}>Ascend</button>`}</div></div>`).join('') || '<p class="muted">Walk the road further to see what waits here.</p>'}</div>`;
+  }).join('');
+  const own = ownedCompanions(s);
+  return `<p class="muted">Your discipline, <b>${esc(s.path)}</b>, branches at levels 20 and 40. Each ascension is permanent and grants a new skill.</p>${rows}
+    <h3 class="sec-h">Companions <small class="muted">${own.length} bound</small></h3><div class="list">${own.map(n => { const c = COMPANION_MAP.get(n); return `<div class="irow ${s.companion === n ? 'equipped' : ''}"><span class="iicon r-rare">${icon(c?.icon ?? 'e_hound')}</span><div class="imain"><div class="iname"><b>${esc(n)}</b></div><small class="idesc">${esc(c?.blurb ?? '')}</small><div class="itag">${esc(c?.perk ?? '')}</div></div><div class="iact">${s.companion === n ? '<span class="badge on">WITH YOU</span>' : '<span class="badge">Swap at any inn</span>'}</div></div>` }).join('')}</div>`;
+}
+
+export function crowns(s: GameState) {
+  const n = regaliaCount(s);
+  const zoneName = (id: string) => ZONES.find(z => z.id === id)?.name ?? id;
+  return `<div class="panel objective"><span class="oi">${icon('crown')}</span><div><small>THE SIX REGALIA · ${n}/${ARCS.length}</small><h3>Crowns of the fallen Regents</h3><p>Six realms. Six Regents who ruled and failed. Recover every Regalia and the throne will not be able to divide you.</p></div></div>
+    <div class="list">${ARCS.map(a => {
+      const step = arcStep(s, a.id), done = arcDone(s, a), cur = a.steps[step - 1];
+      const pctDone = done ? 100 : Math.round(((Math.max(0, step - 1)) / a.steps.length) * 100);
+      const state = done ? 'COMPLETE' : step >= 1 ? `STEP ${step}/${a.steps.length}` : 'NOT STARTED';
+      return `<article class="irow arc ${done ? 'equipped' : ''}"><span class="iicon r-${done ? 'relic' : 'epic'}">${icon(done ? 'trophy' : 'crown')}</span><div class="imain"><div class="iname"><b>${esc(a.title)}</b><em class="cnt">${zoneName(a.region)} · Lv ${a.lvl}+</em></div><small class="idesc">${esc(a.blurb)}</small>${cur && !done ? `<div class="itag"><b>${esc(cur.title)}:</b> ${esc(cur.obj)}</div>` : ''}${done ? '<div class="itag">The Regalia is yours.</div>' : step < 1 ? '<div class="itag">Travel to the hub city to begin.</div>' : ''}<div class="bar"><i style="width:${pctDone}%"></i></div></div><div class="iact"><span class="badge ${done ? 'on' : ''}">${state}</span></div></article>`;
+    }).join('')}</div>
+    <p class="muted fine">The Common Dawn ending requires all six Regalia and mercy for each of the four Wardens.</p>`;
+}
+
+function arcObjectives(s: GameState) {
+  const act = ARCS.filter(a => { const n = arcStep(s, a.id); return n >= 1 && n <= a.steps.length });
+  if (!act.length) return '';
+  return `<h3 class="sec-h">Regalia hunts in progress</h3>${act.map(a => { const n = arcStep(s, a.id), st = a.steps[n - 1]; const have = s.flags[`_ag_${a.id}`] ?? 0; return `<div class="panel objective"><span class="oi">${icon('crown')}</span><div><small>${esc(a.title.toUpperCase())} · STEP ${n}/${a.steps.length}</small><h3>${esc(st.title)}</h3><p>${esc(st.obj)}</p>${st.goal && st.goal.type !== 'clear' && st.goal.type !== 'reach' ? `<div class="bar"><i style="width:${pct(have, st.goal.count)}%"></i></div><small class="muted">${esc(st.goal.label)}: ${have}/${st.goal.count}</small>` : ''}</div></div>` }).join('')}`;
+}

@@ -1,11 +1,11 @@
 import { LOADOUT_MAX, SKILL_MAP } from '../data/skills';
-import { ENDINGS } from '../data/story';
+import { ENDING_FRAMES, ENDING_LINES, ENDINGS } from '../data/story';
 import { TOWN_MAP } from '../data/world';
 import { item, stats } from '../engine/core';
 import { canAfford, checkChance, checkDc, currentNode, getScene, speaker, visibleChoices } from '../engine/story';
 import { icon } from '../icons';
 import type { GameState, IntentKind } from '../types';
-import { UI, barHtml, esc, fmt, itemIcon, statusChips, vitals } from './common';
+import { UI, barHtml, esc, fmt, itemIcon, statusChips, stillArt, vitals } from './common';
 
 const INTENT_ICON: Record<IntentKind, string> = { attack: 'i_attack', heavy: 'i_heavy', dread: 'i_dread', guard: 'i_guard', afflict: 'i_afflict' };
 
@@ -54,7 +54,8 @@ export function combat(s: GameState, ui: UI) {
 
 export function event(s: GameState) {
   const e = s.event!;
-  return `<section class="overlay-page event"><div class="ev-card panel">
+  const tag = (e.tags ?? []).filter(t => t !== 'any' && t !== 'wild' && t !== 'landmark').join(' ');
+  return `<section class="event-stage"><img class="d-art" src="${stillArt(e.art || tag || e.id)}" alt=""><div class="d-shade"></div><div class="ev-card panel">
     <div class="ev-ic">${icon(e.icon)}</div><h1>${esc(e.title)}</h1><p class="story">${esc(e.text)}</p>
     <div class="choices">${e.choices.map((c, i) => {
       const ok = canAfford(s, c);
@@ -64,13 +65,14 @@ export function event(s: GameState) {
     }).join('')}</div></div></section>`;
 }
 
-export function reward(s: GameState) {
+export function reward(s: GameState, adOffer = false) {
   const r = s.reward!;
   return `<section class="overlay-page reward"><div class="rw-card panel">
     <div class="rw-ic">${icon(r.icon ?? 'trophy')}<i class="burst"></i></div><h1>${esc(r.title)}</h1>
     <div class="rw-stats">${r.gold ? `<span class="rs">${icon('gold')}<b>${r.gold > 0 ? '+' : ''}${r.gold}</b> gold</span>` : ''}${r.xp ? `<span class="rs">${icon('xp')}<b>+${r.xp}</b> XP</span>` : ''}</div>
     ${r.lines.map(l => `<p class="log ${/Level \d+!/.test(l) ? 'epic' : 'plain'}">${esc(l)}</p>`).join('')}
     ${r.items.length ? `<h3>Spoils</h3><div class="rw-items">${r.items.map((id, i) => { const d = item(id)!; return `<div class="ri r-${d.rarity}" style="animation-delay:${0.15 + i * 0.09}s" title="${esc(d.name)}">${itemIcon(d)}<b>${esc(d.name)}</b><small>${d.rarity}</small></div>` }).join('')}</div>` : ''}
+    ${adOffer && !r.doubled && r.gold > 0 ? `<button class="btn ad wide" data-act="adDouble">${icon('gold')}<span>Double the gold<small>Watch a short video · optional</small></span></button>` : ''}
     <button class="btn primary wide" data-act="closeReward">Continue</button></div></section>`;
 }
 
@@ -86,7 +88,7 @@ export function dialogue(s: GameState, ui: UI) {
   const key = `${sc.id}:${node.id}`;
   const name = fmt(s, sp.name);
   return `<section class="dialogue">
-    <div class="d-art kenburns" data-key="da-${sc.id}" style="background-image:url('/art/${art}')"></div><div class="d-shade"></div>
+    <img class="d-art" src="${stillArt(art)}" alt=""><div class="d-shade"></div>
     <div class="d-stage">
       ${narr ? '' : `<div class="d-speaker" data-key="sp-${node.who}" style="--c:${sp.color ?? '#e7c98f'}"><span class="d-ic">${icon(sp.icon)}</span><div><b>${name}</b>${sp.title ? `<small>${fmt(s, sp.title)}</small>` : ''}</div></div>`}
       <div class="d-box panel ${narr ? 'narr' : ''}" data-key="dbox">
@@ -102,19 +104,31 @@ export function dialogue(s: GameState, ui: UI) {
   </section>`;
 }
 
-export function death(s: GameState) {
+export function death(s: GameState, adOffer = false) {
   const doomed = s.difficulty === 'Doomed';
   return `<section class="finale death"><div class="fin-in"><div class="fin-ic">${icon('skull')}</div><h1>The March Ends</h1>
     <p class="story">${esc(s.name)} falls on day ${s.day}, after ${s.kills} horrors slain.</p>
-    <p class="muted">${doomed ? 'On the Doomed path, death is final. This chronicle is erased.' : 'Mother Ilse’s people can drag you back — but the dark keeps half your gold.'}</p>
-    <div class="menu-stack">${doomed ? '' : `<button class="btn primary big" data-act="revive">${icon('heart')}<span>Rise again in Veyrgard</span></button>`}<button class="btn big" data-act="new">${icon('quest')}<span>Begin another chronicle</span></button><button class="btn" data-act="toTitle">Main menu</button></div></div></section>`;
+    <p class="muted">${doomed ? 'On the Doomed path, death is final. This chronicle is erased.' : 'The Lantern Court’s runners can drag you back — but the dark keeps half your gold.'}</p>
+    <div class="menu-stack">${adOffer && !doomed ? `<button class="btn ad big" data-act="adRevive">${icon('heart')}<span>Rise where you fell<small>Watch a short video · keep everything</small></span></button>` : ''}${doomed ? '' : `<button class="btn primary big" data-act="revive">${icon('heart')}<span>Rise again in Veyrgard</span></button>`}<button class="btn big" data-act="new">${icon('quest')}<span>Begin another chronicle</span></button><button class="btn" data-act="toTitle">Main menu</button></div></div></section>`;
 }
 
-export function ending(s: GameState) {
-  const e = ENDINGS[s.ending ?? 'return'];
-  return `<section class="finale ending"><div class="fin-in"><div class="fin-ic gold">${icon(e.icon)}</div><small class="kicker">ENDING</small><h1>${e.title}</h1>
-    <p class="story">${esc(e.text)}</p><p class="story dim">${esc(e.epilogue)}</p>
-    <p class="muted fine">Day ${s.day} · Level ${s.level} · ${s.kills} horrors slain · ${s.lore.length} lore fragments · ${s.completedQuests.length} contracts</p>
-    <div class="menu-stack"><button class="btn primary big" data-act="epilogue">${icon('compass')}<span>Continue in ${esc(TOWN_MAP.get('veyrgard')!.name)}</span></button><button class="btn" data-act="share">${icon('share')}Share your ending</button><button class="btn" data-act="new">Begin another chronicle</button></div></div></section>`;
+export function ending(s: GameState, ui: UI) {
+  const id = s.ending ?? 'return';
+  const e = ENDINGS[id];
+  const lines = ENDING_LINES[id] ?? [e.text, e.epilogue];
+  const i = Math.max(0, Math.min(ui.endSlide, lines.length - 1));
+  const last = i >= lines.length - 1;
+  return `<section class="cine">
+    <img class="cine-art" src="${stillArt(ENDING_FRAMES[i] ?? 'meridian')}" alt="">
+    <div class="cine-shade"></div>
+    <div class="cine-copy">
+      <small class="kicker">ENDING · ${i + 1}/${lines.length}</small>
+      <h1>${esc(e.title)}</h1>
+      <p class="story">${esc(lines[i])}</p>
+      ${last ? `<p class="muted fine">Day ${s.day} · Level ${s.level} · ${s.kills} horrors slain · ${s.lore.length} lore · ${s.completedQuests.length} contracts</p>
+        <div class="menu-stack"><button class="btn primary big" data-act="epilogue">${icon('compass')}<span>Continue in ${esc(TOWN_MAP.get('veyrgard')!.name)}</span></button><button class="btn" data-act="share">${icon('share')}Share your ending</button><button class="btn" data-act="new">Begin another chronicle</button></div>`
+        : `<div class="cine-nav"><div class="dots">${lines.map((_, n) => `<i class="${n === i ? 'on' : ''}"></i>`).join('')}</div><button class="btn primary" data-act="nextEnding">Next</button></div>`}
+    </div>
+  </section>`;
 }
 

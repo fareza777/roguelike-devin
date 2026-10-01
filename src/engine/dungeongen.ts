@@ -4,14 +4,15 @@ import { mulberry32, rint, rpick, shuffle } from '../rng';
 
 export const BLOCK_SIGHT = new Set(['#', 'S', '+', 'L']);
 export const WALKABLE = new Set(['.', ',', '~', '<', '>', '/']);
-export const BLOCKING_ENTS = new Set<EntKind>(['enemy', 'boss', 'chest', 'shrine', 'altar', 'prisoner', 'camp', 'fountain', 'lore', 'npc', 'lever']);
+export const BLOCKING_ENTS = new Set<EntKind>(['enemy', 'boss', 'chest', 'waystone', 'plinth', 'prisoner', 'camp', 'fountain', 'lore', 'npc', 'lever']);
 
 interface Room { x: number; y: number; w: number; h: number; cx: number; cy: number }
 export interface GenOpts { bossRespawn: boolean; secretItem?: string; mainCleared: boolean }
 
 const THEME_TAGS: Record<string, string[]> = {
   crypt: ['crypt', 'any'], flooded: ['sea', 'crypt', 'any'], forest: ['forest', 'fire', 'any'], ember: ['fire', 'crypt', 'any'], bone: ['bone', 'any'],
-  mine: ['bone', 'fire', 'any'], ice: ['ice', 'any'], noon: ['noon', 'any'], cave: ['any'], ruin: ['any'], swamp: ['swamp', 'any'], sanctum: ['fire', 'noon', 'crypt', 'any'],
+  mine: ['bone', 'fire', 'any'], ice: ['ice', 'any'], noon: ['noon', 'any'], cave: ['any'], ruin: ['any'], swamp: ['swamp', 'any'], archive: ['fire', 'noon', 'crypt', 'any'],
+  glass: ['glass', 'noon', 'any'], gear: ['gear', 'any'], thorn: ['thorn', 'forest', 'any'], aurora: ['aurora', 'ice', 'any'], deep: ['deep', 'bone', 'any'], reef: ['reef', 'sea', 'any'],
 };
 export const eventPool = (theme: string) => EVENTS.filter(e => (e.tags ?? ['any']).some(t => (THEME_TAGS[theme] ?? ['any']).includes(t)));
 
@@ -127,7 +128,7 @@ export function genFloor(def: DungeonDef, floorIdx: number, seed: number, opts: 
   const nEvent = 1 + rint(rng, 0, 2);
   const chosen = shuffle(rng, evPool).slice(0, nEvent);
   chosen.forEach(ev => { const c = anyCell(otherRooms); if (c) add('event', c[0], c[1], { ref: ev.id }) });
-  if (rng() < 0.55) { const c = anyCell(otherRooms); if (c) add('shrine', c[0], c[1]) }
+  if (rng() < 0.55) { const c = anyCell(otherRooms); if (c) add('waystone', c[0], c[1]) }
   if (floorIdx > 0 || rng() < 0.6) { const c = anyCell(otherRooms); if (c) add('camp', c[0], c[1]) }
   if (rng() < 0.35) { const c = anyCell(otherRooms); if (c) add('fountain', c[0], c[1]) }
   if (rng() < 0.4) { const c = anyCell(otherRooms); if (c) add('lore', c[0], c[1]) }

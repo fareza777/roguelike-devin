@@ -1,10 +1,12 @@
+import { ARCS } from '../data/arcs';
+import { EVENTS } from '../data/events';
 import { LANDMARK_MAP, DUNGEON_MAP, GATE_MERIDIAN, GATE_SOLENNE, MAP_H, MAP_W, TOWN_MAP, ZONES } from '../data/world';
 import { MAIN, MAIN_INDEX } from '../data/story';
 import type { GameState } from '../types';
-import { clamp, hooks, pick, push, rand, scaleSan, stats, zoneAt } from './core';
+import { LEVEL_CAP, clamp, hooks, pick, push, rand, scaleSan, stats, zoneAt } from './core';
 import { commit } from './flow';
-import { cond, questEvent } from './quests';
-import { locationTriggers, openEventById, startScene } from './story';
+import { arcActive, cond, questEvent } from './quests';
+import { locationTriggers, openEvent, openEventById, startScene } from './story';
 import { ENC, IMPASSABLE, getWorld, poiAt, tileAt, worldIdx, type Poi } from './worldgen';
 
 export const STEPS_PER_DAY = 24;
@@ -117,7 +119,7 @@ export function moveWorld(s: GameState, dx: number, dy: number) {
   w.steps++;
   const st = stats(s);
   if (w.steps % STEPS_PER_DAY === 0) s.day++;
-  if (w.steps % STEPS_PER_RATION === 0) {
+  if (w.steps % Math.round(STEPS_PER_RATION * (s.talents.includes('forager') ? 1.25 : 1)) === 0) {
     if (s.supplies > 0) s.supplies--;
     else { s.hp = Math.max(1, s.hp - Math.round(st.maxHp * 0.05)); s.sanity = Math.max(0, s.sanity - scaleSan(s, 1)); push(s, 'Hunger gnaws at you as you walk.', 'bad') }
   }
@@ -129,14 +131,24 @@ export function moveWorld(s: GameState, dx: number, dy: number) {
   if (poi?.kind === 'dungeon') { push(s, `${DUNGEON_MAP.get(poi.id)?.name} lies before you. Enter when you are ready.`); commit(s); return }
   const cd = s.flags._enc ?? 0;
   s.flags._enc = Math.max(0, cd - 1);
-  if (cd <= 0 && !nearTown(s, 2) && Math.random() < 0.045 * (ENC[ch] ?? 1)) {
+  const calm = 1 - st.encPct / 100;
+  if (cd <= 0 && !nearTown(s, 2) && Math.random() < 0.045 * (ENC[ch] ?? 1) * calm) {
     s.flags._enc = 6;
     const zone = zoneAt(nx, ny);
     const elite = Math.random() < 0.06;
     push(s, elite ? 'Something large steps out of the dark.' : 'You are ambushed!', 'bad');
-    hooks.startFight(s, elite ? '@elite' : '@normal', elite ? 'elite' : 'normal', { from: 'world', lvl: clamp(zone.lvl + rand(0, 1), 1, 30) });
+    hooks.startFight(s, elite ? '@elite' : '@normal', elite ? 'elite' : 'normal', { from: 'world', lvl: clamp(zone.lvl + rand(0, 1), 1, LEVEL_CAP) });
+  } else if (cd <= 0 && !nearTown(s, 2) && Math.random() < 0.012 * calm) {
+    const ev = pickWildEvent(zoneAt(nx, ny).biome);
+    if (ev) { s.flags._enc = 10; openEvent(s, ev) }
   }
   commit(s);
+}
+
+/** Overland encounters (non-combat) are the events tagged 'wild' for the local biome. */
+export function pickWildEvent(biome: string) {
+  const pool = EVENTS.filter(e => e.tags?.includes('wild') && (e.tags.includes(biome) || e.tags.includes('anywild')));
+  return pool.length ? pick(pool) : null;
 }
 
 export function travelCost(s: GameState, townId: string) {
@@ -148,6 +160,8 @@ export function travelCost(s: GameState, townId: string) {
 export function canFastTravel(s: GameState, townId: string) {
   if (!s.world.visited.includes(townId) || (s.screen !== 'world' && s.screen !== 'map') || s.town === townId) return false;
   if (townId === 'solenne' && !gateOpen(s, 'G')) return false;
+  // islands are reached by ferry only, and you cannot walk off one
+  if (TOWN_MAP.get(townId)?.ferryOnly || zoneAt(s.world.x, s.world.y).biome === 'sea') return false;
   return travelCost(s, townId).supplies <= s.supplies;
 }
 
@@ -158,6 +172,21 @@ export function fastTravel(s: GameState, townId: string) {
   s.day += c.days;
   push(s, `You travel to ${TOWN_MAP.get(townId)!.name}. ${c.days} day${c.days > 1 ? 's' : ''} pass.`);
   enterTown(s, townId);
+}
+
+export interface Objective { id: string; name: string; pos: [number, number]; kind: 'main' | 'arc'; arc?: string }
+const locate = (at: string | undefined) => { if (!at) return null; const t = TOWN_MAP.get(at); if (t) return { id: at, name: t.name, pos: t.pos }; const d = DUNGEON_MAP.get(at); return d ? { id: at, name: d.name, pos: d.pos } : null };
+/** Every active objective: the main quest plus each unfinished region arc. */
+export function objectiveTargets(s: GameState): Objective[] {
+  const out: Objective[] = [];
+  const m = locate(MAIN[Math.min(s.main, MAIN.length - 1)].at);
+  if (m) out.push({ ...m, kind: 'main' });
+  for (const a of ARCS) {
+    if (!arcActive(s, a)) continue;
+    const l = locate(a.steps[(s.flags[`arc_${a.id}`] ?? 1) - 1]?.at);
+    if (l) out.push({ ...l, kind: 'arc', arc: a.id });
+  }
+  return out;
 }
 
 export function objectiveTarget(s: GameState): { id: string; name: string; pos: [number, number] } | null {
@@ -184,7 +213,27 @@ export function campWorld(s: GameState) {
   if (Math.random() < 0.2 && !nearTown(s, 2)) {
     const zone = zoneAt(s.world.x, s.world.y);
     push(s, 'Something found your camp in the night.', 'bad');
-    hooks.startFight(s, '@normal', 'normal', { from: 'world', lvl: clamp(zone.lvl + rand(0, 1), 1, 30) });
+    hooks.startFight(s, '@normal', 'normal', { from: 'world', lvl: clamp(zone.lvl + rand(0, 1), 1, LEVEL_CAP) });
   }
   commit(s);
+}
+
+// ------------------------------------------------------------------ ferries
+export const ferryCost = (from: string, to: string) => {
+  const a = TOWN_MAP.get(from), b = TOWN_MAP.get(to);
+  if (!a || !b) return 0;
+  return Math.round(40 + (Math.abs(a.pos[0] - b.pos[0]) + Math.abs(a.pos[1] - b.pos[1])) * 3.5);
+};
+export function ferryTargets(s: GameState, from: string) {
+  const t = TOWN_MAP.get(from);
+  return (t?.ferry ?? []).map(id => TOWN_MAP.get(id)).filter((x): x is NonNullable<typeof x> => !!x && cond(s, x.unlock));
+}
+export function canSail(s: GameState, to: string) { return !!s.town && ferryTargets(s, s.town).some(t => t.id === to) && s.gold >= ferryCost(s.town, to) }
+export function sail(s: GameState, to: string) {
+  if (!canSail(s, to)) return;
+  const cost = ferryCost(s.town!, to);
+  s.gold -= cost;
+  s.day += 1 + Math.floor(cost / 160);
+  push(s, `The ferry carries you to ${TOWN_MAP.get(to)!.name} for ${cost} gold.`);
+  enterTown(s, to);
 }
