@@ -1,0 +1,69 @@
+/* ---------- procedural art (canvas scenes, personas, battle stage) ---------- */
+canvas[data-scene]{display:block}
+.d-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:none}
+img.d-ic{width:46px;height:58px;border-radius:12px;object-fit:cover;background:#0a0705;border:1px solid var(--c)}
+.d-speaker{padding:6px 18px 6px 6px;border-radius:16px}
+.banner{background:#080606}
+.banner-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.banner-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 35%,rgba(0,0,0,.82));pointer-events:none}
+.banner:before{z-index:1;mix-blend-mode:screen;opacity:.5}
+.banner-text{z-index:2}
+.np{overflow:hidden;border-radius:12px;width:44px;height:54px;background:#0a0705}.np img{width:100%;height:100%;object-fit:cover;display:block}
+.ev-card{padding-top:0;overflow:hidden}
+.ev-art{position:relative;margin:0 -18px 12px;height:190px;overflow:hidden}
+.ev-canvas{width:100%;height:100%;object-fit:cover}
+.ev-fade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(20,15,12,.98));pointer-events:none}
+.ev-art .ev-ic{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:52px;height:52px;margin:0;animation:glow 3s infinite}
+.ev-card h1{margin-top:12px}
+.battle-host{position:relative;margin:4px -14px 6px;aspect-ratio:16/10;overflow:hidden;background:#0a0707;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.battle-cv{display:block;width:100%;height:100%}
+.combat.over{pointer-events:none}
+.finale{position:relative}
+.fin-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5}
+.fin-in{position:relative;z-index:2}
+.finale:after{content:'';position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 50%,rgba(0,0,0,.55),#000 95%);z-index:1;pointer-events:none}
+.skillbar{grid-template-columns:repeat(4,minmax(0,1fr))}
+.skill{--sc:#4a4038;border-color:color-mix(in srgb,var(--sc) 55%,transparent)}
+.skill .rk{position:absolute;left:6px;top:4px;font:700 .5rem Cinzel;color:var(--gold2);font-style:normal;letter-spacing:.05em}
+.skill.school-Steel{--sc:#c8d0e0}.skill.school-Hex{--sc:#b080ff}.skill.school-Shadow{--sc:#8a7aa8}.skill.school-Sanguine{--sc:#e0484e}.skill.school-Discipline{--sc:#e8c860}
+.skill.school-Astral{--sc:#8aa8ff}.skill.school-Ash{--sc:#ff8a40}.skill.school-Glass{--sc:#ffb8e8}.skill.school-Tide{--sc:#5ac8f0}.skill.school-Verdant{--sc:#8ae050}
+.skill.school-Gear{--sc:#e8b050}.skill.school-Frost{--sc:#a8e0ff}.skill.school-Deep{--sc:#40e0d0}
+.skill .si{background:color-mix(in srgb,var(--sc) 20%,transparent);color:var(--sc)}
+.status-chill{border-color:#6ab0d8;color:#b8e4ff}.status-regen{border-color:#4fae6a;color:#9af0b0}
+.btn.ad{display:flex;align-items:center;justify-content:center;gap:10px;border-color:rgba(240,200,110,.7);background:linear-gradient(180deg,rgba(80,60,20,.55),rgba(30,22,8,.7));color:#f6e0a0}
+.btn.ad small{display:block;font-size:.72rem;color:#c8b480;font-family:'Crimson Pro',serif;letter-spacing:0;text-transform:none}
+.btn.ad span{text-align:left;display:grid}
+.rw-card.boss{box-shadow:0 0 60px rgba(240,184,80,.35)}
+/* reserve room for the native banner ad */
+.app{padding-bottom:var(--ad-h,0px)}
+
+/* ---------- cinematic ---------- */
+.cine-wrap{position:relative;height:100%;background:#000;overflow:hidden}
+.cine{position:absolute;inset:0;cursor:pointer}
+.cine-cv{position:absolute;left:0;top:50%;width:100%;height:auto;aspect-ratio:16/9;transform:translateY(-50%);opacity:0;transition:opacity 1.3s ease}
+.cine-cv.on{opacity:1}
+@media (max-aspect-ratio:16/10){.cine-cv{height:100%;width:auto;left:50%;top:0;transform:translateX(-50%)}}
+.cine-bars{position:absolute;left:0;right:0;height:9%;background:#000;z-index:3}.cine-bars.top{top:0}.cine-bars.bot{bottom:0}
+.cine-vig{position:absolute;inset:0;background:radial-gradient(80% 70% at 50% 50%,transparent 45%,rgba(0,0,0,.65));pointer-events:none;z-index:2}
+.cine-flash{position:absolute;inset:0;background:#ffe2a8;opacity:0;pointer-events:none;z-index:4}.cine-flash.go{animation:cflash 1.3s ease-out}
+@keyframes cflash{0%{opacity:.0}8%{opacity:.85}100%{opacity:0}}
+.cine-sub{position:absolute;left:50%;bottom:calc(var(--safe-b) + 13%);transform:translateX(-50%);width:min(760px,90vw);text-align:center;z-index:5;font-size:clamp(1.05rem,3.2vw,1.55rem);line-height:1.45;font-style:italic;color:#f4ead6;text-shadow:0 2px 16px #000,0 0 3px #000;opacity:0;pointer-events:none}
+.cine-sub.on{opacity:1}.cine-sub.seer{color:#e8d8ff;font-family:Cinzel,serif;font-style:normal;letter-spacing:.04em}
+.cine-sub span{display:inline-block;opacity:0;animation:cword .9s ease forwards}
+@keyframes cword{from{opacity:0;filter:blur(6px);transform:translateY(6px)}to{opacity:1;filter:none;transform:none}}
+.cine-title{position:absolute;inset:0;z-index:6;display:grid;place-content:center;justify-items:center;text-align:center;background:radial-gradient(circle at 50% 45%,rgba(30,10,6,.55),rgba(0,0,0,.92));opacity:0;pointer-events:none;transition:opacity 1.6s ease}
+.cine-title.on{opacity:1}
+.cine-title h1{margin:18px 0 0;font-size:clamp(1.8rem,9vw,4.6rem);letter-spacing:.2em;padding-left:.2em;color:#f0e4cc;text-shadow:0 0 50px rgba(255,150,70,.45)}
+.cine-title p{font-family:Cinzel,serif;letter-spacing:.42em;padding-left:.42em;color:var(--gold);margin:8px 0 0;font-size:.9rem}
+.cine-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08);z-index:7}.cine-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ember),var(--gold2));transition:width .8s ease}
+.cine-skip{position:absolute;right:14px;top:calc(var(--safe-t) + 12px);z-index:8;opacity:.8}
+.cine-hint{position:absolute;left:0;right:0;bottom:calc(var(--safe-b) + 14px);text-align:center;z-index:7;color:#a89c86;font-size:.72rem;letter-spacing:.22em;pointer-events:none;animation:pulse 2.6s infinite}
+/* animated splash */
+.splash-logo{display:grid;justify-items:center}
+.splash-logo h1{animation:logoIn 2.2s .4s cubic-bezier(.2,.7,.2,1) both}
+.splash-logo .sub{animation:logoIn 2.2s .9s cubic-bezier(.2,.7,.2,1) both}
+@keyframes logoIn{from{opacity:0;letter-spacing:.6em;filter:blur(10px)}to{opacity:1;filter:none}}
+.reduce-motion .cine-sub span{animation:none;opacity:1}
+
+.cine.tall .cine-cv{width:100%;height:100%;top:0;left:0;transform:none;aspect-ratio:auto}.cine.tall~.x{display:none}
+.cine.tall .cine-bars{height:0}

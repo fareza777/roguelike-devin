@@ -1,5 +1,6 @@
 import { Noise, clamp, ctxOf, glow, hashKey, lerp, makeCanvas, mix, poly, rgba, rgrad, rngOf, shade, vgrad } from './util';
 import { drawFigure, type FigureSpec } from './figures';
+import { drawMotif, type Motif } from './motifs';
 import type { Rng } from '../rng';
 
 export interface Body { kind: 'eclipse' | 'moon' | 'sun' | 'void' | 'orb'; x: number; y: number; r: number; c: string; corona?: string }
@@ -27,6 +28,7 @@ export type Layer =
   | { t: 'throne'; x: number; y: number; s: number; c: string; glow?: string }
   | { t: 'ground'; y: number; c: string; c2?: string; road?: boolean; puddles?: string; roadC?: string; seed?: number }
   | { t: 'crowd'; y: number; n: number; c: string; s: number; seed?: number }
+  | { t: 'motif'; key: Motif; accent?: string; dark?: string }
   | { t: 'figure'; x: number; y: number; s: number; look?: FigureSpec['look']; c: string; lantern?: string; weapon?: FigureSpec['weapon']; flip?: boolean; back?: boolean; rim?: string; accent?: string };
 
 export interface SceneSpec {
@@ -485,7 +487,7 @@ function tower(p: Pen, l: Extract<Layer, { t: 'tower' }>) {
   ctx.fillStyle = vgrad(ctx, base - h, base, [[0, shade(l.c, 0.12)], [1, shade(l.c, -0.3)]]);
   ctx.fillRect(x - w / 2, base - h, w, h);
   if (l.roof === 'cone') poly(ctx, [[x - w / 2 - 6, base - h], [x, base - h - w * 1.15], [x + w / 2 + 6, base - h]]);
-  else if (l.roof === 'lamp') { poly(ctx, [[x - w / 2 - 4, base - h], [x - w * 0.2, base - h - w * 0.5], [x + w * 0.2, base - h - w * 0.5], [x + w / 2 + 4, base - h]]); ctx.fill(); ctx.fillRect(x - 3, base - h - w * 0.5 - 18, 6, 18); if (l.lit) { ctx.globalCompositeOperation = 'lighter'; glow(ctx, x, base - h - w * 0.5 - 24, w * 1.6, l.lit, 0.9); ctx.globalCompositeOperation = 'source-over' } poly(ctx, [[0, 0], [0, 0], [0, 0]]) }
+  else if (l.roof === 'lamp') { poly(ctx, [[x - w / 2 - 4, base - h], [x - w * 0.2, base - h - w * 0.5], [x + w * 0.2, base - h - w * 0.5], [x + w / 2 + 4, base - h]]); ctx.fill(); ctx.fillRect(x - 3, base - h - w * 0.5 - 18, 6, 18); if (l.lit) { ctx.globalCompositeOperation = 'lighter'; glow(ctx, x, base - h - w * 0.5 - 24, w * 1.6, l.lit, 0.9); ctx.globalCompositeOperation = 'source-over' } }
   else { for (let k = 0; k < Math.floor(w / 12); k++) ctx.fillRect(x - w / 2 + k * 12, base - h - 7, 7, 8) }
   ctx.fill();
   if (l.lit) {
@@ -601,6 +603,7 @@ function drawLayer(p: Pen, l: Layer) {
     case 'throne': throne(p, l); break;
     case 'ground': ground(p, l); break;
     case 'crowd': crowd(p, l); break;
+    case 'motif': drawMotif(p.ctx, l.key, p.W, p.H, l.accent, l.dark, p.rng(3)() * 1000 | 0); break;
     case 'figure': drawFigure(p.ctx, { x: l.x * p.W, y: l.y * p.H, h: l.s * p.H, look: l.look ?? 'hood', c: l.c, lantern: l.lantern, weapon: l.weapon, flip: l.flip, back: l.back ?? true, rim: l.rim ?? p.rim, accent: l.accent }); break;
   }
 }
@@ -716,6 +719,9 @@ export class SceneView {
     }
     return p;
   }
+
+  /** Restart the clock (camera move + animation) when a view is reused. */
+  reset() { this.t = 0 }
 
   draw(dt: number) {
     this.t += dt;

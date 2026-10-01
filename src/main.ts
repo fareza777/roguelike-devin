@@ -2,13 +2,17 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/screens.css';
 import './styles/game.css';
+import './styles/art.css';
+import { mountArt } from './art/mount';
+import { startCinematic } from './cinematic/player';
 import { sfx, setMood, setMusicEnabled, unlockAudio, type Mood, type Sfx } from './audio';
 import { DUNGEON_MAP, MAP_H, MAP_W, TOWN_MAP } from './data/world';
 import * as G from './engine/game';
 import { WALKABLE } from './engine/dungeongen';
 import { haptic, nativeReady, rateGame, shareGame } from './platform';
+import { BattleStage } from './render/battle';
 import { MapView, drawFullMap, type MapHit } from './render/mapview';
-import type { GameState, Meta, Screen, Settings, Slot, Stat } from './types';
+import type { Enemy, GameState, Meta, Screen, Settings, Slot, Stat } from './types';
 import { UI } from './ui/common';
 import * as E from './ui/explore';
 import * as H from './ui/hero';
@@ -35,6 +39,10 @@ const FULL: Screen[] = ['splash', 'intro', 'onboarding', 'title', 'settings', 'a
 const DIRS: [number, number][] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 
 const mapView = new MapView(() => s);
+const battle = new BattleStage(() => s);
+/** While a kill / death animation plays, the finished foe stays on screen. */
+let holdFoe: Enemy | null = null;
+let holdFoeTimer = 0;
 const fullCv = document.createElement('canvas');
 let fullHits: MapHit[] = [];
 let fullInfo = { scale: 1, ox: 0, oy: 0 };
@@ -42,7 +50,7 @@ let typedStarted = '';
 let typeTimer = 0;
 let autoTimer = 0;
 
-const current = (): Screen => (META_SCREENS.includes(screen) ? screen : s.screen);
+const current = (): Screen => (holdFoe ? 'combat' : META_SCREENS.includes(screen) ? screen : s.screen);
 const persist = () => { if (s.name && s.origin && !(s.screen === 'death' && s.difficulty === 'Doomed')) G.save(s) };
 const inGame = () => !!G.load() && !['title', 'creation', 'death'].includes(s.screen);
 const play = (kind: Sfx) => { if (meta.settings.sfx) sfx(kind) };
@@ -81,7 +89,7 @@ function moodFor(cur: Screen): Mood {
 function view(cur: Screen): string {
   switch (cur) {
     case 'splash': return M.splash();
-    case 'intro': return M.intro(ui);
+    case 'intro': return M.intro();
     case 'onboarding': return M.onboarding(ui);
     case 'title': return M.title(meta);
     case 'settings': return M.settings(meta, ui, inGame());
@@ -91,7 +99,7 @@ function view(cur: Screen): string {
     case 'world': return E.world(s, ui);
     case 'dungeon': return s.run ? E.dungeon(s, ui) : E.world(s, ui);
     case 'map': return E.mapScreen(s, ui);
-    case 'combat': return s.enemy ? P.combat(s, ui) : '';
+    case 'combat': return s.enemy || holdFoe ? P.combat(s, ui, holdFoe) : '';
     case 'event': return s.event ? P.event(s) : '';
     case 'reward': return s.reward ? P.reward(s) : '';
     case 'dialogue': return s.scene ? P.dialogue(s, ui) : '';
@@ -104,6 +112,7 @@ function view(cur: Screen): string {
     case 'board': return E.board(s);
     case 'inn': return E.inn(s, ui);
     case 'wardhouse': return E.wardhouse(s);
+    case 'harbor': return E.harbor(s);
     case 'death': return P.death(s);
     case 'ending': return P.ending(s);
   }
@@ -136,7 +145,29 @@ function render() {
   afterRender(cur);
 }
 
+function battleBg(): string {
+  if (s.run) return `dg:${DUNGEON_MAP.get(s.run.dungeon)?.theme ?? 'crypt'}`;
+  const z = G.zoneAt(s.world.x, s.world.y);
+  return z.bg ?? ({ plains: 'heartland', coast: 'saltmere', swamp: 'hollowhill', ash: 'ashwood', bone: 'quarry', snow: 'pass', noon: 'solenne' } as Record<string, string>)[z.biome] ?? 'heartland';
+}
+
+let cineHost: HTMLElement | null = null;
+let cineStop: (() => void) | null = null;
+function stopCine() { cineStop?.(); cineStop = null; cineHost = null }
+
 function afterRender(cur: Screen) {
+  mountArt(app);
+  const cine = document.getElementById('cine');
+  if (cine && cur === 'intro') {
+    if (cine !== cineHost) {
+      stopCine();
+      cineHost = cine;
+      const st = meta.settings;
+      cineStop = startCinematic(cine, { voice: st.voice, subs: st.subs, motion: st.motion, sfx: st.sfx, onDone: () => actions.skipIntro() });
+    }
+  } else if (cineHost) stopCine();
+  const bh = document.getElementById('battlemount');
+  if (bh && cur === 'combat') { battle.attach(bh); battle.reduced = !meta.settings.motion; const fe = holdFoe ?? s.enemy; if (fe) battle.setFoe(fe, battleBg(), s.path) }
   const host = document.getElementById('mapmount');
   if (host && (cur === 'world' || cur === 'dungeon')) mapView.attach(host);
   const fhost = document.getElementById('fullmount');
@@ -207,11 +238,23 @@ function feedback(before: { hp: number; level: number; screen: Screen; gold: num
 function act(fn: () => void, silent = false) {
   const before = { hp: s.hp, level: s.level, screen: s.screen, gold: s.gold, kills: s.kills, items: s.inventory.length };
   const logHead = s.log[0];
+  const foeBefore = s.enemy;
   fn();
   screen = META_SCREENS.includes(screen) && !META_SCREENS.includes(s.screen) ? s.screen : screen;
   if (s.log[0] !== logHead) ui.logSeq++;
   if (s.fx.length || before.screen === 'combat') ui.fxSeq++;
   if (!silent) feedback(before);
+  if (before.screen === 'combat' && foeBefore) {
+    battle.setFoe(foeBefore, battleBg(), s.path);
+    battle.consume(s.anim);
+    s.anim = [];
+    const ended = s.screen !== 'combat' && (foeBefore.hp <= 0 || s.screen === 'death');
+    if (ended && meta.settings.motion) {
+      holdFoe = foeBefore;
+      clearTimeout(holdFoeTimer);
+      holdFoeTimer = window.setTimeout(() => { holdFoe = null; lastScreen = null; render() }, Math.min(2600, 700 + battle.busy() * 1000));
+    }
+  } else if (s.screen === 'combat') s.anim = [];
   render();
 }
 
@@ -324,8 +367,7 @@ function attachCanvasInput() {
 const actions: Record<string, () => void> = {
   noop: () => undefined,
   skipSplash: () => afterSplash(),
-  nextIntro: () => { if (ui.introPanel < M.INTRO_LENGTH - 1) { ui.introPanel++; play('page'); render() } else actions.skipIntro() },
-  skipIntro: () => { meta.introSeen = true; persistMeta(); show(meta.onboarded ? 'title' : 'onboarding') },
+  skipIntro: () => { stopCine(); meta.introSeen = true; persistMeta(); show(meta.onboarded ? 'title' : 'onboarding') },
   nextOnboard: () => { if (ui.onboardStep < 4) { ui.onboardStep++; render() } else actions.skipOnboard() },
   skipOnboard: () => { meta.onboarded = true; persistMeta(); show('title') },
   continue: () => {
@@ -447,6 +489,9 @@ const handlers: [string, (v: string, el: HTMLElement) => void][] = [
   ['upgrade', (v, el) => { const ok = G.upgradeItem(s, v, (el.dataset.slot || null) as Slot | null); play(ok !== false ? 'level' : 'error'); render() }],
   ['learn', v => { G.learn(s, v); play('quest'); render() }],
   ['loadout', v => { G.toggleLoadout(s, v); play('click'); render() }],
+  ['companion', v => { G.swapCompanion(s, v); play('heal'); render() }],
+  ['rankup', v => { if (G.rankUp(s, v)) play('level'); else play('error'); render() }],
+  ['sail', v => act(() => G.sail(s, v))],
   ['accept', v => { G.acceptQuest(s, v); play('quest'); render() }],
   ['claim', v => act(() => G.claimQuest(s, v))],
   ['sigil', v => { G.buySigil(s, Number(v) as 1 | 2 | 3); play('heal'); toastMsg('A sigil settles on your skin.') }],
@@ -460,7 +505,7 @@ const handlers: [string, (v: string, el: HTMLElement) => void][] = [
   ['invfilter', v => { ui.invFilter = v as UI['invFilter']; render() }],
   ['smithtab', v => { ui.smithTab = v as UI['smithTab']; render() }],
   ['setting', v => {
-    const k = v as 'sfx' | 'music' | 'haptics' | 'motion';
+    const k = v as 'sfx' | 'music' | 'haptics' | 'motion' | 'voice' | 'subs';
     meta.settings[k] = !meta.settings[k];
     persistMeta();
     render();
@@ -511,7 +556,7 @@ window.addEventListener('keydown', ev => {
   if (cur === 'dialogue' && (k === 'enter' || k === ' ')) { ev.preventDefault(); if (typeTimer && ui.typed !== `${s.scene?.id}:${s.scene?.node}`) skipTyping(); else if (!document.querySelector('.dchoice')) actions.sceneNext(); return }
   if (cur === 'dialogue' && /^[1-9]$/.test(k)) { const n = Number(k) - 1; if (document.querySelectorAll('.dchoice')[n]) act(() => G.sceneChoose(s, n)); return }
   if (cur === 'event' && /^[1-9]$/.test(k)) { const n = Number(k) - 1; if (s.event?.choices[n]) act(() => G.resolveEvent(s, n)); return }
-  if (cur === 'combat') { if (k === 'a' || k === '1') actions.attack(); else if (k === 'd' || k === '2') actions.defend(); else if (k === 'f') actions.flee() }
+  if (cur === 'combat' && !holdFoe) { if (k === 'a' || k === '1') actions.attack(); else if (k === 'd' || k === '2') actions.defend(); else if (k === 'f') actions.flee() }
   if (cur === 'reward' && (k === 'enter' || k === ' ')) { actions.closeReward(); return }
   if (['town', 'world', 'dungeon', 'character', 'inventory', 'journal', 'map'].includes(cur)) {
     if (k === 'i') go('inventory'); else if (k === 'c') go('character'); else if (k === 'j') go('journal'); else if (k === 'm' && !s.run) go('map'); else if (k === 'escape') { if (ui.sheet) actions.closeSheet(); else go('explore') }

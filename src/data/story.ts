@@ -160,7 +160,7 @@ export const TIPS: [string, string, string][] = [
 ];
 
 export const INTRO = [
-  { art: 'intro1.webp', lines: ['On the ninth day of the endless noon, the sun turned black.', 'Every citizen of Veyr cast three shadows. By nightfall, the shadows had begun to speak.'] },
-  { art: 'intro2.webp', lines: ['From the wound in the sky poured the Dreadmarch — the dead, the changed, the hungry.', 'Kingdom after kingdom fell silent. Only Veyrgard, the Final City, still bars its gates.'] },
-  { art: 'intro3.webp', lines: ['Four Wardens once held the wound shut. Now they serve it.', '“Break the seals,” whispers the Blind Seer. “Then walk into the Meridian, and bring back the morning.”'] },
+  { art: 'intro_sun', lines: ['On the ninth day of the endless noon, the sun turned black.', 'Every citizen of Veyr cast three shadows. By nightfall, the shadows had begun to speak.'] },
+  { art: 'solenne', lines: ['From the wound in the sky poured the Dreadmarch — the dead, the changed, the hungry.', 'Kingdom after kingdom fell silent. Only Veyrgard, the Final City, still bars its gates.'] },
+  { art: 'lantern_hall', lines: ['Four Wardens once held the wound shut. Now they serve it.', '“Break the seals,” whispers the Blind Seer. “Then walk into the Meridian, and bring back the morning.”'] },
 ];

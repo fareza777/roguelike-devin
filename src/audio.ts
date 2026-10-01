@@ -26,7 +26,7 @@ function ensure() {
   return ctx;
 }
 
-export type Sfx = 'click' | 'hit' | 'crit' | 'hurt' | 'heal' | 'level' | 'win' | 'death' | 'door' | 'step' | 'chest' | 'coin' | 'pickup' | 'trap' | 'stairs' | 'spell' | 'quest' | 'page' | 'bell' | 'enter' | 'error' | 'dodge' | 'equip' | 'buy';
+export type Sfx = 'click' | 'hit' | 'crit' | 'hurt' | 'heal' | 'level' | 'win' | 'death' | 'door' | 'step' | 'chest' | 'coin' | 'pickup' | 'trap' | 'stairs' | 'spell' | 'quest' | 'page' | 'bell' | 'enter' | 'error' | 'dodge' | 'equip' | 'buy' | 'boom' | 'riser' | 'whoosh' | 'sting' | 'status' | 'ward';
 
 export function sfx(kind: Sfx) {
   const c = ensure();
@@ -84,6 +84,12 @@ export function sfx(kind: Sfx) {
     case 'error': tone(180, 0.18, 'square', 0.06, 120); break;
     case 'equip': noise(0.09, 0.3, 1800); tone(300, 0.12, 'square', 0.05, 200); break;
     case 'buy': tone(880, 0.08, 'square', 0.04); tone(1174, 0.16, 'square', 0.04, 1174, 0.07); break;
+    case 'boom': tone(62, 2.2, 'sine', 0.34, 28); noise(1.6, 0.35, 220); tone(124, 1.4, 'triangle', 0.08, 50); break;
+    case 'riser': tone(110, 3, 'sawtooth', 0.03, 660); tone(165, 3, 'triangle', 0.04, 990); noise(3, 0.12, 2400, 'bandpass'); break;
+    case 'whoosh': noise(0.9, 0.3, 900, 'bandpass'); tone(200, 0.9, 'sine', 0.05, 90); break;
+    case 'sting': [196, 233, 294].forEach((f, i) => tone(f, 2.4, 'sawtooth', 0.035, f * 0.98, i * 0.05)); tone(49, 2.4, 'sine', 0.2, 41); break;
+    case 'status': tone(420, 0.3, 'sine', 0.07, 210); noise(0.18, 0.18, 1800, 'bandpass'); break;
+    case 'ward': tone(660, 0.25, 'triangle', 0.08, 990); tone(990, 0.35, 'sine', 0.05, 1320, 0.05); break;
   }
 }
 
@@ -178,6 +184,8 @@ function apply() {
 }
 
 export function setMusicEnabled(on: boolean) { enabled = on; if (started) apply() }
+/** Lower the score while the narrator speaks. */
+export function duckMusic(on: boolean) { if (!ctx || !musicBus) return; musicBus.gain.cancelScheduledValues(ctx.currentTime); musicBus.gain.linearRampToValueAtTime(on ? 0.28 : 1, ctx.currentTime + 0.5) }
 export function unlockAudio() { if (!started) { started = true; ensure(); apply() } }
 export function setMood(m: Mood) {
   if (m === mood) return;

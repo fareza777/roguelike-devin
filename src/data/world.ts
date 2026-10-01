@@ -7,7 +7,7 @@ const t = (sky: string, glow: string, ink: string) => ({ sky, glow, ink });
 
 export const TOWNS: TownDef[] = [
   {
-    id: 'veyrgard', name: 'Veyrgard', kind: 'city', subtitle: 'The Final City', region: 'heartland', pos: [32, 24], icon: 'm_city', art: 'city.webp',
+    id: 'veyrgard', name: 'Veyrgard', kind: 'city', subtitle: 'The Final City', region: 'heartland', pos: [32, 24], icon: 'm_city', art: 'veyrgard',
     desc: 'The last walled city under a black sun. Lanterns burn on every corner, and no one asks where the oil comes from.',
     theme: t('#1a0d10', '#d24a3f', '#e7c98f'), services: ['inn', 'shop', 'smithy', 'wardhouse', 'tavern', 'board', 'trainer'], tier: 1, shopTags: ['blade', 'heavy', 'shield', 'potion'], innPrice: 12,
     rumors: ['They say the lanterns never go out. Nobody says why.', 'Seer Ilse hasn’t slept since the sun went dark. Or eaten. Or blinked, even before she lost her eyes.', 'The Watch is short a hundred men and has stopped counting the graves.', 'A raven has been stealing letters from the Collegium. Only the important ones.'],
@@ -20,7 +20,7 @@ export const TOWNS: TownDef[] = [
     ],
   },
   {
-    id: 'saltmere', name: 'Saltmere', kind: 'city', subtitle: 'The Drowned Port', region: 'coast', pos: [14, 34], icon: 'm_city', art: 'r_catacombs.webp',
+    id: 'saltmere', name: 'Saltmere', kind: 'city', subtitle: 'The Drowned Port', region: 'coast', pos: [14, 34], icon: 'm_city', art: 'bellhouse',
     desc: 'A harbour city built on the roofs of a flooded one. The tide brings in fish, smugglers, and sometimes things that used to be sailors.',
     theme: t('#071614', '#3fb6a0', '#a4e0d0'), services: ['inn', 'shop', 'smithy', 'wardhouse', 'tavern', 'board', 'trainer'], tier: 1, shopTags: ['dagger', 'medium', 'bomb', 'potion', 'pistol'], innPrice: 14,
     rumors: ['Every night the bell under the harbour rings one more time than the night before.', 'The Smugglers’ Guild sells maps of places that don’t exist. They’re usually right.', 'A ghost ship anchors in the bay at dusk. Nobody boards it twice.', 'They found a seal-key on a drowned man. Then another. Then eleven.'],
@@ -32,7 +32,7 @@ export const TOWNS: TownDef[] = [
     ],
   },
   {
-    id: 'emberhollow', name: 'Emberhollow', kind: 'city', subtitle: 'The Hearth in the Ash', region: 'ashwood', pos: [52, 24], icon: 'm_city', art: 'r_ashwood.webp',
+    id: 'emberhollow', name: 'Emberhollow', kind: 'city', subtitle: 'The Hearth in the Ash', region: 'ashwood', pos: [52, 24], icon: 'm_city', art: 'ashwood',
     desc: 'A timber city that refuses to burn. The foresters swear it is stubbornness. The Hall says it is craft. The trees say nothing, which is worse.',
     theme: t('#1a0c05', '#ff8a3a', '#ffd7a0'), services: ['inn', 'shop', 'smithy', 'wardhouse', 'tavern', 'board', 'trainer'], tier: 2, shopTags: ['axe', 'spear', 'crossbow', 'cloth', 'potion'], innPrice: 18,
     rumors: ['The Cinder Hart walks the deep woods, and wherever it walks the trees remember fire.', 'The Ash Compact swore to keep the fire alive. The forest never agreed to the terms.', 'A lamp-keeper named Maren is very kind to everyone. Everyone finds this suspicious.', 'The Huntsman’s horn sounds every dusk. No one has ever seen him.'],
@@ -44,7 +44,7 @@ export const TOWNS: TownDef[] = [
     ],
   },
   {
-    id: 'gravemarrow', name: 'Gravemarrow', kind: 'city', subtitle: 'The City in the Ribs', region: 'bone', pos: [10, 20], icon: 'm_city', art: 'r_quarry.webp',
+    id: 'gravemarrow', name: 'Gravemarrow', kind: 'city', subtitle: 'The City in the Ribs', region: 'bone', pos: [10, 20], icon: 'm_city', art: 'quarry',
     desc: 'Miners carved a city into the ribcage of something too large to have lived. The walls hum on windless nights. Nobody minds. Nobody sleeps.',
     theme: t('#12100c', '#c9b48a', '#f0e2c0'), services: ['inn', 'shop', 'smithy', 'wardhouse', 'tavern', 'board', 'trainer'], tier: 3, shopTags: ['hammer', 'mace', 'heavy', 'bomb', 'halberd'], innPrice: 22,
     rumors: ['The Foreman promised the miners they’d be remembered. The walls have been whispering names ever since.', 'A vein of glass runs through the deepest shaft. It flinches when you bring a light near.', 'Dagna Stonevein has never lost an argument. She has lost three husbands. She calls that even.', 'The Titan’s ribcage is warm on the inside. Something in there is still breathing.'],
@@ -55,7 +55,7 @@ export const TOWNS: TownDef[] = [
     ],
   },
   {
-    id: 'hollowreach', name: 'Hollowreach', kind: 'city', subtitle: 'The Fortress at the Edge', region: 'north', pos: [33, 8], icon: 'm_city', art: 'r_pass.webp',
+    id: 'hollowreach', name: 'Hollowreach', kind: 'city', subtitle: 'The Fortress at the Edge', region: 'north', pos: [33, 8], icon: 'm_city', art: 'pass',
     desc: 'A citadel of black stone under permanent snow. The garrison mans walls built to face north. Every one of them keeps glancing south.',
     theme: t('#06101c', '#8fb8e6', '#dceaff'), services: ['inn', 'shop', 'smithy', 'wardhouse', 'tavern', 'board', 'trainer'], tier: 3, shopTags: ['halberd', 'heavy', 'shield', 'potion', 'arquebus'], innPrice: 24,
     rumors: ['The southward army has not moved in sixty years, but the snow around it keeps getting deeper.', 'Marshal Sigrun hasn’t smiled since she inherited a title she never wanted.', 'A frozen soldier was found saluting the wrong direction. Officer’s orders, they say.', 'At night the whole Pass whispers a single word. Everyone hears a different one.'],
@@ -66,7 +66,7 @@ export const TOWNS: TownDef[] = [
     ],
   },
   {
-    id: 'solenne', name: 'Solenne', kind: 'city', subtitle: 'The City That Never Set', region: 'south', pos: [32, 38], icon: 'm_city', art: 'intro2.webp',
+    id: 'solenne', name: 'Solenne', kind: 'city', subtitle: 'The City That Never Set', region: 'south', pos: [32, 38], icon: 'm_city', art: 'solenne',
     desc: 'A golden city frozen in the ninth day of noon. Its people repeat the same afternoon endlessly, and are very polite about it.',
     theme: t('#1c1204', '#ffd15a', '#fff0c4'), services: ['inn', 'shop', 'wardhouse', 'tavern', 'board', 'trainer'], tier: 4, shopTags: ['cloth', 'staff', 'tome', 'orb', 'relic'], innPrice: 30,
     rumors: ['The clocks in Solenne all show the same time, and it’s always time for tea.', 'Nobody in Solenne has cast a shadow in sixty years. Not one. Not even three.', 'The Herald announces the King every noon. He’s been announcing for a very long time.', 'The children play a game where the loser has to remember the night.'],
@@ -77,35 +77,35 @@ export const TOWNS: TownDef[] = [
     ],
   },
   {
-    id: 'lanternrest', name: 'Lanternrest', kind: 'village', subtitle: 'A Roadside Hamlet', region: 'heartland', pos: [42, 25], icon: 'm_town', art: 'splash.webp',
+    id: 'lanternrest', name: 'Lanternrest', kind: 'village', subtitle: 'A Roadside Hamlet', region: 'heartland', pos: [42, 25], icon: 'm_town', art: 'splash',
     desc: 'A dozen houses, a well, and a lantern on a pole that has burned for forty years without oil.',
     theme: t('#170e08', '#f0a05a', '#ffe0b0'), services: ['inn', 'shop', 'board'], tier: 1, shopTags: ['potion', 'medium'], innPrice: 10,
     rumors: ['The lantern on the pole never goes out. Travelers pay respects to it.', 'Two men from the Rookery came through last week. They asked for directions and left very quickly.'],
     npcs: [{ id: 'marta', name: 'Marta Lanternwick', title: 'Innkeeper', icon: 'e_hermit', greeting: 'A stout woman with a ladle in one hand and a shotgun in the other. She hasn’t decided which to use on you.', idle: ['“Stew’s hot, beds are clean, and the lantern’s been lit since before your granddad was born.”', '“Hurry up and eat. The road doesn’t wait.”'] }],
   },
   {
-    id: 'wickhaven', name: 'Wickhaven', kind: 'village', subtitle: 'A Fisher’s Hamlet', region: 'coast', pos: [9, 41], icon: 'm_town', art: 'r_catacombs.webp',
+    id: 'wickhaven', name: 'Wickhaven', kind: 'village', subtitle: 'A Fisher’s Hamlet', region: 'coast', pos: [9, 41], icon: 'm_town', art: 'bellhouse',
     desc: 'Stilt-houses clinging to a cliff above the surf. The fishermen no longer go out past the second buoy.',
     theme: t('#071012', '#4cc1d1', '#b6ecf2'), services: ['inn', 'shop', 'board'], tier: 1, shopTags: ['potion', 'bomb'], innPrice: 10,
     rumors: ['Something in the caves sings to the boats at night.', 'Old Nell lost a husband to the sea. She says the sea gave him back. She won’t say in what state.'],
     npcs: [{ id: 'nell', name: 'Old Nell', title: 'Fisherwoman', icon: 'e_pirate', greeting: 'Wrinkled, wind-burned, and utterly unimpressed with you.', idle: ['“Fish are down. Ghosts are up. It’s a poor season.”', '“Don’t go in the caves without a lantern. Or a plan. Preferably both.”'] }],
   },
   {
-    id: 'dunmarrow', name: 'Dunmarrow Camp', kind: 'village', subtitle: 'A Miners’ Waystation', region: 'bone', pos: [19, 24], icon: 'm_town', art: 'r_quarry.webp',
+    id: 'dunmarrow', name: 'Dunmarrow Camp', kind: 'village', subtitle: 'A Miners’ Waystation', region: 'bone', pos: [19, 24], icon: 'm_town', art: 'quarry',
     desc: 'Wagons, tents, and a smithy that never cools. Half the camp is waiting to go down. The other half is waiting to hear from the ones who did.',
     theme: t('#13110d', '#d9b47a', '#f0e0bc'), services: ['inn', 'shop', 'board'], tier: 2, shopTags: ['hammer', 'potion', 'heavy'], innPrice: 12,
     rumors: ['A cart went into the Foundry last month. Only its wheels came back. In perfect condition.', 'The quarry is louder at night. Nobody has figured out if it’s the rock or the miners.'],
     npcs: [{ id: 'gav', name: 'Foreman Gav', title: 'Camp Boss', icon: 'e_miner', greeting: 'Big, tired, and permanently hoarse from shouting at rocks.', idle: ['“Wage’s a coin a day and a coffin on the house.”', '“Careful with the west shaft. It’s been sulking.”'] }],
   },
   {
-    id: 'frostgate', name: 'Frostgate Watch', kind: 'village', subtitle: 'The Northern Outpost', region: 'north', pos: [30, 14], icon: 'm_town', art: 'r_pass.webp',
+    id: 'frostgate', name: 'Frostgate Watch', kind: 'village', subtitle: 'The Northern Outpost', region: 'north', pos: [30, 14], icon: 'm_town', art: 'pass',
     desc: 'A stockade of frozen logs with a brazier at every corner. The guards stare north with the special dread of people who already know.',
     theme: t('#08111d', '#9cc6ee', '#e6f2ff'), services: ['inn', 'shop', 'board'], tier: 2, shopTags: ['halberd', 'potion', 'heavy'], innPrice: 14,
     rumors: ['The last patrol came back with more men than it left with.', 'Something in the snow keeps counting our footsteps.'],
     npcs: [{ id: 'dorn', name: 'Captain Dorn', title: 'Frostgate Commander', icon: 'e_soldier', greeting: 'A hard man with a beard full of ice and a hip flask full of something worse.', idle: ['“Cold. Coldest night in fifty years. Same as last night.”', '“If you see the army, don’t wave. They take it personally.”'] }],
   },
   {
-    id: 'hangedman', name: 'The Hanged Man’s Rest', kind: 'village', subtitle: 'A Crossroads Inn', region: 'heartland', pos: [25, 30], icon: 'm_town', art: 'splash.webp',
+    id: 'hangedman', name: 'The Hanged Man’s Rest', kind: 'village', subtitle: 'A Crossroads Inn', region: 'heartland', pos: [25, 30], icon: 'm_town', art: 'splash',
     desc: 'A crooked inn under a crooked tree at a crooked crossing. The sign shows a man with a happy expression, which is either a joke or a warning.',
     theme: t('#120a10', '#c78bd8', '#f0d8f4'), services: ['inn', 'shop', 'tavern', 'board'], tier: 1, shopTags: ['dagger', 'potion', 'bomb'], innPrice: 9,
     rumors: ['The rope on the tree is replaced every spring. Nobody knows by whom.', 'Bandits from the Rookery drink here. The Watch drinks here too. Nobody knows who buys the first round.'],
@@ -121,22 +121,22 @@ export const TOWN_SCHOOLS: Record<string, School[]> = {
 
 const D = (d: DungeonDef): DungeonDef => d;
 export const DUNGEONS: DungeonDef[] = [
-  D({ id: 'undercroft', name: 'Old Watchtower Undercroft', subtitle: 'The dead guard what the living forgot', desc: 'The first watchtower of Veyrgard, and beneath it the barracks of men who never left their posts.', art: 'r_catacombs.webp', theme: 'crypt', floors: 2, lvl: 2, enemies: ['skeleton', 'ghoul', 'lanternwraith', 'ratswarm'], elite: 'deadsergeant', boss: 'oldsentinel', size: [27, 21], pos: [27, 20], icon: 'm_tower' }),
-  D({ id: 'rookery', name: 'The Rookery', subtitle: 'A robber’s tower of stolen rooms', desc: 'A ruined manor taken by the Rook-King and his crew. Every wall is hung with stolen portraits of people who look worried.', art: 'r_ashwood.webp', theme: 'ruin', floors: 2, lvl: 3, enemies: ['bandit', 'rookarcher', 'hedgewitch', 'rookhound'], elite: 'magpie', boss: 'rookking', size: [27, 21], pos: [38, 30], icon: 'm_castle' }),
-  D({ id: 'seacaves', name: 'Wickhaven Sea Caves', subtitle: 'Where the tide brings things back', desc: 'Salt-wet grottos that sing when the tide changes. The Widow’s wedding ring was lost here, a long time ago.', art: 'r_catacombs.webp', theme: 'flooded', floors: 3, lvl: 5, enemies: ['crab', 'eel', 'drownedsailor', 'brinehag'], elite: 'tidegrasp', boss: 'saltbeard', size: [29, 21], pos: [6, 44], icon: 'm_cave', secretItem: 'tok_widow' }),
-  D({ id: 'catacombs', name: 'The Drowned Catacombs', subtitle: 'Where the dead refuse the tide', desc: 'Flooded crypts beneath Saltmere. The bells ring under water, and every ring is a name.', art: 'r_catacombs.webp', theme: 'flooded', floors: 3, lvl: 7, enemies: ['drownedwanderer', 'eel', 'tidesinger', 'bellthrall'], elite: 'ringer', boss: 'widow', size: [31, 23], pos: [18, 38], gate: 'm04', mainBoss: true, intro: 's_cata_intro', clear: 's_widow', icon: 'm_dungeon' }),
-  D({ id: 'hearthcrypt', name: 'The Hearth Crypt', subtitle: 'Where the Compact keeps its embers', desc: 'The ash-brotherhood’s burial vault. Their fires are meant to be tended forever. Something has been tending them a bit too well.', art: 'r_ashwood.webp', theme: 'ember', floors: 3, lvl: 10, enemies: ['ashhound', 'lanternkin', 'cinderghoul', 'emberwisp'], elite: 'ashenmatron', boss: 'huntsman', size: [29, 21], pos: [56, 20], icon: 'm_graveyard', secretItem: 'tok_hart' }),
-  D({ id: 'ashwood', name: 'Ashwood Expanse', subtitle: 'A forest that remembers fire', desc: 'Black trees bleed embers. Lanterns lead travelers in circles until they become lanterns too.', art: 'r_ashwood.webp', theme: 'forest', floors: 3, lvl: 12, enemies: ['ashhound', 'lanternkin', 'charcoal', 'thornstalker', 'emberstag'], elite: 'weepingbough', boss: 'hart', size: [33, 25], pos: [58, 28], gate: 'm08', mainBoss: true, intro: 's_ash_intro', clear: 's_hart', icon: 'm_deadtree' }),
-  D({ id: 'hollowhill', name: 'Witch’s Hollow Hill', subtitle: 'The hill that hums at night', desc: 'A green mound beside the marsh, riddled with warrens and lit from the inside by a lantern no one has ever seen.', art: 'r_ashwood.webp', theme: 'swamp', floors: 3, lvl: 13, enemies: ['mirefrog', 'bogwitch', 'hollowmoth', 'scarecrow'], elite: 'mothmother', boss: 'crone', size: [29, 21], pos: [48, 34], icon: 'm_mushroom' }),
-  D({ id: 'archive', name: 'The Charred Archive', subtitle: 'An archive the fire refused to finish', desc: 'The old Lantern Court archive, burnt to its shelves. The fire spared exactly one person.', art: 'r_ashwood.webp', theme: 'archive', floors: 3, lvl: 14, enemies: ['brandbearer', 'charredarchivist', 'ashwraith', 'fireimp'], elite: 'cindermagistrate', boss: 'unburntkeeper', size: [29, 21], pos: [50, 14], icon: 'm_archive' }),
-  D({ id: 'quarry', name: 'Ossuary Quarry', subtitle: 'The old world had larger bones', desc: 'Miners carved a city through the skeletons of forgotten giants, then carved each other.', art: 'r_quarry.webp', theme: 'bone', floors: 3, lvl: 16, enemies: ['prospector', 'marrow', 'dustwife', 'gravelgolem'], elite: 'overseer', boss: 'grist', size: [33, 25], pos: [6, 14], gate: 'm12', mainBoss: true, intro: 's_quarry_intro', clear: 's_grist', icon: 'm_mine' }),
-  D({ id: 'ribcage', name: 'Titan’s Ribcage', subtitle: 'The hollow beneath the bones', desc: 'The interior of the great skeleton. Mist rises from between the ribs, and the mist has opinions.', art: 'r_quarry.webp', theme: 'bone', floors: 3, lvl: 18, enemies: ['marrowworm', 'ribspider', 'titantick', 'boneharpy'], elite: 'ribwarden', boss: 'hollowtitan', size: [31, 23], pos: [4, 26], icon: 'm_ruins', secretItem: 'tok_grist' }),
-  D({ id: 'foundry', name: 'The Sunken Foundry', subtitle: 'Where light was cast into iron', desc: 'A drowned smelter where the first lanterns were poured. The furnaces are still hot. Nobody has stoked them in a century.', art: 'r_quarry.webp', theme: 'mine', floors: 3, lvl: 19, enemies: ['slagimp', 'foundrywraith', 'clockwarden', 'ironmaw'], elite: 'castmaster', boss: 'moltenregent', size: [31, 23], pos: [16, 16], icon: 'm_volcano' }),
-  D({ id: 'pass', name: 'The Weeping Pass', subtitle: 'Every frozen corpse faces south', desc: 'A lost army waits beneath the snow for one final command. Some of them hear it early.', art: 'r_pass.webp', theme: 'ice', floors: 3, lvl: 21, enemies: ['deserter', 'rime', 'standard', 'frostwolf'], elite: 'colonel', boss: 'vhal', size: [33, 25], pos: [34, 3], gate: 'm16', mainBoss: true, intro: 's_pass_intro', clear: 's_vhal', icon: 'm_snow' }),
-  D({ id: 'barrows', name: 'The Frozen Barrows', subtitle: 'A king’s household, buried alive', desc: 'A royal burial mound. The household is still in residence. So is the banner Vhal’s army carried.', art: 'r_pass.webp', theme: 'ice', floors: 3, lvl: 22, enemies: ['barrowdraug', 'rimeghoul', 'icespider', 'frostbanshee'], elite: 'barrowlord', boss: 'barrowking', size: [29, 21], pos: [24, 6], icon: 'm_graveyard', secretItem: 'tok_vhal' }),
-  D({ id: 'rimeglass', name: 'Rimeglass Cavern', subtitle: 'A cave that dreams in ice', desc: 'A crystal cave where the ice preserves things that should not be preserved.', art: 'r_pass.webp', theme: 'ice', floors: 3, lvl: 24, enemies: ['icegolem', 'frostbat', 'glassmaw', 'yeti'], elite: 'crystalstag', boss: 'glacierwyrm', size: [31, 23], pos: [44, 6], icon: 'm_cave' }),
-  D({ id: 'undercity', name: 'The Undercity of Noon', subtitle: 'The city beneath the city that never set', desc: 'A golden mirror of Solenne beneath the streets. Here the fifth seal waits behind a Herald who never stops announcing.', art: 'intro2.webp', theme: 'noon', floors: 3, lvl: 26, enemies: ['noonchild', 'echo', 'mourner', 'gilded', 'shadethird'], elite: 'gildedmarshal', boss: 'herald', size: [31, 23], pos: [34, 40], gate: 'm23', mainBoss: true, intro: 's_under_intro', clear: 's_herald', icon: 'm_dungeon' }),
-  D({ id: 'meridian', name: 'The Black Meridian', subtitle: 'The wound at the end of the world', desc: 'Here the sky opens and every possible ending screams at once. The throne is at the bottom, and it has been waiting for you specifically.', art: 'intro2.webp', theme: 'archive', floors: 4, lvl: 29, enemies: ['echo', 'noonchild', 'mourner', 'shadethird', 'gilded'], elite: 'regentshade', boss: 'king', size: [33, 25], pos: [32, 45], gate: 'm25', mainBoss: true, intro: 's_meridian_intro', clear: 's_king', icon: 'm_obelisk' }),
+  D({ id: 'undercroft', name: 'Old Watchtower Undercroft', subtitle: 'The dead guard what the living forgot', desc: 'The first watchtower of Veyrgard, and beneath it the barracks of men who never left their posts.', art: 'bellhouse', theme: 'crypt', floors: 2, lvl: 2, enemies: ['skeleton', 'ghoul', 'lanternwraith', 'ratswarm'], elite: 'deadsergeant', boss: 'oldsentinel', size: [27, 21], pos: [27, 20], icon: 'm_tower' }),
+  D({ id: 'rookery', name: 'The Rookery', subtitle: 'A robber’s tower of stolen rooms', desc: 'A ruined manor taken by the Rook-King and his crew. Every wall is hung with stolen portraits of people who look worried.', art: 'ashwood', theme: 'ruin', floors: 2, lvl: 3, enemies: ['bandit', 'rookarcher', 'hedgewitch', 'rookhound'], elite: 'magpie', boss: 'rookking', size: [27, 21], pos: [38, 30], icon: 'm_castle' }),
+  D({ id: 'seacaves', name: 'Wickhaven Sea Caves', subtitle: 'Where the tide brings things back', desc: 'Salt-wet grottos that sing when the tide changes. The Widow’s wedding ring was lost here, a long time ago.', art: 'bellhouse', theme: 'flooded', floors: 3, lvl: 5, enemies: ['crab', 'eel', 'drownedsailor', 'brinehag'], elite: 'tidegrasp', boss: 'saltbeard', size: [29, 21], pos: [6, 44], icon: 'm_cave', secretItem: 'tok_widow' }),
+  D({ id: 'catacombs', name: 'The Drowned Catacombs', subtitle: 'Where the dead refuse the tide', desc: 'Flooded crypts beneath Saltmere. The bells ring under water, and every ring is a name.', art: 'bellhouse', theme: 'flooded', floors: 3, lvl: 7, enemies: ['drownedwanderer', 'eel', 'tidesinger', 'bellthrall'], elite: 'ringer', boss: 'widow', size: [31, 23], pos: [18, 38], gate: 'm04', mainBoss: true, intro: 's_cata_intro', clear: 's_widow', icon: 'm_dungeon' }),
+  D({ id: 'hearthcrypt', name: 'The Hearth Crypt', subtitle: 'Where the Compact keeps its embers', desc: 'The ash-brotherhood’s burial vault. Their fires are meant to be tended forever. Something has been tending them a bit too well.', art: 'ashwood', theme: 'ember', floors: 3, lvl: 10, enemies: ['ashhound', 'lanternkin', 'cinderghoul', 'emberwisp'], elite: 'ashenmatron', boss: 'huntsman', size: [29, 21], pos: [56, 20], icon: 'm_graveyard', secretItem: 'tok_hart' }),
+  D({ id: 'ashwood', name: 'Ashwood Expanse', subtitle: 'A forest that remembers fire', desc: 'Black trees bleed embers. Lanterns lead travelers in circles until they become lanterns too.', art: 'ashwood', theme: 'forest', floors: 3, lvl: 12, enemies: ['ashhound', 'lanternkin', 'charcoal', 'thornstalker', 'emberstag'], elite: 'weepingbough', boss: 'hart', size: [33, 25], pos: [58, 28], gate: 'm08', mainBoss: true, intro: 's_ash_intro', clear: 's_hart', icon: 'm_deadtree' }),
+  D({ id: 'hollowhill', name: 'Witch’s Hollow Hill', subtitle: 'The hill that hums at night', desc: 'A green mound beside the marsh, riddled with warrens and lit from the inside by a lantern no one has ever seen.', art: 'ashwood', theme: 'swamp', floors: 3, lvl: 13, enemies: ['mirefrog', 'bogwitch', 'hollowmoth', 'scarecrow'], elite: 'mothmother', boss: 'crone', size: [29, 21], pos: [48, 34], icon: 'm_mushroom' }),
+  D({ id: 'archive', name: 'The Charred Archive', subtitle: 'An archive the fire refused to finish', desc: 'The old Lantern Court archive, burnt to its shelves. The fire spared exactly one person.', art: 'ashwood', theme: 'archive', floors: 3, lvl: 14, enemies: ['brandbearer', 'charredarchivist', 'ashwraith', 'fireimp'], elite: 'cindermagistrate', boss: 'unburntkeeper', size: [29, 21], pos: [50, 14], icon: 'm_archive' }),
+  D({ id: 'quarry', name: 'Ossuary Quarry', subtitle: 'The old world had larger bones', desc: 'Miners carved a city through the skeletons of forgotten giants, then carved each other.', art: 'quarry', theme: 'bone', floors: 3, lvl: 16, enemies: ['prospector', 'marrow', 'dustwife', 'gravelgolem'], elite: 'overseer', boss: 'grist', size: [33, 25], pos: [6, 14], gate: 'm12', mainBoss: true, intro: 's_quarry_intro', clear: 's_grist', icon: 'm_mine' }),
+  D({ id: 'ribcage', name: 'Titan’s Ribcage', subtitle: 'The hollow beneath the bones', desc: 'The interior of the great skeleton. Mist rises from between the ribs, and the mist has opinions.', art: 'quarry', theme: 'bone', floors: 3, lvl: 18, enemies: ['marrowworm', 'ribspider', 'titantick', 'boneharpy'], elite: 'ribwarden', boss: 'hollowtitan', size: [31, 23], pos: [4, 26], icon: 'm_ruins', secretItem: 'tok_grist' }),
+  D({ id: 'foundry', name: 'The Sunken Foundry', subtitle: 'Where light was cast into iron', desc: 'A drowned smelter where the first lanterns were poured. The furnaces are still hot. Nobody has stoked them in a century.', art: 'quarry', theme: 'mine', floors: 3, lvl: 19, enemies: ['slagimp', 'foundrywraith', 'clockwarden', 'ironmaw'], elite: 'castmaster', boss: 'moltenregent', size: [31, 23], pos: [16, 16], icon: 'm_volcano' }),
+  D({ id: 'pass', name: 'The Weeping Pass', subtitle: 'Every frozen corpse faces south', desc: 'A lost army waits beneath the snow for one final command. Some of them hear it early.', art: 'pass', theme: 'ice', floors: 3, lvl: 21, enemies: ['deserter', 'rime', 'standard', 'frostwolf'], elite: 'colonel', boss: 'vhal', size: [33, 25], pos: [34, 3], gate: 'm16', mainBoss: true, intro: 's_pass_intro', clear: 's_vhal', icon: 'm_snow' }),
+  D({ id: 'barrows', name: 'The Frozen Barrows', subtitle: 'A king’s household, buried alive', desc: 'A royal burial mound. The household is still in residence. So is the banner Vhal’s army carried.', art: 'pass', theme: 'ice', floors: 3, lvl: 22, enemies: ['barrowdraug', 'rimeghoul', 'icespider', 'frostbanshee'], elite: 'barrowlord', boss: 'barrowking', size: [29, 21], pos: [24, 6], icon: 'm_graveyard', secretItem: 'tok_vhal' }),
+  D({ id: 'rimeglass', name: 'Rimeglass Cavern', subtitle: 'A cave that dreams in ice', desc: 'A crystal cave where the ice preserves things that should not be preserved.', art: 'pass', theme: 'ice', floors: 3, lvl: 24, enemies: ['icegolem', 'frostbat', 'glassmaw', 'yeti'], elite: 'crystalstag', boss: 'glacierwyrm', size: [31, 23], pos: [44, 6], icon: 'm_cave' }),
+  D({ id: 'undercity', name: 'The Undercity of Noon', subtitle: 'The city beneath the city that never set', desc: 'A golden mirror of Solenne beneath the streets. Here the fifth seal waits behind a Herald who never stops announcing.', art: 'solenne', theme: 'noon', floors: 3, lvl: 26, enemies: ['noonchild', 'echo', 'mourner', 'gilded', 'shadethird'], elite: 'gildedmarshal', boss: 'herald', size: [31, 23], pos: [34, 40], gate: 'm23', mainBoss: true, intro: 's_under_intro', clear: 's_herald', icon: 'm_dungeon' }),
+  D({ id: 'meridian', name: 'The Black Meridian', subtitle: 'The wound at the end of the world', desc: 'Here the sky opens and every possible ending screams at once. The throne is at the bottom, and it has been waiting for you specifically.', art: 'solenne', theme: 'archive', floors: 4, lvl: 29, enemies: ['echo', 'noonchild', 'mourner', 'shadethird', 'gilded'], elite: 'regentshade', boss: 'king', size: [33, 25], pos: [32, 45], gate: 'm25', mainBoss: true, intro: 's_meridian_intro', clear: 's_king', icon: 'm_obelisk' }),
 ];
 export const DUNGEON_MAP = new Map(DUNGEONS.map(x => [x.id, x]));
 
@@ -161,7 +161,7 @@ export const LANDMARKS: LandmarkDef[] = [
 ];
 export const LANDMARK_MAP = new Map(LANDMARKS.map(x => [x.id, x]));
 
-export interface Zone { id: string; at: [number, number]; lvl: number; pool: string[]; name: string; biome: string; elite: string; fx?: string }
+export interface Zone { id: string; at: [number, number]; lvl: number; pool: string[]; name: string; biome: string; elite: string; fx?: string; bg?: string; island?: boolean }
 export const ZONES: Zone[] = [
   { id: 'heartland', name: 'The Heartland', at: [32, 24], lvl: 2, pool: ['bandit', 'wolf', 'crow', 'scarecrow', 'ratswarm'], biome: 'plains', elite: 'deadsergeant' },
   { id: 'coast', name: 'The Drowned Coast', at: [12, 38], lvl: 6, pool: ['crab', 'eel', 'drownedsailor', 'brinehag', 'drownedwanderer'], biome: 'coast', elite: 'tidegrasp' },

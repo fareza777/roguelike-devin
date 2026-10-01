@@ -1,15 +1,15 @@
 import { DUNGEON_MAP, LANDMARK_MAP, TOWN_MAP, TOWN_SCHOOLS } from '../data/world';
 import { SKILLS } from '../data/skills';
-import { QUEST_MAP } from '../data/quests';
 import { MAIN } from '../data/story';
+import { personaUrl } from '../art/mount';
 import { item, upgradeCost, canUpgrade, MAX_UPGRADE, splitId, SLOT_LABEL, zoneAt, baseItem } from '../engine/core';
 import { onEntrance, onExit, dungeonProgress } from '../engine/dungeon';
-import { QUEST_LIMIT, availableQuests, claimable, cond } from '../engine/quests';
+import { QUEST_LIMIT, availableQuests, claimable, cond, questDef } from '../engine/quests';
 import { currentStep } from '../engine/story';
 import {
-  SUPPLY_PRICE, sigilCost, canSell, cleanseCost, innCost, roundCost, sellPrice, shopStock, schoolsHere, skillPrice,
+  SUPPLY_PRICE, buyPrice, rankUpCost, ownedCompanions, sigilCost, canSell, cleanseCost, innCost, roundCost, sellPrice, shopStock, schoolsHere, skillPrice,
 } from '../engine/town';
-import { canFastTravel, currentPoi, objectiveTarget, travelCost } from '../engine/world';
+import { canFastTravel, canSail, currentPoi, ferryCost, ferryTargets, objectiveTarget, travelCost } from '../engine/world';
 import { TERRAIN_NAME, tileAt } from '../engine/worldgen';
 import { icon } from '../icons';
 import type { GameState, ItemDef, Slot } from '../types';
@@ -75,10 +75,9 @@ export function dungeon(s: GameState, ui: UI) {
   </section>`;
 }
 
-const REGION_FX: Record<string, string> = { ashwood: 'embers', north: 'snow', coast: 'rain', bone: 'dust', south: 'motes', heartland: 'dust', swamp: 'motes' };
 const SERVICE_META: Record<string, { ic: string; label: string; go: string }> = {
   inn: { ic: 'inn', label: 'Inn & Tavern', go: 'inn' }, shop: { ic: 'shop', label: 'Market', go: 'shop' }, smithy: { ic: 'smith', label: 'Smithy', go: 'smithy' },
-  wardhouse: { ic: 'wardhouse', label: 'Wardhouse', go: 'wardhouse' }, board: { ic: 'notice', label: 'Notice Board', go: 'board' }, trainer: { ic: 'skills', label: 'Trainer', go: 'skills' },
+  wardhouse: { ic: 'wardhouse', label: 'Wardhouse', go: 'wardhouse' }, harbor: { ic: 'm_ship', label: 'Harbor', go: 'harbor' }, board: { ic: 'notice', label: 'Notice Board', go: 'board' }, trainer: { ic: 'skills', label: 'Trainer', go: 'skills' },
 };
 
 export function town(s: GameState) {
@@ -88,12 +87,12 @@ export function town(s: GameState) {
   const avail = availableQuests(s, t.id).length;
   const sub = (id: string) => ({
     inn: `Rest · ${innCost(s)} gold${t.services.includes('tavern') ? ' · rumors' : ''}`, shop: 'Buy, sell, supplies', smithy: 'Reinforce your gear', wardhouse: s.corruption ? `Purge corruption · ${cleanseCost(s)}g` : 'Sigils & quiet hour',
-    board: ready ? `${ready} ready to claim` : avail ? `${avail} contract${avail > 1 ? 's' : ''} available` : 'No new contracts', trainer: (TOWN_TRAIN(t.id)).join(' · '),
+    board: ready ? `${ready} ready to claim` : avail ? `${avail} contract${avail > 1 ? 's' : ''} available` : 'No new contracts', trainer: (TOWN_TRAIN(t.id)).join(' · '), harbor: 'Ferries to distant ports',
   } as Record<string, string>)[id];
   const services = t.services.filter(x => x !== 'tavern');
   return `<section class="town" style="--sky:${t.theme.sky};--glow:${t.theme.glow};--ink:${t.theme.ink}">
-    <div class="banner" style="--art:url('/art/${t.art}')">
-      <div class="banner-fx fx-${REGION_FX[t.region] ?? 'dust'}">${Array.from({ length: 14 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</div>
+    <div class="banner">
+      <canvas class="banner-art" data-scene="${esc(t.art)}" data-res="card" data-key="tb-${t.id}"></canvas><div class="banner-shade"></div>
       <div class="banner-text"><small>${t.kind === 'city' ? 'CITY' : 'SETTLEMENT'}</small><h1>${esc(t.name)}</h1><p>${esc(t.subtitle)}</p></div>
     </div>
     <p class="town-desc">${esc(t.desc)}</p>
@@ -102,7 +101,7 @@ export function town(s: GameState) {
     <h3 class="sec-h">People of ${esc(t.name)}</h3>
     <div class="npc-list">${t.npcs.map(n => {
       const story = n.talk?.some(v => cond(s, v.cond));
-      return `<button class="npc ${story ? 'story' : ''}" data-talk="${n.id}"><span class="np">${icon(n.icon)}</span><span class="nt"><b>${esc(n.name)}</b><small>${esc(n.title)}</small></span>${story ? `<em class="mark">${icon('quest')}</em>` : ''}</button>`;
+      return `<button class="npc ${story ? 'story' : ''}" data-talk="${n.id}"><span class="np"><img src="${personaUrl(n.id, undefined, n.look)}" alt=""></span><span class="nt"><b>${esc(n.name)}</b><small>${esc(n.title)}</small></span>${story ? `<em class="mark">${icon('quest')}</em>` : ''}</button>`;
     }).join('')}</div>
     <div class="row-end"><button class="btn" data-act="leaveTown">${icon('back')}Leave ${esc(t.name)}</button></div>
   </section>`;
@@ -132,7 +131,7 @@ export function shop(s: GameState, ui: UI) {
     <div class="chips-row">${CATS.filter(([k]) => ui.shopTab === 'sell' || k !== 'junk').map(([k, l]) => `<button class="pill ${ui.shopCat === k ? 'on' : ''}" data-shopcat="${k}">${l}</button>`).join('')}</div>
     ${ui.shopTab === 'buy' ? `<div class="list">
       <div class="irow"><span class="iicon r-common">${icon('supplies')}</span><div class="imain"><div class="iname"><b>Supply Bundle</b></div><small class="idesc">+2 supplies for the road. You carry ${s.supplies}.</small></div><div class="iact"><button class="btn buy" data-act="buySupplies" ${s.gold < SUPPLY_PRICE ? 'disabled' : ''}>${SUPPLY_PRICE}${icon('gold')}</button></div></div>
-      ${stock.map(d => itemRow(s, d, `<button class="btn buy" data-buy="${d.id}" ${s.gold < d.price ? 'disabled' : ''}>${d.price}${icon('gold')}</button>`, { sheet: 'shop', compare: true })).join('') || emptyState('shop', 'Nothing in this category today.')}</div>`
+      ${stock.map(d => itemRow(s, d, `<button class="btn buy" data-buy="${d.id}" ${s.gold < buyPrice(s, d) ? 'disabled' : ''}>${buyPrice(s, d)}${icon('gold')}</button>`, { sheet: 'shop', compare: true })).join('') || emptyState('shop', 'Nothing in this category today.')}</div>`
       : `${valuables ? `<div class="row-end"><button class="btn" data-act="sellJunk">${icon('gold')}Sell all valuables</button></div>` : ''}<div class="list">${sellable.map(({ d, n }) => itemRow(s, d, canSell(d.id) ? `<button class="btn sell" data-sell="${d.id}">+${sellPrice(d)}${icon('gold')}</button>` : '<small class="muted">Keepsake</small>', { count: n, sheet: 'bag' })).join('') || emptyState('bag', 'Nothing to sell. Unequip gear to sell it.')}</div>`}
   </section>`;
 }
@@ -162,6 +161,8 @@ export function inn(s: GameState, ui: UI) {
   const tavern = t.services.includes('tavern');
   return `<section class="page-in"><div class="page-head"><h2>${icon('inn')}The Inn</h2><p class="muted">A bed, a fire, and a door that locks. Rest restores health, sanity and clears ailments.</p></div>
     <div class="panel feature"><span class="fi">${icon('inn')}</span><div><h3>A warm bed</h3><p>Sleep until the world stops whispering.</p></div><button class="btn primary" data-act="rest" ${s.gold < cost ? 'disabled' : ''}>Rest · ${cost}${icon('gold')}</button></div>
+    ${ownedCompanions(s).length > 1 ? `<h3 class="sec-h">Companion</h3><div class="svc-grid">${['None', ...ownedCompanions(s)].map(n => `<button class="svc ${s.companion === n ? 'on' : ''}" data-companion="${esc(n)}"><span class="si">${icon('e_hound')}</span><span class="st2"><b>${esc(n)}</b><small>${n === 'None' ? 'Walk alone' : s.companion === n ? 'Travelling with you' : 'Swap'}</small></span></button>`).join('')}</div>` : ''}
+    <div id="adslot-inn"></div>
     ${tavern ? `<div class="panel feature"><span class="fi">${icon('tavern')}</span><div><h3>The tavern</h3><p>Tongues loosen for those who buy a round. Rumors may point to places you have not yet found.</p></div><button class="btn" data-act="round" ${s.gold < roundCost(s) ? 'disabled' : ''}>Buy a round · ${roundCost(s)}${icon('gold')}</button></div>
     ${ui.tavernText ? `<blockquote class="rumor" data-key="rum-${ui.tavernText.length}">“${esc(ui.tavernText)}”</blockquote>` : '<blockquote class="rumor muted">Rumors are free. Listen at the bar.<button class="btn" data-act="listen">Listen</button></blockquote>'}` : ''}
   </section>`;
@@ -188,8 +189,10 @@ export function trainer(s: GameState) {
     <div class="list">${list.map(k => {
       const known = s.skills.includes(k.id);
       const lock = s.level < k.level;
+      const rank = s.skillRanks[k.id] ?? 1;
+      const rc = rankUpCost(s, k.id);
       return `<div class="irow ${known ? 'known' : ''} ${lock ? 'locked' : ''}"><span class="iicon r-rare">${icon(k.icon)}</span><div class="imain"><div class="iname"><b>${k.name}</b><em class="cnt">${k.school}</em></div><small class="idesc">${k.desc}</small><div class="itag">Cooldown ${k.cooldown}${k.sanityCost ? ` · ${k.sanityCost} sanity` : ''}${k.hpCost ? ` · ${k.hpCost}% health` : ''} · Level ${k.level}</div></div>
-        <div class="iact">${known ? '<span class="badge">KNOWN</span>' : `<button class="btn buy" data-learn="${k.id}" ${lock || s.gold < skillPrice(k.id) ? 'disabled' : ''}>${lock ? `Lv ${k.level}` : `${k.price}${icon('gold')}`}</button>`}</div></div>`;
+        <div class="iact">${known ? `<span class="badge">RANK ${rank}</span>${rc ? `<button class="btn buy" data-rankup="${k.id}" ${s.gold < rc ? 'disabled' : ''}>${rc}${icon('gold')}</button>` : '<small class="muted">Mastered</small>'}` : `<button class="btn buy" data-learn="${k.id}" ${lock || s.gold < skillPrice(k.id) ? 'disabled' : ''}>${lock ? `Lv ${k.level}` : `${k.price}${icon('gold')}`}</button>`}</div></div>`;
     }).join('') || emptyState('skills', 'No trainer here has anything to teach you.')}</div></section>`;
 }
 
@@ -198,14 +201,14 @@ export function board(s: GameState) {
   const avail = availableQuests(s, t.id);
   const active = s.quests;
   const card = (id: string) => {
-    const d = QUEST_MAP.get(id)!;
+    const d = questDef(s, id)!;
     const q = s.quests.find(x => x.id === id)!;
     const here = d.town === t.id;
-    return `<div class="quest ${q.done ? 'ready' : ''}"><span class="qi">${icon(q.done ? 'trophy' : 'quest')}</span><div class="qm"><b>${esc(d.title)}</b><small>${esc(d.giver)} · ${esc(TOWN_MAP.get(d.town)!.name)}</small><p>${q.done ? esc(d.done ?? 'Return to the giver to claim your reward.') : esc(d.goal.label)}</p>
+    return `<div class="quest ${q.done ? 'ready' : ''}"><span class="qi">${icon(q.done ? 'trophy' : 'quest')}</span><div class="qm"><b>${esc(d.title)}</b><small>${esc(d.giver)} · ${esc(TOWN_MAP.get(d.town)!.name)}${d.bounty ? ' · bounty' : ''}</small><p>${q.done ? esc(d.done ?? 'Return to the giver to claim your reward.') : esc(d.goal.label)}</p>
       <div class="bar bar-xp thin"><div class="fill" style="width:${(q.progress / d.goal.count) * 100}%"></div><span>${q.progress} / ${d.goal.count}</span></div></div>
       ${q.done ? (here ? `<button class="btn primary" data-claim="${id}">Claim</button>` : `<small class="muted">Return to ${esc(TOWN_MAP.get(d.town)!.name)}</small>`) : ''}</div>`;
   };
-  return `<section class="page-in"><div class="page-head"><h2>${icon('notice')}Notice Board</h2><p class="muted">Contracts nailed over older contracts. Up to ${QUEST_LIMIT} at once.</p></div>
+  return `<section class="page-in"><div class="page-head"><h2>${icon('notice')}Notice Board</h2><p class="muted">Contracts nailed over older contracts, plus fresh bounties every six days. Up to ${QUEST_LIMIT} at once.</p></div>
     <h3 class="sec-h">Active (${active.length}/${QUEST_LIMIT})</h3>
     <div class="list">${active.map(q => card(q.id)).join('') || emptyState('notice', 'No active contracts.')}</div>
     <h3 class="sec-h">Posted in ${esc(t.name)}</h3>
@@ -235,3 +238,10 @@ export function mapScreen(s: GameState, ui: UI) {
   return `<section class="page-in mapscreen"><div class="fullmap-host" id="fullmount" data-static></div><div class="panel mapinfo">${info}</div></section>`;
 }
 
+
+export function harbor(s: GameState) {
+  const t = TOWN_MAP.get(s.town!)!;
+  const dests = ferryTargets(s, t.id);
+  return `<section class="page-in"><div class="page-head"><h2>${icon('m_ship')}Harbor of ${esc(t.name)}</h2><p class="muted">Ferrymen who ask no questions, for a price. Sailing takes a day or more.</p></div>
+    <div class="list">${dests.map(d => { const cost = ferryCost(t.id, d.id); return `<div class="irow"><span class="iicon r-rare">${icon(d.kind === 'city' ? 'm_city' : 'm_town')}</span><div class="imain"><div class="iname"><b>${esc(d.name)}</b><em class="cnt">${s.world.visited.includes(d.id) ? 'visited' : 'unvisited'}</em></div><small class="idesc">${esc(d.subtitle)}</small></div><div class="iact"><button class="btn buy" data-sail="${d.id}" ${canSail(s, d.id) ? '' : 'disabled'}>${cost}${icon('gold')}</button></div></div>` }).join('') || emptyState('m_ship', 'No ships sail from here yet. Ask around the docks.')}</div></section>`;
+}

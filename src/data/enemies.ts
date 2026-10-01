@@ -34,7 +34,7 @@ export const ENEMIES: EnemyDef[] = [
   e('tidesinger', 'Tide-Singer', 'e_cultist', 'caster', 'human hex', ['dread', 'attack', 'guard'], 'Sings backwards to wake what sleeps below.', { dread: 3 }),
   e('bellthrall', 'Bell-Thrall', 'e_bellkeeper', 'tank', 'undead', ['guard', 'attack', 'heavy'], 'Rings when struck. Angrier every time.'),
   e('ringer', 'The Bell-Ringer', 'e_bear', 'brute', 'undead elite', ['attack', 'dread', 'heavy'], 'Deaf for three centuries. Still rings on time.', { dread: 4 }),
-  e('widow', 'The Bell-Widow', 'e_veiled', 'caster', 'undead boss', ['attack', 'dread', 'heavy', 'afflict'], 'She married the bell to save the city. It kept her.', { art: 'boss_catacombs.webp', hpMul: 4.2, dread: 4, ...aff('weak') }),
+  e('widow', 'The Bell-Widow', 'e_veiled', 'caster', 'undead boss', ['attack', 'dread', 'heavy', 'afflict'], 'She married the bell to save the city. It kept her.', { hpMul: 4.2, dread: 4, ...aff('weak') }),
 
   e('ashhound', 'Ash Hound', 'e_hound', 'skirmisher', 'beast fire', ['attack', 'attack', 'afflict'], 'Hunts by the smell of fear. You smell delicious.', aff('bleed')),
   e('lanternkin', 'Lanternkin', 'e_lantern', 'caster', 'undead fire', ['afflict', 'dread', 'attack'], 'A lost traveler, now a lamp for the next one.', { ...aff('burn'), dread: 3 }),
@@ -47,7 +47,7 @@ export const ENEMIES: EnemyDef[] = [
   e('thornstalker', 'Thornstalker', 'e_eviltree', 'brute', 'plant', ['attack', 'afflict', 'heavy'], 'Walks when you look away. Roots when you look back.', aff('bleed')),
   e('emberstag', 'Emberstag', 'e_stag', 'skirmisher', 'beast fire', ['attack', 'heavy', 'afflict'], 'One of the Hart’s fawns. It has never been cold.', aff('burn')),
   e('weepingbough', 'The Weeping Bough', 'e_treeface', 'tank', 'plant elite', ['guard', 'heavy', 'afflict', 'dread'], 'Sap runs from its eyes. It is grief that grew roots.', { ...aff('weak'), dread: 3 }),
-  e('hart', 'The Cinder Hart', 'e_stag', 'brute', 'beast fire boss', ['attack', 'afflict', 'heavy', 'guard'], 'Wherever it walks, the forest remembers being alive.', { art: 'boss_ashwood.webp', hpMul: 4.2, ...aff('burn') }),
+  e('hart', 'The Cinder Hart', 'e_stag', 'brute', 'beast fire boss', ['attack', 'afflict', 'heavy', 'guard'], 'Wherever it walks, the forest remembers being alive.', { hpMul: 4.2, ...aff('burn') }),
 
   e('mirefrog', 'Mire-Toad', 'e_frog', 'brute', 'beast swamp', ['attack', 'afflict', 'attack'], 'Swallows what it cannot understand.', aff('poison')),
   e('bogwitch', 'Bog-Witch', 'e_witch', 'caster', 'human hex', ['dread', 'afflict', 'attack'], 'Trades wishes for teeth.', { ...aff('poison'), dread: 3 }),
@@ -67,7 +67,7 @@ export const ENEMIES: EnemyDef[] = [
   e('dustwife', 'Dust Wife', 'e_ghost', 'caster', 'undead spirit', ['dread', 'dread', 'attack'], 'Sweeps the quarry floors of every trace of her husband.', { dread: 4 }),
   e('gravelgolem', 'Gravel Golem', 'e_ogre', 'tank', 'construct bone', ['guard', 'heavy', 'attack'], 'A heap of stone that decided to be furious.'),
   e('overseer', 'The Overseer', 'e_troll', 'tank', 'undead elite', ['guard', 'heavy', 'attack'], 'Counts the dead workers. The number is always one short.'),
-  e('grist', 'Foreman Grist', 'e_skeleton', 'brute', 'undead bone boss', ['attack', 'heavy', 'guard', 'afflict'], 'He promised the miners they would be remembered. He built them into the walls.', { art: 'boss_quarry.webp', hpMul: 4.2, ...aff('bleed') }),
+  e('grist', 'Foreman Grist', 'e_skeleton', 'brute', 'undead bone boss', ['attack', 'heavy', 'guard', 'afflict'], 'He promised the miners they would be remembered. He built them into the walls.', { hpMul: 4.2, ...aff('bleed') }),
 
   e('marrowworm', 'Marrow Worm', 'e_earthworm', 'brute', 'beast bone', ['attack', 'heavy', 'afflict'], 'It ate a Titan’s spine and grew fat.', aff('weak')),
   e('ribspider', 'Rib-Spider', 'e_spider', 'skirmisher', 'beast bone', ['attack', 'afflict', 'attack'], 'Spins its web from ligament.', aff('poison')),
@@ -88,7 +88,7 @@ export const ENEMIES: EnemyDef[] = [
   e('standard', 'Standard-Bearer', 'e_knight', 'tank', 'undead ice', ['guard', 'attack', 'heavy'], 'The banner is stitched from the skin of cowards.'),
   e('frostwolf', 'Frostwolf', 'e_polar', 'skirmisher', 'beast ice', ['attack', 'afflict', 'attack'], 'Runs in the tracks of the dead army.', aff('bleed')),
   e('colonel', 'Colonel Ashgrave', 'e_blackknight', 'tank', 'undead ice elite', ['heavy', 'afflict', 'attack', 'guard'], 'Vhal’s right hand. The left hand is somewhere in the snow.', aff('bleed')),
-  e('vhal', 'General Vhal', 'e_oldking', 'brute', 'undead ice boss', ['attack', 'heavy', 'dread', 'guard', 'afflict'], 'He faced south so his army would never see what was following.', { art: 'boss_pass.webp', hpMul: 4.4, ...aff('weak') }),
+  e('vhal', 'General Vhal', 'e_oldking', 'brute', 'undead ice boss', ['attack', 'heavy', 'dread', 'guard', 'afflict'], 'He faced south so his army would never see what was following.', { hpMul: 4.4, ...aff('weak') }),
 
   e('barrowdraug', 'Barrow Draug', 'e_mummy', 'brute', 'undead ice', ['attack', 'heavy', 'afflict'], 'Guards the grave gifts of soldiers no one mourned.', aff('weak')),
   e('rimeghoul', 'Rime Ghoul', 'e_zombie', 'brute', 'undead ice', ['attack', 'attack', 'afflict'], 'Cold as a lie told by a friend.', aff('bleed')),
@@ -112,8 +112,8 @@ export const ENEMIES: EnemyDef[] = [
   e('gildedmarshal', 'Gilded Marshal', 'e_blackknight', 'tank', 'construct noon elite', ['guard', 'heavy', 'afflict', 'attack'], 'Commands an empty city with perfect discipline.', aff('burn')),
   e('herald', 'Herald of Noon', 'e_seer', 'caster', 'human noon boss', ['dread', 'heavy', 'afflict', 'attack'], 'Announces the King. The announcement never ends.', { hpMul: 3.8, ...aff('burn'), dread: 5, icon: 'e_sunhood' }),
   e('regentshade', 'Regent’s Shade', 'e_oldking', 'brute', 'spirit noon elite', ['heavy', 'dread', 'attack', 'afflict'], 'A former sitter of the throne. They are all still sitting.', { dread: 5, ...aff('weak') }),
-  e('king', 'The King Behind Noon', 'e_crowned', 'brute', 'human noon boss', ['dread', 'heavy', 'afflict', 'attack', 'guard', 'heavy'], 'He wears the face of whoever reaches him.', { art: 'boss_meridian.webp', hpMul: 4.6, ...aff('weak'), dread: 6 }),
-  e('ilse', 'Seer Ilse, the Blind', 'e_seer', 'caster', 'human noon boss', ['dread', 'heavy', 'afflict', 'guard', 'attack'], 'She sees through your eyes, and she is not pleased with the view.', { art: 'intro3.webp', hpMul: 4.4, ...aff('burn'), dread: 6 }),
+  e('king', 'The King Behind Noon', 'e_crowned', 'brute', 'human noon boss', ['dread', 'heavy', 'afflict', 'attack', 'guard', 'heavy'], 'He wears the face of whoever reaches him.', { hpMul: 4.6, ...aff('weak'), dread: 6 }),
+  e('ilse', 'Seer Ilse, the Blind', 'e_seer', 'caster', 'human noon boss', ['dread', 'heavy', 'afflict', 'guard', 'attack'], 'She sees through your eyes, and she is not pleased with the view.', { hpMul: 4.4, ...aff('burn'), dread: 6 }),
 
   e('siegechamp', 'Hollow Legion Champion', 'e_barbarian', 'brute', 'undead boss', ['heavy', 'attack', 'dread', 'afflict'], 'Leads the dead against the last gate.', { hpMul: 3.4, ...aff('bleed') }),
   e('maren', 'Lamp-Keeper Maren, Ash-Eyed', 'e_veiled', 'caster', 'human elite', ['afflict', 'dread', 'heavy', 'attack'], 'She has been looking through someone else’s eyes for so long that she forgot her own.', { ...aff('burn'), dread: 4 }),

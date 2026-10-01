@@ -62,7 +62,7 @@ export const canUpgrade = (idStr: string) => {
 };
 
 export function defaultSettings(): Settings {
-  return { sfx: true, music: true, haptics: true, motion: true, textSize: 'normal', difficulty: 'Wayfarer' };
+  return { sfx: true, music: true, haptics: true, motion: true, voice: true, subs: true, textSize: 'normal', difficulty: 'Wayfarer' };
 }
 export function loadMeta(): Meta {
   const base: Meta = { introSeen: false, onboarded: false, settings: defaultSettings(), endings: [], runs: 0 };

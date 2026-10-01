@@ -1,24 +1,20 @@
-import { COMPANIONS, INTRO, ORIGINS, PATHS, TIPS } from '../data/story';
+import { COMPANIONS, ORIGINS, PATHS, TIPS } from '../data/story';
 import { hasLegacySave, load } from '../engine/core';
 import { icon } from '../icons';
 import type { GameState, Meta } from '../types';
 import { UI, esc } from './common';
 
-export const VERSION_LABEL = '3.0.0';
-export const INTRO_LENGTH = INTRO.length;
+export const VERSION_LABEL = '4.0.0';
 
 const eclipse = (cls = '') => `<div class="eclipse ${cls}" aria-hidden="true"><i class="corona"></i><i class="corona c2"></i><i class="disc"></i></div>`;
 
 export function splash() {
-  return `<div class="splash" data-act="skipSplash"><div class="splash-in">${eclipse('big')}<h1>DREADMARCH</h1><p class="sub">THE BLACK MERIDIAN</p><div class="loader"><i></i></div><small>Tap to continue</small></div></div>`;
+  return `<div class="splash" data-act="skipSplash"><canvas data-scene="splash" data-res="auto"></canvas><div class="splash-shade"></div>
+    <div class="splash-in splash-logo"><h1>DREADMARCH</h1><p class="sub">THE BLACK MERIDIAN</p><div class="loader"><i></i></div><small>Tap to continue</small></div></div>`;
 }
 
-export function intro(ui: UI) {
-  const p = INTRO[ui.introPanel];
-  return `<div class="intro"><div class="intro-art kenburns" data-key="ia-${ui.introPanel}" style="background-image:url('/art/${p.art}')"></div><div class="intro-shade"></div>
-    <div class="intro-text" data-key="it-${ui.introPanel}">${p.lines.map((l, i) => `<p class="reveal" style="animation-delay:${0.5 + i * 1.7}s">${l}</p>`).join('')}</div>
-    <div class="intro-nav"><div class="dots">${INTRO.map((_, i) => `<i class="${i === ui.introPanel ? 'on' : ''}"></i>`).join('')}</div>
-      <button class="btn" data-act="skipIntro">Skip</button><button class="btn primary" data-act="nextIntro">${ui.introPanel === INTRO.length - 1 ? 'Begin' : 'Next'}</button></div></div>`;
+export function intro() {
+  return `<div class="cine-wrap"><div class="cine" id="cine" data-static></div><button class="btn cine-skip" data-act="skipIntro">Skip</button><div class="cine-hint">TAP TO ADVANCE</div></div>`;
 }
 
 export function onboarding(ui: UI) {
@@ -36,7 +32,7 @@ export function onboarding(ui: UI) {
 export function title(meta: Meta) {
   const saved = load();
   return `<div class="title">
-    <div class="title-art"></div><div class="title-shade"></div>${eclipse('top')}
+    <canvas class="title-art" data-scene="splash" data-res="auto"></canvas><div class="title-shade"></div>${eclipse('top')}
     <div class="title-card">
       <small class="kicker">A CHRONICLE OF THE FINAL CITY</small>
       <h1>Dreadmarch</h1>
@@ -61,6 +57,8 @@ export function settings(meta: Meta, ui: UI, inGame: boolean) {
     <h2>${icon('settings')}Settings</h2>
     ${toggle('sfx', 'Sound effects', st.sfx, 'Combat, interface and exploration cues')}
     ${toggle('music', 'Ambient score', st.music, 'Living music that follows the road')}
+    ${toggle('voice', 'Voice-over', st.voice, 'Narration in the opening and key story moments')}
+    ${toggle('subs', 'Subtitles', st.subs, 'Show spoken lines as text')}
     ${toggle('haptics', 'Haptics', st.haptics, 'Vibration on hits and level ups')}
     ${toggle('motion', 'Motion & particles', st.motion, 'Embers, screen shake and cinematic pans')}
     <div class="setting"><div><b>Text size</b><small>Readability of story text</small></div><div class="seg">${(['normal', 'large'] as const).map(v => `<button class="${st.textSize === v ? 'on' : ''}" data-text="${v}">${v.toUpperCase()}</button>`).join('')}</div></div>

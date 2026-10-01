@@ -1,7 +1,7 @@
 export type Screen =
   | 'splash' | 'intro' | 'onboarding' | 'title' | 'settings' | 'about' | 'creation'
   | 'town' | 'world' | 'dungeon' | 'map' | 'combat' | 'event' | 'reward' | 'dialogue'
-  | 'character' | 'inventory' | 'journal' | 'shop' | 'smithy' | 'skills' | 'board' | 'inn' | 'wardhouse'
+  | 'character' | 'inventory' | 'journal' | 'shop' | 'smithy' | 'skills' | 'board' | 'inn' | 'wardhouse' | 'harbor'
   | 'death' | 'ending';
 
 export type Stat = 'vigor' | 'will' | 'cunning';
@@ -195,7 +195,7 @@ export interface GameState {
 export interface AdsState { day: string; counts: Record<string, number>; inter: number; open: number; freeUntil: number; boostUntil: number }
 
 export interface Settings {
-  sfx: boolean; music: boolean; haptics: boolean; motion: boolean; textSize: 'normal' | 'large';
+  sfx: boolean; music: boolean; haptics: boolean; motion: boolean; voice: boolean; subs: boolean; textSize: 'normal' | 'large';
   difficulty: 'Wayfarer' | 'Doomed';
 }
 
