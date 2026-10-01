@@ -337,7 +337,14 @@ export class BattleStage {
     if (stunned) { for (let i = 0; i < 3; i++) { const a = this.clock * 3 + (i / 3) * Math.PI * 2; ctx.fillStyle = '#ffe060'; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * 46, cy - 90 + Math.sin(a) * 12, 5, 0, Math.PI * 2); ctx.fill() } }
     if (e.status.ward) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#7ac8ff', 0.5 + Math.sin(this.clock * 4) * 0.15); ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + this.clock * 0.4; ctx.lineTo(cx + Math.cos(a) * 110, cy + 20 + Math.sin(a) * 130) } ctx.closePath(); ctx.stroke(); ctx.fillStyle = rgba('#7ac8ff', 0.07); ctx.fill(); ctx.restore() }
     if (e.status.marked) { ctx.save(); ctx.translate(cx, cy + 10); ctx.rotate(this.clock * 0.6); ctx.strokeStyle = rgba('#ff5a5a', 0.85); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 54, 0, Math.PI * 2); ctx.moveTo(-70, 0); ctx.lineTo(-38, 0); ctx.moveTo(70, 0); ctx.lineTo(38, 0); ctx.moveTo(0, -70); ctx.lineTo(0, -38); ctx.moveTo(0, 70); ctx.lineTo(0, 38); ctx.stroke(); ctx.restore() }
-    if (e.status.chill) { ctx.fillStyle = 'rgba(160,224,255,.1)'; ctx.fillRect(cx - 120, cy - 120, 240, 280) }
+    if (e.status.chill) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createRadialGradient(cx, cy + 20, 10, cx, cy + 20, 130); g.addColorStop(0, 'rgba(150,220,255,.22)'); g.addColorStop(1, 'rgba(150,220,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, cy + 20, 130, 150, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = 'rgba(210,240,255,.7)';
+      for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2 + 0.4, d = 70 + (i % 3) * 18, x = cx + Math.cos(a) * d, y = cy + 30 + Math.sin(a) * d * 0.9; ctx.beginPath(); ctx.moveTo(x, y - 14); ctx.lineTo(x + 5, y); ctx.lineTo(x, y + 8); ctx.lineTo(x - 5, y); ctx.closePath(); ctx.fill() }
+    }
   }
 
   private drawHero(ctx: CanvasRenderingContext2D, h: BattleStage['heroS']) {

@@ -1,5 +1,5 @@
 import { drawFigure } from './figures';
-import { clamp, glow, hashKey, lerp, mix, poly, rgba, rngOf, shade, vgrad } from './util';
+import { clamp, glow, hashKey, lerp, makeCanvas, mix, poly, rgba, rngOf, shade, vgrad } from './util';
 
 /** Enemy portraits. Nothing here has a face: heads are hoods, bone plates, masks, veils, helms or simply absent. */
 export type Arch = 'hood' | 'armor' | 'rogue' | 'quad' | 'crawler' | 'winged' | 'worm' | 'swarm' | 'spirit' | 'golem' | 'plant' | 'elemental' | 'blob' | 'titan' | 'king' | 'bell' | 'cart';
@@ -10,7 +10,7 @@ const HINTS: [RegExp, Arch][] = [
   [/bell-?widow|widow|bellthrall|bell-?ringer|ringer/, 'bell'],
   [/king|regent|general|herald|molten|rook-?king|barrow-?king|aurelia/, 'king'],
   [/wolf|hound|hart|stag|bear|yeti|boar|cat|ram|bull|horse|fawn|moth\b|nixraven/, 'quad'],
-  [/crab|spider|tick|beetle|scorpion|mite|crawler|spinner|lobster/, 'crawler'],
+  [/crab|spider|tick|beetle|scarab|scorpion|mite|crawler|spinner|lobster/, 'crawler'],
   [/bat|moth|crow|raven|harpy|bird|wasp|dragonfly|owl|gull|magpie|vulture|butterfly/, 'winged'],
   [/worm|eel|serpent|wyrm|maw|snake|hydra|leech|kraken|tidegrasp|tentacle|maggot/, 'worm'],
   [/rat|swarm|wisp|flock|cloud|bees|gnat|marrow$/, 'swarm'],
@@ -355,6 +355,13 @@ const drawCart: Draw = drawGolem;
 
 const DRAW: Record<Arch, Draw> = { hood: drawHood, armor: drawArmor, rogue: drawRogue, quad: drawQuad, crawler: drawCrawler, winged: drawWinged, worm: drawWorm, swarm: drawSwarm, spirit: drawSpirit, golem: drawGolem, plant: drawPlant, elemental: drawElemental, blob: drawBlob, titan: drawTitan, king: drawKing, bell: drawBell, cart: drawCart };
 
+let scratchCv: HTMLCanvasElement | null = null;
+function scratch(w: number, h: number) {
+  if (!scratchCv) scratchCv = makeCanvas(w, h);
+  if (scratchCv.width !== w || scratchCv.height !== h) { scratchCv.width = w; scratchCv.height = h }
+  return scratchCv;
+}
+
 /** Draws the creature standing on (w/2, h*0.9). */
 export function drawCreature(ctx: CanvasRenderingContext2D, w: number, h: number, c: CreatureSpec, st: CreatureState) {
   const u = h * 0.74 * c.size;
@@ -374,10 +381,21 @@ export function drawCreature(ctx: CanvasRenderingContext2D, w: number, h: number
   const sc = 1 + lung * 0.2 + Math.sin(st.t * 1.8) * 0.008;
   ctx.scale(sc, sc * (1 - dieK * 0.35));
   ctx.globalAlpha = 1 - dieK;
-  if (st.hit > 0) { ctx.filter = `brightness(${1 + st.hit * 1.8})` }
   const rnd = rngOf(c.seed);
-  DRAW[c.arch](ctx, c, u, st.t, rnd);
-  ctx.filter = 'none';
+  if (st.hit > 0.02) {
+    // hit flash: draw the creature alone on a scratch layer, wash it white, then composite it back
+    const tm = scratch(w, h);
+    const t = tm.getContext('2d')!;
+    t.setTransform(1, 0, 0, 1, 0, 0); t.clearRect(0, 0, w, h);
+    t.save(); t.translate(w / 2 + shakeX, gy + lung * h * 0.1); t.scale(sc, sc * (1 - dieK * 0.35));
+    DRAW[c.arch](t, c, u, st.t, rnd);
+    t.restore();
+    t.globalCompositeOperation = 'source-atop'; t.fillStyle = `rgba(255,236,210,${Math.min(0.85, st.hit * 0.8)})`; t.fillRect(0, 0, w, h);
+    t.globalCompositeOperation = 'source-over';
+    ctx.restore(); ctx.save();
+    ctx.globalAlpha = 1 - dieK;
+    ctx.drawImage(tm, 0, 0);
+  } else DRAW[c.arch](ctx, c, u, st.t, rnd);
   if (c.rank === 'boss' && c.crown) { /* crown drawn by the archetype */ }
   ctx.restore();
   void mix;

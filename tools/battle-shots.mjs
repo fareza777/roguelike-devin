@@ -1,0 +1,33 @@
+import { chromium } from 'playwright-core';
+const [url, dir, w = '412', h = '860'] = process.argv.slice(2);
+const exe = process.env.CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const b = await chromium.launch({ executablePath: exe, args: ['--no-sandbox', '--disable-gpu', '--use-gl=swiftshader'] });
+const p = await b.newPage({ viewport: { width: +w, height: +h } });
+p.on('console', m => { if (m.type() === 'error') console.log('[page]', m.text()) });
+p.on('pageerror', e => console.log('[pageerror]', e.message));
+await p.goto(url, { waitUntil: 'load' });
+await p.waitForTimeout(500);
+await p.evaluate(() => {
+  const d = window.__dm; d.meta.introSeen = true; d.meta.onboarded = true;
+  const s = d.G.fresh('Wayfarer'); s.name = 'Ash'; s.origin = 'Grave Warden'; s.path = 'Vanguard'; s.companion = 'Moth'; d.G.setup(s); d.s = s;
+  s.level = 26; s.vigor = 30; s.cunning = 20; s.skills = ['sever', 'cleave', 'breaker', 'ravage', 'cinder', 'riposte']; s.loadout = [...s.skills];
+  s.equipment.weapon = 'w_blade_4'; s.equipment.body = 'a_body_heavy_4'; s.hp = 600; s.screen = 'world'; s.town = null;
+  d.G.startFight(s, 'glassscarab', 'normal', { lvl: 26 }); d.render();
+});
+const shot = async n => { await p.screenshot({ path: `${dir}/b_${n}.png` }) };
+await p.waitForTimeout(900); await shot('00_idle');
+await p.evaluate(() => window.__dm.actions.attack()); await p.waitForTimeout(160); await shot('01_attack_160');
+await p.waitForTimeout(500); await shot('02_attack_660');
+await p.waitForTimeout(1200);
+await p.evaluate(() => { const d = window.__dm; d.G.useSkill(d.s, 'sever'); d.actions.noop(); d.render(); });
+await p.waitForTimeout(220); await shot('03_skill_220');
+await p.waitForTimeout(700); await shot('04_skill_900');
+await p.waitForTimeout(1500);
+// force a crit-like heavy status scene
+await p.evaluate(() => { const d = window.__dm; if (d.s.enemy) { d.s.enemy.status = { burn: 3, bleed: 2, chill: 2 }; d.s.status = { poison: 2, ward: 1 }; d.render(); } });
+await p.waitForTimeout(500); await shot('05_status');
+await p.evaluate(() => { const d = window.__dm; if (d.s.enemy) { d.s.enemy.hp = 1; } d.actions.attack(); });
+await p.waitForTimeout(250); await shot('06_kill_250');
+await p.waitForTimeout(900); await shot('07_kill_1150');
+await p.waitForTimeout(1500); await shot('08_after');
+await b.close();
