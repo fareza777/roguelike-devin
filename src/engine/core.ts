@@ -74,7 +74,7 @@ export function loadMeta(): Meta {
 }
 export function saveMeta(m: Meta) { localStorage.setItem(META_KEY, JSON.stringify(m)) }
 
-export const xpFor = (level: number) => Math.round(30 * level ** 1.45);
+export const xpFor = (level: number) => Math.round(30 * level ** 1.55);
 
 export function fresh(difficulty: Settings['difficulty'] = 'Wayfarer'): GameState {
   const s: GameState = {

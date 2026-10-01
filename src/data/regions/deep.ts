@@ -32,7 +32,7 @@ const towns = [
 ];
 
 const dungeons = [
-  dg({ id: 'glowcapwarrens', name: 'The Glowcap Warrens', subtitle: 'A forest of light under the stone', desc: 'A cavern of glowing fungus, ten fathoms tall, threaded with warrens and webs. The spores are beautiful. The things that harvest them are less so.', art: 'underdeep', theme: 'deep', floors: 3, lvl: 47, enemies: ['glowcap', 'cavestrider', 'lampmoth', 'blindfish'], elite: 'colophongiant', boss: 'sporeking', size: [29, 21], pos: [2, 10], icon: 'm_mushroom', secretItem: 'u_quill_lens' }),
+  dg({ id: 'glowcapwarrens', name: 'The Glowcap Warrens', subtitle: 'A forest of light under the stone', desc: 'A cavern of glowing fungus, ten fathoms tall, threaded with warrens and webs. The spores are beautiful. The things that harvest them are less so.', art: 'underdeep', theme: 'deep', floors: 3, lvl: 47, enemies: ['glowcap', 'cavestrider', 'lampmoth', 'blindfish'], elite: 'colophongiant', boss: 'sporeking', size: [29, 21], pos: [2, 10], cond: { arcMin: ['ledger', 3] }, clear: 's_ledger_warrens', icon: 'm_mushroom', secretItem: 'u_quill_lens' }),
   dg({ id: 'unlitlibrary', name: 'The Unlit Library', subtitle: 'Shelves that go down for ever', desc: 'A library where the lamps went out and the books stayed. The shelves reach into the dark in every direction, and every shelf holds a book you have not read.', art: 'underdeep', theme: 'deep', floors: 3, lvl: 47, enemies: ['archiveclerk', 'silverswarm', 'bookworm', 'shelfmimic'], elite: 'vaultwarden', boss: 'indexsilence', size: [29, 21], pos: [12, 2], cond: { arcMin: ['ledger', 2] }, clear: 's_ledger_library', icon: 'm_archive' }),
   dg({ id: 'ledgerhalls', name: 'The Ledger Halls', subtitle: 'Where every debt was entered', desc: 'Corridor after corridor of ledgers, each one the width of a door. Clerks walk the aisles, adding. They have been adding for three hundred years, and they have not yet finished the sum.', art: 'underdeep', theme: 'deep', floors: 3, lvl: 49, enemies: ['archiveclerk', 'inkwraith', 'pageflayer', 'memoryleech', 'stackguard'], elite: 'vaultwarden', boss: 'vellum', size: [31, 23], pos: [4, 7], cond: { arcMin: ['ledger', 4] }, clear: 's_ledger_halls', icon: 'm_dungeon' }),
   dg({ id: 'finalindex', name: 'The Final Index', subtitle: 'The last page of the last book', desc: 'The central stack of the Archive: a spiral of shelves going down into a dark so deep it has a texture. At the bottom, a desk, a quill, and a very old man who has not stopped writing since before the sun died.', art: 'finalindex', theme: 'deep', floors: 5, lvl: 51, enemies: ['archiveclerk', 'indexgolem', 'memoryleech', 'voidcrawler', 'stackguard'], elite: 'colophongiant', boss: 'quill', size: [33, 25], pos: [9, 1], cond: { arcMin: ['ledger', 7] }, clear: 's_quill_end', mainBoss: true, icon: 'm_castle' }),
@@ -118,6 +118,10 @@ const events = [
 ];
 
 const scenes = [
+  sc('s_ledger_warrens', 'underdeep', [
+    ['narrator', 'The Spore-King nods once, twice, and dissolves into a haze of light. Across the Warrens, a million glowcaps flicker, then settle into a calmer, bluer glow, like a lamp turned down for the night.'],
+    ['narrator', 'Wenna Stairwell is on the lowest step when you climb out, counting the lamps with her finger. “All lit,” she says. “All of them. Well. I will need to buy more oil.”', { eff: [xpL(0.3), san(-2)] }],
+  ]),
   sc('s_ledger_arrive', 'lumenhollow', [
     ['narrator', 'The tunnel opens and the Underdeep opens with it: a cavern so vast its far wall is a smudge, lit from within by ten thousand glowing caps, each a pale blue star. Terraces of stone houses climb the walls, a lamp at every door, a book on every sill. Lamplighters in veiled hoods drift between them with long poles, touching each flame in turn.'],
     ['narrator', 'The whole city is whispering, very softly, and it takes a moment to understand what it is whispering. It is reading names. Yours is among them.', { eff: [arc('ledger', 1), xpL(0.25)] }],
@@ -194,7 +198,7 @@ export const DEEP: RegionPack = {
     steps: [
       { title: 'The Lamplighter', obj: 'Speak with Odalys Reed in Lumen Hollow.', text: 'The lamps lit when you came down the stair. Odalys will tell you why.', at: 'lumenhollow' },
       { title: 'The Unlit Library', obj: 'Defeat the Index of Silence in the Unlit Library.', text: 'The first page lies on a lectern at the heart of the dark stacks.', at: 'unlitlibrary', goal: g('clear', 1, 'Defeat the Index of Silence', 'unlitlibrary') },
-      { title: 'Light the Deep', obj: 'Slay fourteen creatures of the Underdeep.', text: 'The things of the dark have come out of their holes. The lamplighters cannot keep them at bay.', at: 'lumenhollow', goal: g('killTag', 14, 'Slay Underdeep creatures', 'deep') },
+      { title: 'Light the Deep', obj: 'Enter the Glowcap Warrens and defeat the Spore-King.', text: 'The things of the dark have come out of their holes, and the Warrens are where they nest. Light them out.', at: 'glowcapwarrens', goal: g('clear', 1, 'Defeat the Spore-King', 'glowcapwarrens') },
       { title: 'The Ledger Halls', obj: 'Defeat Clerk-General Vellum in the Ledger Halls.', text: 'The second page is balanced on a desk at the end of an endless sum.', at: 'ledgerhalls', goal: g('clear', 1, 'Defeat Clerk-General Vellum', 'ledgerhalls') },
       { title: 'The Binder', obj: 'Take both pages to Polly Marginalia in Inkwell.', text: 'Only the Binder can turn two pages into a key.', at: 'inkwell' },
       { title: 'The Blank Page', obj: 'Touch the Blank Page with the bone ring.', text: 'The only page of the Index that is still being written.', at: 'finalindex', goal: g('reach', 1, 'Reach the Blank Page', 'blankpage') },

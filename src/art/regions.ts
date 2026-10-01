@@ -232,7 +232,21 @@ const DEEP: Dict = {
   },
 };
 
-const ALL: Dict = { ...GLASS, ...THORN, ...TIDE, ...GEAR, ...FROST, ...DEEP };
+const NOON: Dict = {
+  mirrorcourt: {
+    ...hallScene(161, 'glass', '#4a3a1a', '#fff0c0', '#2a2010', [{ t: 'throne', x: 0.5, y: 0.8, s: 0.2, c: '#120e06', glow: '#fff0c0' }, figLayer(0.3, 'mask', '#d8c890', '#fff0c0', { s: 0.28, y: 0.8 }), figLayer(0.7, 'mask', '#d8c890', '#fff0c0', { s: 0.28, y: 0.8, flip: true })], '#e8c870'),
+    particles: { kind: 'motes', n: 40, c: '#fff0c0' },
+  },
+  gildedgardens: {
+    ...baseScene(162, 'noon', { body: { kind: 'sun', x: 0.5, y: 0.3, r: 0.06, c: '#1a1004', corona: '#ffe08a' }, clouds: cloudLayer('#e8c060', 0.4) }),
+    far: [{ t: 'ridge', y: 0.64, amp: 0.05, c: '#6a4c16', haze: 0.5, seed: 4 }, { t: 'skyline', y: 0.72, c: '#4a3410', style: 'noon', h: 0.3, windows: '#fff0c0', haze: 0.3, seed: 6 }],
+    mid: [{ t: 'pines', y: 0.84, n: 12, h: 0.3, c: '#5a4012', seed: 5 }, { t: 'columns', y: 0.84, n: 4, h: 0.4, c: '#6a4c16', style: 'arch', seed: 3, x0: 0.1, x1: 0.9 }],
+    near: [{ t: 'ground', y: 0.88, c: '#4a3810', c2: '#1a1204', road: true, roadC: '#8a6a24' }, figLayer(0.5, 'mask', '#d8c070', '#fff0c0', { s: 0.34, y: 0.98, back: false })],
+    fog: [{ c: '#f0c860', a: 0.2, y: 0.8, h: 0.3 }], particles: { kind: 'motes', n: 36, c: '#fff0c0' }, lights: [lamp(0.5, 0.3, 0.4, '#ffe08a', 0.3)],
+  },
+};
+
+const ALL: Dict = { ...GLASS, ...THORN, ...TIDE, ...GEAR, ...FROST, ...DEEP, ...NOON };
 
 Object.keys(ALL).forEach(k => { if (SCENES[k]) delete ALL[k] });
 registerScenes(ALL);

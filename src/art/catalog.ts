@@ -246,7 +246,7 @@ export function sceneSpec(key: string): SceneSpec {
   return spec;
 }
 /** Which backdrop an event gets, by its first matching tag. */
-export const EVENT_BG: Record<string, string> = { sand: 'glasswastes', thorn: 'thornwick', brass: 'orrery', snow: 'pass', glass: 'glasswastes', gear: 'orrery', thorn: 'thornwick', aurora: 'aurora', deep: 'underdeep', reef: 'tidewatch', crypt: 'hearthcrypt', sea: 'bellhouse', flooded: 'bellhouse', forest: 'ashwood', fire: 'ashwood', bone: 'quarry', ice: 'pass', noon: 'solenne', swamp: 'hollowhill', mine: 'foundry', wild: 'heartland', any: 'heartland' };
+export const EVENT_BG: Record<string, string> = { sand: 'glasswastes', thorn: 'thornwick', brass: 'orrery', snow: 'pass', glass: 'glasswastes', gear: 'orrery', aurora: 'aurora', deep: 'underdeep', reef: 'tidewatch', crypt: 'hearthcrypt', sea: 'bellhouse', flooded: 'bellhouse', forest: 'ashwood', fire: 'ashwood', bone: 'quarry', ice: 'pass', noon: 'solenne', swamp: 'hollowhill', mine: 'foundry', wild: 'heartland', any: 'heartland' };
 export function eventArtKey(tags: string[] | undefined, motif: string, art?: string): string {
   if (art) return art;
   const specific = (tags ?? []).filter(t => t !== 'wild' && t !== 'any');

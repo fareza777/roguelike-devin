@@ -9,6 +9,13 @@ import { SKILLS, TALENTS } from '../data/skills';
 import { COMPANIONS, LORE, MAIN, MAIN_INDEX, ORIGINS, PATHS, SPEAKERS, TIPS } from '../data/story';
 import { DUNGEONS, DUNGEON_MAP, LANDMARKS, MAP_H, MAP_W, TOWNS, TOWN_MAP, TRIGGERS } from '../data/world';
 import type { Cond, Eff } from '../types';
+import '../art/regions';
+import { SCENES as ART } from '../art/catalog';
+import { ARCS } from '../data/arcs';
+import { COMPANION_MAP } from '../data/companions';
+import { ZONES } from '../data/world';
+import { ALL_VO, CINEMATIC } from '../data/cinematic';
+import { existsSync, readFileSync } from 'node:fs';
 import { genFloor } from './dungeongen';
 import { IMPASSABLE, getWorld, worldIdx } from './worldgen';
 
@@ -110,11 +117,9 @@ describe('content integrity', () => {
 
 describe('world map', () => {
   const w = getWorld();
-  it('reaches every point of interest from Veyrgard', () => {
-    const reach = new Uint8Array(MAP_W * MAP_H);
-    const start = TOWN_MAP.get('veyrgard')!.pos;
-    const q = [worldIdx(start[0], start[1])];
-    reach[q[0]] = 1;
+  const flood = (starts: [number, number][], reach = new Uint8Array(MAP_W * MAP_H)) => {
+    const q: number[] = [];
+    starts.forEach(([x, y]) => { const i = worldIdx(x, y); if (!reach[i]) { reach[i] = 1; q.push(i) } });
     for (let i = 0; i < q.length; i++) {
       const c = q[i], x = c % MAP_W, y = Math.floor(c / MAP_W);
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -125,10 +130,25 @@ describe('world map', () => {
         reach[ni] = 1; q.push(ni);
       }
     }
+    return reach;
+  };
+  it('reaches every point of interest from Veyrgard, or from its island port', () => {
+    const reach = flood([TOWN_MAP.get('veyrgard')!.pos]);
+    flood(TOWNS.filter(t => t.ferryOnly).map(t => t.pos), reach);
     const unreachable: string[] = [];
     w.poi.forEach((p, idx) => { if (!reach[idx]) unreachable.push(`${p.kind}:${p.id}`) });
     expect(unreachable).toEqual([]);
     expect(w.poi.size).toBe(TOWNS.length + DUNGEONS.length + LANDMARKS.length);
+  });
+  it('keeps island towns off the road network but reachable by ferry', () => {
+    const land = flood([TOWN_MAP.get('veyrgard')!.pos]);
+    const islands = TOWNS.filter(t => t.ferryOnly);
+    expect(islands.length).toBeGreaterThanOrEqual(3);
+    islands.forEach(t => expect(land[worldIdx(t.pos[0], t.pos[1])], `${t.id} must need a ferry`).toBe(0));
+    const reached = new Set(TOWNS.filter(t => !t.ferryOnly && t.services.includes('harbor')).map(t => t.id));
+    for (let k = 0; k < 6; k++) [...reached].forEach(id => TOWN_MAP.get(id)?.ferry?.forEach(to => reached.add(to)));
+    islands.forEach(t => expect(reached.has(t.id), `${t.id} has a ferry route`).toBe(true));
+    TOWNS.filter(t => t.ferry).forEach(t => { expect(t.services.includes('harbor'), `${t.id} harbor`).toBe(true); t.ferry!.forEach(to => expect(TOWN_MAP.has(to), to).toBe(true)) });
   });
   it('places every POI on passable ground', () => {
     w.poi.forEach((p, idx) => expect(IMPASSABLE.has(w.tiles[idx]), `${p.id} on ${w.tiles[idx]}`).toBe(false));
@@ -164,5 +184,64 @@ describe('dungeon generator', () => {
         }
       }
     });
+  });
+});
+
+describe('part II and presentation', () => {
+  it('has six Regalia arcs that resolve against the world data', () => {
+    expect(ARCS.length).toBe(6);
+    const flags = new Set<string>();
+    ARCS.forEach(a => {
+      expect(a.steps.length, a.id).toBeGreaterThanOrEqual(7);
+      expect(ITEM_MAP.has(`reg_${a.regalia}`), `${a.id} regalia item`).toBe(true);
+      expect(flags.has(a.regalia)).toBe(false); flags.add(a.regalia);
+      a.steps.forEach((st, i) => {
+        expect(st.at && (TOWN_MAP.has(st.at) || DUNGEON_MAP.has(st.at)), `${a.id}.${i + 1} at`).toBeTruthy();
+        const g = st.goal;
+        if (g?.type === 'clear') expect(DUNGEON_MAP.has(g.target!), `${a.id}.${i + 1} clear ${g.target}`).toBe(true);
+        if (g?.type === 'reach') expect(LANDMARKS.some(l => l.id === g.target), `${a.id}.${i + 1} reach ${g.target}`).toBe(true);
+      });
+      expect(TRIGGERS.some(t => TOWN_MAP.get(t.loc)?.region === a.region && t.cond.mainAt === 'r00'), `${a.id} arrival trigger`).toBe(true);
+    });
+    DUNGEONS.forEach(d => { const c = d.cond?.arcMin ?? d.cond?.arc; if (c) { const arc = ARCS.find(a => a.id === c[0]); expect(arc, `${d.id} gate arc`).toBeTruthy(); expect(c[1]).toBeLessThanOrEqual(arc!.steps.length) } });
+  });
+  it('recruits only companions that exist and unlocks only places that exist', () => {
+    const all: Eff[] = [];
+    SCENES.forEach(sc => sc.nodes.forEach(n => { all.push(...effsOf(n.eff)); n.choices?.forEach(c => all.push(...effsOf(c.eff))) }));
+    EVENTS.forEach(e => e.choices.forEach(c => { all.push(...effsOf(c.eff), ...effsOf(c.fail)) }));
+    all.forEach(e => {
+      if (e.t === 'recruit') expect(COMPANION_MAP.has(e.id), `recruit ${e.id}`).toBe(true);
+      if (e.t === 'unlock') expect(TOWN_MAP.has(e.loc) || DUNGEON_MAP.has(e.loc), `unlock ${e.loc}`).toBe(true);
+      if (e.t === 'regalia') expect(ARCS.some(a => a.regalia === e.id), `regalia ${e.id}`).toBe(true);
+      if (e.t === 'item' || e.t === 'take') expect(ITEM_MAP.has(e.id), `item ${e.id}`).toBe(true);
+    });
+  });
+  it('has a procedural backdrop for every art key', () => {
+    const missing: string[] = [];
+    const chk = (where: string, key?: string) => { if (key && !ART[key]) missing.push(`${where}:${key}`) };
+    TOWNS.forEach(t => chk(`town ${t.id}`, t.art));
+    DUNGEONS.forEach(d => chk(`dungeon ${d.id}`, d.art));
+    SCENES.forEach(sc => chk(`scene ${sc.id}`, sc.art));
+    ZONES.forEach(z => chk(`zone ${z.id}`, z.bg));
+    LANDMARKS.forEach(l => chk(`landmark ${l.id}`, l.art));
+    expect(missing).toEqual([]);
+  });
+  it('has a voice line for every cinematic shot, and a valid manifest', () => {
+    const ids = new Set(ALL_VO.map(v => v.id));
+    expect(ids.size).toBe(ALL_VO.length);
+    CINEMATIC.forEach(sh => { expect(ids.has(sh.vo), sh.vo).toBe(true); expect(ART[sh.scene], sh.scene).toBeTruthy() });
+    const path = 'public/audio/vo/manifest.json';
+    expect(existsSync(path)).toBe(true);
+    const manifest = JSON.parse(readFileSync(path, 'utf8')) as Record<string, number>;
+    Object.keys(manifest).forEach(k => expect(ids.has(k), `manifest entry ${k}`).toBe(true));
+  });
+  it('has the content volume promised for a 30 hour main path', () => {
+    expect(TOWNS.length).toBeGreaterThanOrEqual(28);
+    expect(DUNGEONS.length).toBeGreaterThanOrEqual(38);
+    expect(ENEMIES.length).toBeGreaterThanOrEqual(200);
+    expect(QUESTS.length).toBeGreaterThanOrEqual(100);
+    expect(EVENTS.length).toBeGreaterThanOrEqual(85);
+    expect(SKILLS.length).toBeGreaterThanOrEqual(90);
+    expect(MAIN.length).toBeGreaterThanOrEqual(38);
   });
 });

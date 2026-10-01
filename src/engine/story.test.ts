@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DUNGEON_MAP, TOWNS } from '../data/world';
+import { ARCS } from '../data/arcs';
+import { DUNGEON_MAP, LANDMARK_MAP, TOWNS, TOWN_MAP } from '../data/world';
 import { MAIN, MAIN_INDEX } from '../data/story';
 import type { GameState } from '../types';
 import {
   attack, closeReward, currentNode, drain, engage, enterDungeon, enterTown, floorOf, fresh, gotoFloor, leaveDungeon, sceneAdvance, sceneChoose, setup, stats,
   talkNpc, visibleChoices, resolveEvent, availableQuests, acceptQuest, claimQuest, questEvent, moveDungeon, onEntrance, buy, shopStock, sell, equip, upgradeItem, rest, learn,
-  moveWorld, fastTravel, canFastTravel, gainXp,
+  moveWorld, fastTravel, canFastTravel, gainXp, approachHere, runEffects, cond, arcStep, arcDone, regaliaCount,
 } from './game';
 
 function newGame(companion = 'Moth'): GameState {
@@ -60,68 +61,77 @@ function clearDungeon(s: GameState, id: string, choose?: (labels: string[]) => n
 }
 
 describe('main story playthrough', () => {
-  it('runs from prologue to the true ending', () => {
+  it('runs from prologue to the Common Dawn, following the story data', () => {
     const s = newGame('Nix');
-    expect(step(s)).toBe('m00');
-    talkNpc(s, 'veyrgard', 'ilse'); settle(s);
-    expect(step(s)).toBe('m01');
-    talkNpc(s, 'veyrgard', 'roe'); settle(s);
-    expect(step(s)).toBe('m02');
-    enterTown(s, 'saltmere'); settle(s);
-    expect(step(s)).toBe('m03');
-    talkNpc(s, 'saltmere', 'osk'); settle(s);
-    expect(step(s)).toBe('m04');
-    clearDungeon(s, 'catacombs'); settle(s);
-    expect(step(s)).toBe('m05');
-    talkNpc(s, 'saltmere', 'ysolde'); settle(s);
-    expect(step(s)).toBe('m06');
-    enterTown(s, 'emberhollow'); settle(s);
-    expect(step(s)).toBe('m07');
-    talkNpc(s, 'emberhollow', 'tamsin'); settle(s);
-    expect(step(s)).toBe('m08');
-    talkNpc(s, 'emberhollow', 'tamsin'); settle(s, l => (l.some(x => x.includes('Cut it')) ? l.findIndex(x => x.includes('Cut it')) : 0));
-    expect(s.flags.leash_cut).toBe(1);
-    clearDungeon(s, 'ashwood'); settle(s);
-    expect(step(s)).toBe('m09');
-    talkNpc(s, 'emberhollow', 'maren'); settle(s);
-    expect(step(s)).toBe('m10');
-    enterTown(s, 'gravemarrow'); settle(s);
-    talkNpc(s, 'gravemarrow', 'dagna'); settle(s);
-    expect(step(s)).toBe('m12');
-    clearDungeon(s, 'quarry');
-    expect(step(s)).toBe('m13');
-    talkNpc(s, 'gravemarrow', 'dagna'); settle(s);
-    expect(step(s)).toBe('m14');
-    enterTown(s, 'hollowreach'); settle(s);
-    talkNpc(s, 'hollowreach', 'sigrun'); settle(s);
-    clearDungeon(s, 'pass');
-    expect(step(s)).toBe('m17');
-    talkNpc(s, 'hollowreach', 'sigrun'); settle(s);
-    expect(step(s)).toBe('m18');
-    enterTown(s, 'veyrgard'); settle(s);
-    expect(step(s)).toBe('m19');
-    expect(s.flags.companion_trust).toBe(1);
-    talkNpc(s, 'veyrgard', 'pell'); settle(s);
-    expect(step(s)).toBe('m20');
-    talkNpc(s, 'veyrgard', 'ilse'); settle(s);
-    expect(step(s)).toBe('m21');
-    enterTown(s, 'solenne'); settle(s);
-    talkNpc(s, 'solenne', 'aurelia'); settle(s);
-    expect(step(s)).toBe('m23');
-    clearDungeon(s, 'undercity');
-    expect(step(s)).toBe('m24');
-    talkNpc(s, 'solenne', 'aurelia'); settle(s);
+    const seen: string[] = [];
+    let guard = 0;
+    /** Talk to everyone in town who has something to say until the story moves on. */
+    const talkHere = (town: string, moved: () => boolean) => {
+      const t = TOWN_MAP.get(town)!;
+      const who = t.npcs.filter(n => n.talk?.some(v => cond(s, v.cond)));
+      expect(who.length, `someone in ${town} has something to say at ${step(s)}`).toBeGreaterThan(0);
+      for (const n of who) { talkNpc(s, town, n.id); settle(s); if (moved()) return }
+    };
+    const doGoal = (g: NonNullable<(typeof MAIN)[number]['goal']>) => {
+      if (g.type === 'clear') clearDungeon(s, g.target!);
+      else if (g.type === 'reach') {
+        const lm = LANDMARK_MAP.get(g.target!)!;
+        s.screen = 'world'; s.town = null; s.world.x = lm.pos[0]; s.world.y = lm.pos[1];
+        approachHere(s); settle(s);
+      } else if (g.type === 'regalia') { /* handled by the arcs */ }
+      else for (let i = 0; i < g.count; i++) questEvent(s, g.type === 'killTag' ? { type: 'kill', enemy: 'x', tags: [g.target!] } : g.type === 'elites' ? { type: 'elite' } : { type: 'kill', enemy: g.target!, tags: [] });
+    };
+    const arcRun = () => {
+      for (const arc of ARCS) {
+        const hub = TOWNS.find(t => t.region === arc.region && t.kind === 'city')!;
+        enterTown(s, hub.id); settle(s);
+        expect(arcStep(s, arc.id), `${arc.id} started on arrival`).toBe(1);
+        let g2 = 0;
+        while (!arcDone(s, arc) && g2++ < 20) {
+          const n = arcStep(s, arc.id), st = arc.steps[n - 1];
+          if (st.goal) doGoal(st.goal);
+          else { const t = TOWN_MAP.get(st.at!)!; enterTown(s, t.id); settle(s); talkHere(t.id, () => arcStep(s, arc.id) > n) }
+          settle(s);
+          expect(arcStep(s, arc.id), `${arc.id} step ${n} advances`).toBeGreaterThan(n);
+        }
+        expect(s.flags[`regalia_${arc.regalia}`], `${arc.regalia} regalia`).toBe(1);
+      }
+    };
+    while (s.main < MAIN_INDEX.get('m25')! && guard++ < 120) {
+      const st = MAIN[s.main];
+      seen.push(st.id);
+      const before = s.main;
+      if (st.id === 'r00') { arcRun(); settle(s) }
+      else if (st.goal) { if (st.at && TOWN_MAP.has(st.at)) { enterTown(s, st.at); settle(s) } doGoal(st.goal); settle(s) }
+      else if (st.at && DUNGEON_MAP.has(st.at)) {
+        if (st.id === 'm08') { enterTown(s, 'emberhollow'); settle(s); talkNpc(s, 'emberhollow', 'tamsin'); settle(s, l => (l.some(x => x.includes('Cut it')) ? l.findIndex(x => x.includes('Cut it')) : 0)); expect(s.flags.leash_cut).toBe(1) }
+        clearDungeon(s, st.at); settle(s);
+      } else if (st.at && TOWN_MAP.has(st.at)) {
+        enterTown(s, st.at); settle(s);
+        if (s.main === before) { talkHere(st.at, () => s.main > before); settle(s) }
+      }
+      expect(s.main, `story advances from ${st.id}`).toBeGreaterThan(before);
+    }
+    expect(seen).toEqual(expect.arrayContaining(['p01', 'p02', 'p03', 'p04', 'p05', 'p06', 'p07', 'r00', 'r01', 'p08', 'p09', 'm23']));
     expect(step(s)).toBe('m25');
     ['mercy_widow', 'mercy_hart', 'mercy_grist', 'mercy_vhal'].forEach(k => { s.flags[k] = 1 });
+    expect(regaliaCount(s)).toBe(6);
     const def = DUNGEON_MAP.get('meridian')!;
     expect(enterDungeon(s, 'meridian')).toBe(true);
     settle(s);
     gotoFloor(s, def.floors - 1, 'down');
     engage(s, floorOf(s).ents.find(e => e.k === 'boss')!, false);
-    settle(s, labels => Math.max(0, labels.findIndex(l => l.includes('Free her'))));
-    expect(s.ending).toBe('dawn');
+    settle(s, labels => Math.max(0, labels.findIndex(l => l.includes('Wear all six'))));
+    expect(s.ending).toBe('common');
     expect(s.screen).toBe('ending');
     expect(MAIN[s.main].id).toBe('m27');
+  });
+
+  it('does not let a story jump skip a mandatory prep step', () => {
+    const s = newGame();
+    s.main = MAIN_INDEX.get('m01')!;
+    runEffects(s, [{ t: 'main', to: 'm05' }]);
+    expect(step(s)).toBe('p01');
   });
 
   it('has every companion secret resolve', () => {

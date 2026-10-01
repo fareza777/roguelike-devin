@@ -35,7 +35,7 @@ const towns = [
 ];
 
 const dungeons = [
-  dg({ id: 'scorchquarry', name: 'The Scorchglass Quarry', subtitle: 'Where the sand was melted on purpose', desc: 'A pit mine where the Guild cuts raw glass from the fused desert. The overseers stopped answering their own horns.', art: 'glasswastes', theme: 'glass', floors: 3, lvl: 25, enemies: ['glassscarab', 'shardjackal', 'cullet', 'lensgrinder'], elite: 'slagoverseer', boss: 'obsid', size: [29, 21], pos: [64, 18], icon: 'm_mine', secretItem: 'u_glass_hound' }),
+  dg({ id: 'scorchquarry', name: 'The Scorchglass Quarry', subtitle: 'Where the sand was melted on purpose', desc: 'A pit mine where the Guild cuts raw glass from the fused desert. The overseers stopped answering their own horns.', art: 'glasswastes', theme: 'glass', floors: 3, lvl: 25, enemies: ['glassscarab', 'shardjackal', 'cullet', 'lensgrinder'], elite: 'slagoverseer', boss: 'obsid', size: [29, 21], pos: [64, 18], cond: { arcMin: ['glass', 3] }, clear: 's_glass_quarry', icon: 'm_mine', secretItem: 'u_glass_hound' }),
   dg({ id: 'orangery', name: 'The Cracked Orangery', subtitle: 'A garden of glass, kept by something that forgot why', desc: 'A hothouse built by the Lens-Queen to grow trees from light. The trees are gone. The glass remembers them.', art: 'orangery', theme: 'glass', floors: 3, lvl: 24, enemies: ['glassscarab', 'cullet', 'lensgrinder', 'shardjackal'], elite: 'prismhulk', boss: 'glasshousekeeper', size: [29, 21], pos: [71, 16], cond: { arcMin: ['glass', 2] }, clear: 's_glass_orangery', icon: 'm_ruins' }),
   dg({ id: 'mirage', name: 'The Mirage Cistern', subtitle: 'Water that remembers being a lie', desc: 'A vast drowned vault beneath the dunes. Its pools show the room you are not standing in.', art: 'cistern', theme: 'glass', floors: 3, lvl: 26, enemies: ['miragedancer', 'saltwraith', 'dunewyrm', 'mirrormimic'], elite: 'wellwarden', boss: 'siltmaw', size: [31, 23], pos: [82, 28], cond: { arcMin: ['glass', 4] }, clear: 's_glass_cistern', icon: 'm_cave' }),
   dg({ id: 'prismpalace', name: 'The Prism Palace', subtitle: 'The Lens-Queen’s court of light', desc: 'A palace built of lenses, so that nothing within it can be concealed, including you. At its heart, the Great Lens still turns.', art: 'prismpalace', theme: 'glass', floors: 5, lvl: 28, enemies: ['heliosentry', 'sunstruck', 'miragedancer', 'lensgrinder', 'mirrormimic'], elite: 'lensbearer', boss: 'maridel', size: [33, 25], pos: [90, 23], cond: { arcMin: ['glass', 7] }, clear: 's_maridel_end', mainBoss: true, icon: 'm_castle' }),
@@ -120,6 +120,10 @@ const events = [
 ];
 
 const scenes = [
+  sc('s_glass_quarry', 'quarry', [
+    ['narrator', 'The Quarrymaster’s whip falls from his fused hand. In the pit below, the last lens-cutters finally stop, look up, and see you. One of them, an old woman with a blanket over her shoulders, raises a glass cup in silent thanks.'],
+    ['narrator', 'The sheet of raw glass you carry out of the pit is the colour of honey and does not cut anyone. That, in the Wastes, counts as a marvel.', { eff: [xpL(0.3), san(-2)] }],
+  ]),
   sc('s_glass_arrive', 'brasshaven', [
     ['narrator', 'The dunes end in a wall of glass. Beyond it, Brasshaven: a dome of brass the colour of an old trumpet, lenses winking on every rooftop, a river of sand-sellers in veils and goggles pouring through the gates. Not one face anywhere. Every traveller is wrapped, masked, hooded against the glare.'],
     ['narrator', 'Somewhere under the noise, a very large lens turns on its axis, and the whole city changes colour for one breath.', { eff: [arc('glass', 1), xpL(0.25)] }],
@@ -197,7 +201,7 @@ export const GLASS: RegionPack = {
     steps: [
       { title: 'The Guildmistress', obj: 'Speak with Orla Brasswick in Brasshaven.', text: 'Brasshaven’s Opticians’ Guild knows what sleeps in the Prism Palace. Orla will tell you how to reach it.', at: 'brasshaven' },
       { title: 'The Cracked Orangery', obj: 'Enter the Cracked Orangery and defeat its Keeper.', text: 'The first of three keys is a lens in a ruined glass garden.', at: 'orangery', goal: g('clear', 1, 'Defeat the Glasshouse Keeper', 'orangery') },
-      { title: 'Shards for the Guild', obj: 'Slay fourteen glass creatures in the Glasswastes.', text: 'The Guild needs raw shard-glass, and the Wastes have an endless supply of things that wear it.', at: 'shardrest', goal: g('killTag', 14, 'Slay glass creatures', 'glass') },
+      { title: 'Shards for the Guild', obj: 'Clear the Scorchglass Quarry and defeat Quarrymaster Obsid.', text: 'The Guild needs raw shard-glass, and the quarry that cuts it has gone silent. Find out why.', at: 'scorchquarry', goal: g('clear', 1, 'Defeat Quarrymaster Obsid', 'scorchquarry') },
       { title: 'The Mirage Cistern', obj: 'Enter the Mirage Cistern and defeat Siltmaw.', text: 'The second lens lies in a drowned vault under the dunes.', at: 'mirage', goal: g('clear', 1, 'Defeat Siltmaw', 'mirage') },
       { title: 'The Last Grinder', obj: 'Take both lenses to Ana the Lensless in Kilnhold.', text: 'Only the Queen’s own grinder can fuse them into a key.', at: 'kilnhold' },
       { title: 'The Great Lens', obj: 'Reach the Great Lens in the dunes.', text: 'The key must be aimed through the old Great Lens to find the Palace road.', at: 'prismpalace', goal: g('reach', 1, 'Reach the Great Lens', 'greatlens') },

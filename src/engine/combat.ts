@@ -16,14 +16,20 @@ const ROLE: Record<Role, { hp: number; dmg: number; arm: number }> = {
 };
 
 export const anim = (s: GameState, a: Anim) => { s.anim.push(a) };
+/** Per-level growth on top of the linear enemy curves. Tuned with tools/sim.ts so fights keep lasting as gear and skills scale. */
+export const HP_BASE = 1.2;
+export const HP_GROWTH = 0.028;
+export const HP_CAP = 2.4;
+export const DMG_GROWTH = 0.008;
 
 export function scaleEnemy(def: EnemyDef, rank: Enemy['rank'], L: number): Enemy {
   const r = ROLE[def.role];
-  const hpRank = rank === 'elite' ? 2.1 : rank === 'boss' ? (def.hpMul ?? 4) : 1;
-  const dmgRank = (rank === 'elite' ? 1.2 : rank === 'boss' ? 1.35 : 1) * (def.dmgMul ?? 1);
-  const hp = Math.round((16 + 4.6 * L) * r.hp * hpRank + (rank === 'normal' ? rand(-2, 3) : 0));
-  const lo = Math.max(1, Math.round((2 + 0.55 * L) * r.dmg * dmgRank));
-  const hi = Math.max(lo + 1, Math.round((4.5 + 0.9 * L) * r.dmg * dmgRank));
+  const hpRank = rank === 'elite' ? 1.9 : rank === 'boss' ? (def.hpMul ?? 4) : 1;
+  const dmgRank = (rank === 'elite' ? 1.2 : rank === 'boss' ? 1.2 : 1) * (def.dmgMul ?? 1);
+  const hp = Math.round((16 + 4.6 * L) * Math.min(HP_CAP, HP_BASE + L * HP_GROWTH) * r.hp * hpRank + (rank === 'normal' ? rand(-2, 3) : 0));
+  const dmgGrow = 1 + L * DMG_GROWTH;
+  const lo = Math.max(1, Math.round((2 + 0.55 * L) * r.dmg * dmgRank * dmgGrow));
+  const hi = Math.max(lo + 1, Math.round((4.5 + 0.9 * L) * r.dmg * dmgRank * dmgGrow));
   const armor = Math.round((0.5 * L + 1) * r.arm * (rank === 'boss' ? 1.25 : 1)) + (def.armorAdd ?? 0);
   const e: Enemy = {
     id: def.id, name: def.name, icon: def.icon, art: def.art, look: def.look, hp, maxHp: hp, damage: [lo, hi], armor, moves: def.moves, afflict: def.afflict, rank,

@@ -32,7 +32,7 @@ const towns = [
 ];
 
 const dungeons = [
-  dg({ id: 'sunkenmaze', name: 'The Sunken Maze', subtitle: 'A hedge-maze that grew a roof', desc: 'A labyrinth of living walls, drowned to the knee. The paths rearrange when you blink, and sometimes when you do not.', art: 'thornwick', theme: 'thorn', floors: 3, lvl: 30, enemies: ['briarhound', 'thornback', 'mosswalker', 'pollencloud'], elite: 'hedgeguard', boss: 'mazekeeper', size: [29, 21], pos: [68, 44], icon: 'm_deadtree', secretItem: 'u_thorn_vest' }),
+  dg({ id: 'sunkenmaze', name: 'The Sunken Maze', subtitle: 'A hedge-maze that grew a roof', desc: 'A labyrinth of living walls, drowned to the knee. The paths rearrange when you blink, and sometimes when you do not.', art: 'thornwick', theme: 'thorn', floors: 3, lvl: 30, enemies: ['briarhound', 'thornback', 'mosswalker', 'pollencloud'], elite: 'hedgeguard', boss: 'mazekeeper', size: [29, 21], pos: [68, 44], cond: { arcMin: ['thorn', 3] }, clear: 's_thorn_maze', icon: 'm_deadtree', secretItem: 'u_thorn_vest' }),
   dg({ id: 'conservatory', name: 'The Overgrown Conservatory', subtitle: 'A glasshouse where something went on growing', desc: 'The Gardener’s first greenhouse. The glass is cracked open and the plants walked out. A few came back to see who had been in their garden.', art: 'conservatory', theme: 'thorn', floors: 3, lvl: 29, enemies: ['briarhound', 'seedsower', 'lanternbloom', 'strangler'], elite: 'thornlord', boss: 'bloomtyrant', size: [29, 21], pos: [70, 34], cond: { arcMin: ['thorn', 2] }, clear: 's_thorn_conservatory', icon: 'm_ruins' }),
   dg({ id: 'prunehalls', name: 'The Pruning Halls', subtitle: 'Where dissent was trimmed to shape', desc: 'Long, tidy corridors of hedge-wall, trimmed to the width of a single person. At every corner, a bench. At every bench, a pair of shears.', art: 'thornwick', theme: 'thorn', floors: 3, lvl: 31, enemies: ['scythehand', 'topiaryknight', 'hedgeguard', 'carrionrook', 'lichenwraith'], elite: 'thornlord', boss: 'headpruner', size: [31, 23], pos: [88, 38], cond: { arcMin: ['thorn', 4] }, clear: 's_thorn_prune', icon: 'm_dungeon' }),
   dg({ id: 'heartbriar', name: 'The Heartbriar', subtitle: 'The root of the whole hedge', desc: 'A single bramble, three miles across, with a chamber at its heart where the Gardener tends a seat of living thorn. The chamber is warm. The thorns are warmer.', art: 'heartbriar', theme: 'thorn', floors: 5, lvl: 33, enemies: ['scythehand', 'strangler', 'topiaryknight', 'lanternbloom', 'rootmaw'], elite: 'strangleking', boss: 'hobthessaly', size: [33, 25], pos: [90, 46], cond: { arcMin: ['thorn', 7] }, clear: 's_hob_end', mainBoss: true, icon: 'm_castle' }),
@@ -117,6 +117,10 @@ const events = [
 ];
 
 const scenes = [
+  sc('s_thorn_maze', 'thornwick', [
+    ['narrator', 'The Maze-Keeper unwinds and sags. All around you, the living walls draw back like a tide going out, and the roof of the maze opens to a pale, ordinary sky.'],
+    ['narrator', 'On the centre dais, a heap of lost things: hats, lanterns, a child’s shoe. You take none of it. You do walk out through the front door, which, for the first time, is where it ought to be.', { eff: [xpL(0.3), san(-2)] }],
+  ]),
   sc('s_thorn_arrive', 'mirewick', [
     ['narrator', 'The road narrows to a lane, and the lane to a tunnel, and then you are inside the hedge. Walls of living green forty feet thick, lit from within by lanterns hung on thorns. Mirewick: the city you cannot see until you are in it. Pruners on ladders wave to you, politely, with shears.'],
     ['narrator', 'In the middle distance, something very large breathes. The city leans toward it the way a plant leans toward a window.', { eff: [arc('thorn', 1), xpL(0.25)] }],
@@ -188,7 +192,7 @@ export const THORN: RegionPack = {
     steps: [
       { title: 'The Head Hedge-Warden', obj: 'Speak with Ysmay Thorne in Mirewick.', text: 'The hedge is growing faster than the city can prune. Ysmay knows where it begins.', at: 'mirewick' },
       { title: 'The Overgrown Conservatory', obj: 'Defeat the Bloom Tyrant in the Overgrown Conservatory.', text: 'The first seed lies at the heart of a ruined glasshouse.', at: 'conservatory', goal: g('clear', 1, 'Defeat the Bloom Tyrant', 'conservatory') },
-      { title: 'Cut Back the Wild', obj: 'Slay twelve plant creatures in Thornwick.', text: 'The Hedge-Wardens cannot spare anyone. Thin the green.', at: 'mirewick', goal: g('killTag', 12, 'Slay plant creatures', 'plant') },
+      { title: 'Cut Back the Wild', obj: 'Enter the Sunken Maze and defeat the Maze-Keeper.', text: 'The hedge-maze west of Bramblegate has grown a roof and started to take travellers. Thin the green at its root.', at: 'sunkenmaze', goal: g('clear', 1, 'Defeat the Maze-Keeper', 'sunkenmaze') },
       { title: 'The Pruning Halls', obj: 'Defeat the Head Pruner in the Pruning Halls.', text: 'The second seed is kept by the Gardener’s right hand.', at: 'prunehalls', goal: g('clear', 1, 'Defeat the Head Pruner', 'prunehalls') },
       { title: 'The Keeper of Seeds', obj: 'Bring both seeds to Fenn Seedwright in Lowmire.', text: 'Fenn can wake what the seeds are for.', at: 'lowmire' },
       { title: 'The First Grove', obj: 'Plant the seeds in the First Grove.', text: 'Seven oaks, one hollow. The hollow is waiting.', at: 'heartbriar', goal: g('reach', 1, 'Reach the First Grove', 'firstgrove') },

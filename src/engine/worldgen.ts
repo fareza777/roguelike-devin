@@ -103,6 +103,8 @@ function build(): WorldMap {
   for (let x = 20; x <= 44; x++) tiles[idx(x, 33)] = 'Z';
   for (let y = 33; y < H; y++) { tiles[idx(20, y)] = 'Z'; tiles[idx(44, y)] = 'Z' }
   for (let x = 21; x <= 43; x++) tiles[idx(x, 42)] = 'Z';
+  // the southern sea: nothing west of the Orrery is walkable below the coast
+  for (let y = 48; y < H; y++) for (let x = 0; x < 62; x++) tiles[idx(x, y)] = 'w';
   for (let x = 20; x <= 44; x++) tiles[idx(x, 48)] = 'Z';
   for (let y = 42; y <= 48; y++) { tiles[idx(20, y)] = 'Z'; tiles[idx(44, y)] = 'Z' }
   for (const z of ZONES) for (const isl of z.islands ?? []) {

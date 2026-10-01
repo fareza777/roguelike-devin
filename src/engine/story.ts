@@ -22,8 +22,10 @@ export const currentStep = (s: GameState) => MAIN[Math.min(s.main, MAIN.length -
 export function unlockLoc(s: GameState, id: string) { if (!s.world.known.includes(id)) s.world.known.push(id) }
 
 export function setMain(s: GameState, id: string) {
-  const idx = MAIN_INDEX.get(id);
+  let idx = MAIN_INDEX.get(id);
   if (idx === undefined || idx <= s.main) return;
+  // optional-looking prep steps ('p..') are mandatory: a jump never skips over one
+  for (let i = s.main + 1; i < idx; i++) if (MAIN[i].id.startsWith('p')) { idx = i; break }
   s.main = idx;
   s.flags._mg = 0;
   const step = MAIN[idx];

@@ -33,7 +33,7 @@ const towns = [
 ];
 
 const dungeons = [
-  dg({ id: 'gullcaves', name: 'The Gull Caves', subtitle: 'Where the tide keeps its quiet things', desc: 'Salt-wet grottos under the rock of Gullrest. The gulls nest in the roof. What nests in the floor is the problem.', art: 'tidewatch', theme: 'reef', floors: 3, lvl: 34, enemies: ['riptideeel', 'wreckcrab', 'gullhawk', 'shellmaw'], elite: 'reefwarden', boss: 'oldtangle', size: [29, 21], pos: [8, 64], icon: 'm_cave', secretItem: 'u_corall_pistol' }),
+  dg({ id: 'gullcaves', name: 'The Gull Caves', subtitle: 'Where the tide keeps its quiet things', desc: 'Salt-wet grottos under the rock of Gullrest. The gulls nest in the roof. What nests in the floor is the problem.', art: 'tidewatch', theme: 'reef', floors: 3, lvl: 34, enemies: ['riptideeel', 'wreckcrab', 'gullhawk', 'shellmaw'], elite: 'reefwarden', boss: 'oldtangle', size: [29, 21], pos: [8, 64], cond: { arcMin: ['tide', 3] }, clear: 's_tide_caves', icon: 'm_cave', secretItem: 'u_corall_pistol' }),
   dg({ id: 'reefgrottos', name: 'The Reefbell Grottos', subtitle: 'Coral that rings in the dark', desc: 'A cave of living reef, where every branch is a bell and every bell has a tide-name. The sound is beautiful. It is also a summons.', art: 'reefgrottos', theme: 'reef', floors: 3, lvl: 33, enemies: ['barnaclebrute', 'riptideeel', 'jellylantern', 'shellmaw'], elite: 'reefwarden', boss: 'reefheart', size: [29, 21], pos: [22, 67], cond: { arcMin: ['tide', 2] }, clear: 's_tide_reef', icon: 'm_cave' }),
   dg({ id: 'sunkenarmada', name: 'The Sunken Armada', subtitle: 'Forty ships, still in formation', desc: 'A fleet that went down on its Captain’s order, keels up, masts down, flags still hoisted. The crews are still at their posts.', art: 'armada', theme: 'reef', floors: 3, lvl: 35, enemies: ['drownedmarine', 'ghostrigging', 'anchorgolem', 'petrelswarm', 'wreckcrab'], elite: 'drownedcommodore', boss: 'bellweather', size: [31, 23], pos: [38, 67], cond: { arcMin: ['tide', 4] }, clear: 's_tide_armada', icon: 'm_ship' }),
   dg({ id: 'unsinking', name: 'The Unsinking', subtitle: 'Captain Corall’s flagship', desc: 'A galleon that has been sinking for three hundred years and has not yet reached the bottom. Its decks are dry. Its hold is the sea.', art: 'unsinking', theme: 'reef', floors: 5, lvl: 37, enemies: ['drownedmarine', 'ghostrigging', 'tidecaller', 'anchorgolem', 'krakenarm'], elite: 'leviathancalf', boss: 'corall', size: [33, 25], pos: [50, 58], cond: { arcMin: ['tide', 7] }, clear: 's_corall_end', mainBoss: true, icon: 'm_castle' }),
@@ -118,6 +118,10 @@ const events = [
 ];
 
 const scenes = [
+  sc('s_tide_caves', 'tidewatch', [
+    ['narrator', 'Old Tangle subsides into the dark of his cave, quiet at last, one huge arm lying across the entrance like a gate left open. The gulls on the roof go silent, then, one by one, begin to sing.'],
+    ['narrator', 'Nerys is waiting on the beach when you come out. She does not say thank you. She just sits down beside you on the sand, and her white eel loops once around your shoulders in what could be gratitude.', { eff: [xpL(0.3), san(-2)] }],
+  ]),
   sc('s_tide_arrive', 'tidewatch', [
     ['narrator', 'The ferry noses through a forest of masts, hulls, bridges, and lanterns on lines. Tidewatch rises from the water like a coral, every level a deck, every deck a street, every street a gangway. The air smells of tar and kelp and warm lamp oil.'],
     ['narrator', 'At the very top, a lighthouse beam points at the sea, not sweeping, not moving, as if holding something on a leash.', { eff: [arc('tide', 1), xpL(0.25)] }],
@@ -196,7 +200,7 @@ export const TIDE: RegionPack = {
     steps: [
       { title: 'The Harbormaster', obj: 'Speak with Quillon Brae in Tidewatch.', text: 'The harbour keeps a ledger of every ship ever lost. Quillon knows how to find the flagship.', at: 'tidewatch' },
       { title: 'The Reefbell Grottos', obj: 'Defeat the Reef-Heart in the Reefbell Grottos.', text: 'The first coral shard still rings in a cave of living bells.', at: 'reefgrottos', goal: g('clear', 1, 'Defeat the Reef-Heart', 'reefgrottos') },
-      { title: 'Clear the Shallows', obj: 'Slay fourteen sea creatures in the Archipelago.', text: 'The islands are overrun. The ferries will not run until the water is safe.', at: 'tidewatch', goal: g('killTag', 14, 'Slay sea creatures', 'sea') },
+      { title: 'Clear the Shallows', obj: 'Enter the Gull Caves and defeat Old Tangle.', text: 'The islands are overrun, and the ferries will not run until the kraken under Gullrest is dealt with.', at: 'gullcaves', goal: g('clear', 1, 'Defeat Old Tangle', 'gullcaves') },
       { title: 'The Sunken Armada', obj: 'Defeat Admiral Bellweather in the Sunken Armada.', text: 'The second shard lies in the admiral’s chest.', at: 'sunkenarmada', goal: g('clear', 1, 'Defeat Admiral Bellweather', 'sunkenarmada') },
       { title: 'The Atoll Light', obj: 'Take both shards to Sive Lamplighter on Lantern Atoll.', text: 'Only the lamplighter can set the needle.', at: 'lanternatoll' },
       { title: 'Compass Rock', obj: 'Stand upon Compass Rock at low tide.', text: 'The needle will find the flagship from the place where it was cut.', at: 'unsinking', goal: g('reach', 1, 'Reach Compass Rock', 'compassrock') },

@@ -32,7 +32,7 @@ const towns = [
 ];
 
 const dungeons = [
-  dg({ id: 'mainspring', name: 'The Mainspring Works', subtitle: 'Where the first spring was wound', desc: 'A vast, humming foundry of brass springs, each tight enough to hurl a house. The workers left in a hurry, or were never really workers at all.', art: 'orrery', theme: 'gear', floors: 3, lvl: 38, enemies: ['tickspider', 'brasswasp', 'clockworkhound', 'gearswarm'], elite: 'pendulumwarden', boss: 'mainspring', size: [29, 21], pos: [66, 64], icon: 'm_mine', secretItem: 'u_hour_cog' }),
+  dg({ id: 'mainspring', name: 'The Mainspring Works', subtitle: 'Where the first spring was wound', desc: 'A vast, humming foundry of brass springs, each tight enough to hurl a house. The workers left in a hurry, or were never really workers at all.', art: 'orrery', theme: 'gear', floors: 3, lvl: 38, enemies: ['tickspider', 'brasswasp', 'clockworkhound', 'gearswarm'], elite: 'pendulumwarden', boss: 'mainspring', size: [29, 21], pos: [66, 64], cond: { arcMin: ['gear', 3] }, clear: 's_gear_spring', icon: 'm_mine', secretItem: 'u_hour_cog' }),
   dg({ id: 'geartrain', name: 'The Great Gear-Train', subtitle: 'The wheel inside the wheel inside the wheel', desc: 'A maze of interlocking gears the size of cathedrals. They turn. You must time your crossing, or be turned.', art: 'orrery', theme: 'gear', floors: 3, lvl: 38, enemies: ['tickspider', 'springknight', 'gearswarm', 'steamelemental'], elite: 'pendulumwarden', boss: 'gearmaster', size: [29, 21], pos: [72, 52], cond: { arcMin: ['gear', 2] }, clear: 's_gear_train', icon: 'm_ruins' }),
   dg({ id: 'equationvaults', name: 'The Equation Vaults', subtitle: 'Where the schedule was calculated', desc: 'Rooms of brass tablets, each engraved with an equation that solved a life. The tablets are still adding.', art: 'orrery', theme: 'gear', floors: 3, lvl: 40, enemies: ['minutehand', 'hourgolem', 'cogwraith', 'chronophage'], elite: 'orrerytitan', boss: 'primeengine', size: [31, 23], pos: [90, 56], cond: { arcMin: ['gear', 4] }, clear: 's_gear_vaults', icon: 'm_cave' }),
   dg({ id: 'hourengine', name: 'The Hour Engine', subtitle: 'The heart of every clock in the world', desc: 'The vast central mechanism of the Orrery, a spinning tower of gears that has not advanced a second in three centuries. At the top, a man stands at a console, and has never once looked up.', art: 'hourengine', theme: 'gear', floors: 5, lvl: 42, enemies: ['minutehand', 'hourgolem', 'pendulumreaper', 'cuckoosentinel', 'springknight'], elite: 'orrerytitan', boss: 'orrin', size: [33, 25], pos: [88, 68], cond: { arcMin: ['gear', 7] }, clear: 's_orrin_end', mainBoss: true, icon: 'm_castle' }),
@@ -59,7 +59,7 @@ const enemies = [
   en('cuckoosentinel', 'Cuckoo Sentinel', 'e_owl', 'caster', 'construct beast', ['dread', 'attack', 'dread'], 'A brass bird that pops out of a tower and calls the hour. The hour is always now.', { dread: 3, look: 'winged' }),
   en('pendulumwarden', 'Pendulum Warden', 'e_blackknight', 'tank', 'construct elite', ['guard', 'heavy', 'dread'], 'A massive brass sentinel that swings a pendulum of lead. Each swing is a different time.', { dread: 2, look: 'armor' }),
   en('orrerytitan', 'Orrery Titan', 'e_cyclops', 'brute', 'construct elite', ['heavy', 'attack', 'heavy', 'afflict'], 'A walking planetarium: rings, spheres, orbits, and a heavy fist at the end of each arm.', { ...aff('weak'), look: 'titan' }),
-  en('mainspring', 'The Mainspring', 'e_icegolem', 'tank', 'construct boss', ['guard', 'heavy', 'heavy', 'afflict'], 'A single coiled spring the height of a tower, with a will of its own, wound to the point of snapping.', { hpMul: 4, ...aff('bleed'), look: 'golem' }),
+  en('mainspring', 'The Mainspring', 'e_icegolem', 'tank', 'construct boss', ['guard', 'heavy', 'heavy', 'afflict'], 'A single coiled spring the height of a tower, with a will of its own, wound to the point of snapping.', { hpMul: 3.4, ...aff('bleed'), look: 'golem' }),
   en('gearmaster', 'Gearmaster Brindle-Kane', 'e_dwarf', 'brute', 'construct human boss', ['heavy', 'attack', 'guard', 'heavy'], 'The last foreman of the Great Gear-Train, replaced piece by piece until the machine was the only thing left.', { hpMul: 4, look: 'armor+mask' }),
   en('primeengine', 'The Prime Engine', 'e_gearmask', 'caster', 'construct boss', ['dread', 'heavy', 'afflict', 'guard'], 'An engine that computes lives. It has just completed yours.', { hpMul: 4.2, dread: 3, look: 'golem' }),
   en('orrin', 'Orrin Vael, the Clockwright', 'e_crowned', 'caster', 'human construct boss', ['dread', 'heavy', 'afflict', 'guard', 'heavy'], 'Fifth Regent of the Meridian. He ruled by the schedule, and kept ruling after he stopped being a man.', { hpMul: 5.4, dread: 4, ...aff('weak'), look: 'king' }),
@@ -116,6 +116,10 @@ const events = [
 ];
 
 const scenes = [
+  sc('s_gear_spring', 'orrery', [
+    ['narrator', 'The Mainspring unwinds with a sound like a hundred thousand clocks sighing at once. The Works falls quiet, and the little brass spiders pour out through the doors, free at last.'],
+    ['narrator', 'Pim is sitting on a crate when you step outside, grinning, covered in oil. “It stopped ticking,” he says, as though it were a personal victory. “It stopped. And then it started again, slower. Slower is better.”', { eff: [xpL(0.3), san(-2)] }],
+  ]),
   sc('s_gear_arrive', 'cogspire', [
     ['narrator', 'A hundred bells ring on the hour, in a hundred different pitches, and the city of Cogspire hums to life like an enormous watch being wound. Gear-streets turn slowly beneath your feet. Veiled clerks in brass masks hurry along the pavement, each carrying a slip of paper with a time written on it.'],
     ['narrator', 'High above, at the top of the tallest spire, a great clock face turns its hands. Somehow you know, without checking, that it is exactly the right time. It always is.', { eff: [arc('gear', 1), xpL(0.25)] }],
@@ -187,7 +191,7 @@ export const GEAR: RegionPack = {
     steps: [
       { title: 'The Horologist', obj: 'Speak with Ines Vael in Cogspire.', text: 'The Clockwright’s great-granddaughter knows where he locked himself in.', at: 'cogspire' },
       { title: 'The Great Gear-Train', obj: 'Defeat the Gearmaster in the Great Gear-Train.', text: 'The first brass wheel spins at the heart of the Gear-Train.', at: 'geartrain', goal: g('clear', 1, 'Defeat the Gearmaster', 'geartrain') },
-      { title: 'Clear the Mechanisms', obj: 'Slay fourteen constructs in the Orrery.', text: 'The wild clockwork has outgrown its keepers. Thin it before the next hour.', at: 'cogspire', goal: g('killTag', 14, 'Slay constructs', 'construct') },
+      { title: 'Unwind the Spring', obj: 'Enter the Mainspring Works and defeat the Mainspring.', text: 'The Works is overwound and the wild clockwork is spilling out of it. Unwind it before the next hour.', at: 'mainspring', goal: g('clear', 1, 'Defeat the Mainspring', 'mainspring') },
       { title: 'The Equation Vaults', obj: 'Defeat the Prime Engine in the Equation Vaults.', text: 'The second wheel lies at the heart of the calculating engine.', at: 'equationvaults', goal: g('clear', 1, 'Defeat the Prime Engine', 'equationvaults') },
       { title: 'The Tick-Mender', obj: 'Take both wheels to Pim Tickwell in Escapement.', text: 'Only Pim can build the Key.', at: 'escapement' },
       { title: 'The Zero Point', obj: 'Stand on the Zero Point and turn the Key.', text: 'The one moment in the Orrery that is not on a schedule.', at: 'hourengine', goal: g('reach', 1, 'Reach the Zero Point', 'zeropoint') },

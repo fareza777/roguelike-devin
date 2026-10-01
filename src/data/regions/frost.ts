@@ -32,7 +32,7 @@ const towns = [
 ];
 
 const dungeons = [
-  dg({ id: 'whalebarrows', name: 'The Whaleback Barrows', subtitle: 'A graveyard in the shape of a whale', desc: 'A long ridge of ice that is, on closer inspection, the back of a vast whale. The whalers buried their dead in the blow-hole. The dead did not stay.', art: 'aurora', theme: 'aurora', floors: 3, lvl: 44, enemies: ['frostbound', 'iciclehound', 'whiteoutshade', 'glaciermaw'], elite: 'frostchampion', boss: 'hollowleviathan', size: [29, 21], pos: [64, 3], icon: 'm_graveyard', secretItem: 'u_frost_harpoon' }),
+  dg({ id: 'whalebarrows', name: 'The Whaleback Barrows', subtitle: 'A graveyard in the shape of a whale', desc: 'A long ridge of ice that is, on closer inspection, the back of a vast whale. The whalers buried their dead in the blow-hole. The dead did not stay.', art: 'aurora', theme: 'aurora', floors: 3, lvl: 44, enemies: ['frostbound', 'iciclehound', 'whiteoutshade', 'glaciermaw'], elite: 'frostchampion', boss: 'hollowleviathan', size: [29, 21], pos: [64, 3], cond: { arcMin: ['frost', 3] }, clear: 's_frost_barrows', icon: 'm_graveyard', secretItem: 'u_frost_harpoon' }),
   dg({ id: 'auroraobservatory', name: 'The Aurora Observatory', subtitle: 'Where the lights are counted', desc: 'A tower of ice and brass, tall as a fjord, where astronomers once charted every colour that crossed the sky. The Star-Reader still takes notes.', art: 'aurora', theme: 'aurora', floors: 3, lvl: 43, enemies: ['aurorawisp', 'icemantis', 'wintercourtier', 'frostharpy'], elite: 'rimegiant', boss: 'starreader', size: [29, 21], pos: [72, 10], cond: { arcMin: ['frost', 2] }, clear: 's_frost_observatory', icon: 'm_tower' }),
   dg({ id: 'silentmere', name: 'The Silent Mere', subtitle: 'A lake under glass', desc: 'A frozen lake, clear as a window, with a drowned city beneath it that you can see but not hear. Nothing in the Mere has made a sound in three hundred years.', art: 'aurora', theme: 'aurora', floors: 3, lvl: 45, enemies: ['whiteoutshade', 'glaciermaw', 'frostbound', 'snowblind', 'iciclehound'], elite: 'frostchampion', boss: 'merewarden', size: [31, 23], pos: [86, 12], cond: { arcMin: ['frost', 4] }, clear: 's_frost_mere', icon: 'm_cave' }),
   dg({ id: 'glasskeep', name: 'Hrimm’s Glass Keep', subtitle: 'The Winter Queen’s court of ice', desc: 'A palace of ice so clear it seems to be made of light. Inside, three hundred courtiers stand frozen in the middle of a dance, and at the heart of the court, the Queen sits very still on a throne of snow.', art: 'glasskeep', theme: 'aurora', floors: 5, lvl: 47, enemies: ['wintercourtier', 'frostbound', 'mammoth', 'whiteoutshade', 'icemantis'], elite: 'rimegiant', boss: 'skadi', size: [33, 25], pos: [92, 3], cond: { arcMin: ['frost', 7] }, clear: 's_skadi_end', mainBoss: true, icon: 'm_castle' }),
@@ -93,7 +93,7 @@ const events = [
     c('Light a flare', 'Make them find you.', [wild(), xpL(0.15)])], 'figure'),
   E('ev_f_aurora', 'The Aurora Descends', 'sigil', 'wild snow aurora', 'A ribbon of green light comes down from the sky and lies across the snow in front of you, as if it had been dropped. When you step on it, it is warm.', [
     c('Follow it', 'See where it leads.', [lore(), xpL(0.2)]),
-    c('Gather some', 'It will not hold, but try.', [item('j_shine'), san(-3)], { check: ck('cunning', 14), fail: [hp(-14)] }),
+    c('Gather some', 'It will not hold, but try.', [item('j_cluster'), san(-3)], { check: ck('cunning', 14), fail: [hp(-14)] }),
     c('Walk through it', 'Let it change you.', [san(8), corrupt(1)])], 'circle'),
   E('ev_f_ballroom', 'A Frozen Ballroom', 'e_hooded', 'aurora', 'A grand room of ice. Three hundred figures dance in frozen pairs, cloaked and masked, lit by a chandelier of icicles. Not one of them has a face. A single couple is missing from the floor.', [
     c('Take the empty place', 'Join the dance.', [san(-6), loot('epic')], { check: ck('will', 15), fail: [hp(-24), wild('elite')] }),
@@ -114,6 +114,10 @@ const events = [
 ];
 
 const scenes = [
+  sc('s_frost_barrows', 'aurora', [
+    ['narrator', 'The Hollow Leviathan sings one long, low note, and the ice around you rings with it. Then the great ribs sag, the blow-hole closes, and the whale, or what was shaped like a whale, becomes a hill again.'],
+    ['narrator', 'Torvald stands at the edge of the ice with his old harpoon lowered. He does not salute you. He lifts his chin toward the sea, and the whole camp, in a low unison, starts to sing.', { eff: [xpL(0.3), san(-2)] }],
+  ]),
   sc('s_frost_arrive', 'skerrig', [
     ['narrator', 'The fjord road ends at Skerrig. A grey harbour, every roof turned to the sky, every window dark but for the aurora overhead: slow ribbons of green and violet unfurling above the roofs, listening. In the harbour, whalers’ boats sit in black ice, quiet as sleeping animals.'],
     ['narrator', 'Not a soul on the quay speaks above a murmur. The whole city holds its breath, and the sky overhead holds it with them.', { eff: [arc('frost', 1), xpL(0.25)] }],
@@ -190,7 +194,7 @@ export const FROST: RegionPack = {
     steps: [
       { title: 'The Chancellor', obj: 'Speak with Brynja Skarn in Skerrig.', text: 'Skerrig has been quiet for three centuries. Brynja knows why.', at: 'skerrig' },
       { title: 'The Aurora Observatory', obj: 'Defeat the Star-Reader in the Aurora Observatory.', text: 'The first thread of aurora lies in the Observatory’s ice.', at: 'auroraobservatory', goal: g('clear', 1, 'Defeat the Star-Reader', 'auroraobservatory') },
-      { title: 'Break the Frost', obj: 'Slay fourteen frost creatures in Aurora Reach.', text: 'The cold-things have spilled out of the Keep and are crowding the roads.', at: 'skerrig', goal: g('killTag', 14, 'Slay frost creatures', 'frost') },
+      { title: 'Break the Frost', obj: 'Enter the Whaleback Barrows and defeat the Hollow Leviathan.', text: 'The cold-things have spilled out of the Keep and the Whaleback is walking again. Put the leviathan to rest.', at: 'whalebarrows', goal: g('clear', 1, 'Defeat the Hollow Leviathan', 'whalebarrows') },
       { title: 'The Silent Mere', obj: 'Defeat the Mere-Warden in the Silent Mere.', text: 'The second thread lies at the bottom of a frozen lake.', at: 'silentmere', goal: g('clear', 1, 'Defeat the Mere-Warden', 'silentmere') },
       { title: 'The Weaver', obj: 'Take both threads to Ragnhild Frostbrand in Rimewatch.', text: 'Only a weaver of aurora-silk can make a mantle that will survive the Keep.', at: 'rimewatch' },
       { title: 'The Still Point', obj: 'Stand at the Still Point in the northern snow.', text: 'The one patch of bare ground in the world, where the Queen’s road begins.', at: 'glasskeep', goal: g('reach', 1, 'Reach the Still Point', 'stillpoint') },
