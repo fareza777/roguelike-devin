@@ -1,10 +1,10 @@
 {
   "_readme": "AdMob ids. These are Google's official TEST ids: they show labelled test ads and earn nothing. Before publishing, create the app and 3 ad units (banner, interstitial, rewarded) in AdMob, paste the real ids here and set testMode to false. scripts/patch-android.mjs copies appId into AndroidManifest.xml.",
-  "testMode": true,
-  "appId": "ca-app-pub-3940256099942544~3347511713",
+  "testMode": false,
+  "appId": "ca-app-pub-6279186647593327~4470295219",
   "units": {
-    "banner": "ca-app-pub-3940256099942544/9214589741",
-    "interstitial": "ca-app-pub-3940256099942544/1033173712",
-    "rewarded": "ca-app-pub-3940256099942544/5224354917"
+    "banner": "ca-app-pub-6279186647593327/7045496829",
+    "interstitial": "ca-app-pub-6279186647593327/3803246656",
+    "rewarded": "ca-app-pub-6279186647593327/3369975699"
   }
 }
