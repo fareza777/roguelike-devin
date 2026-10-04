@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.dreadmarch.blackmeridian',
-  appName: 'Dreadmarch',
+  appName: 'Dreadmarch RPG',
   webDir: 'dist',
   backgroundColor: '#070606',
   android: {

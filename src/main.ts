@@ -3,6 +3,7 @@ import './styles/components.css';
 import './styles/screens.css';
 import './styles/game.css';
 import { cancelPendingAds, initAds, maybeInterstitial, onAdsChange, rewardedAvailable, setBanner, showPrivacyOptions, showRewarded } from './ads';
+import { buyRemoveAds, initPurchases, onPurchasesChange, restoreRemoveAds } from './purchases';
 import { canWatch, type RewardId } from './data/ads';
 import { setAudible, sfx, setMood, setMusicEnabled, unlockAudio, type Mood, type Sfx } from './audio';
 import { DUNGEON_MAP, MAP_H, MAP_W, TOWN_MAP } from './data/world';
@@ -403,6 +404,8 @@ const actions: Record<string, () => void> = {
   adSupplies: () => void watchAd('supplies', () => { play('pickup'); toastMsg('A supply cache is yours.') }),
   adBoost: () => void watchAd('boost', () => { play('level'); toastMsg('Fortune favours you for 30 more minutes.') }),
   privacy: () => void showPrivacyOptions(),
+  removeAds: () => void purchaseRemoveAds(),
+  restoreAds: () => void restoreAdsPurchase(),
   nextEnding: () => { ui.endSlide++; play('page'); render() },
   epilogue: () => {
     if (s.ending && !meta.endings.includes(s.ending)) { meta.endings.push(s.ending); persistMeta() }
@@ -443,6 +446,18 @@ async function watchAd(id: RewardId, done: () => void) {
   adBusy = false;
   if (r.ok) { if (G.grantAdReward(s, id)) { persist(); done() } else toastMsg('That bonus is not available right now.') }
   else toastMsg(r.reason === 'skipped' ? 'Watch the whole video to earn the reward.' : 'No ad is ready yet. Try again in a moment.');
+}
+
+async function purchaseRemoveAds() {
+  const result = await buyRemoveAds();
+  if (result.ok) toastMsg('Purchase started. Ads disappear after Google Play confirms it.');
+  else if (result.reason === 'not-ready') toastMsg('Google Play is still loading the product. Try again shortly.');
+  else toastMsg('The Remove Ads purchase is unavailable right now.');
+}
+
+async function restoreAdsPurchase() {
+  const result = await restoreRemoveAds();
+  toastMsg(result.ok ? 'Your Remove Ads purchase has been restored.' : 'No Remove Ads purchase could be restored yet.');
 }
 
 function skipTyping() {
@@ -568,8 +583,10 @@ attachCanvasInput();
 applySettings();
 render();
 onAdsChange(() => { if (!META_SCREENS.includes(current()) && ['reward', 'death', 'inn'].includes(current())) render() });
+onPurchasesChange(() => { void setBanner(false); render() });
 window.setInterval(() => { if (!document.hidden && s.name && !META_SCREENS.includes(screen)) s.playSeconds += 1 }, 1000);
 void nativeReady();
+void initPurchases();
 void TOWN_MAP;
 window.setTimeout(() => { if (screen === 'splash') afterSplash() }, 2800);
 

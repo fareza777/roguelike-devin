@@ -4,6 +4,7 @@
 import cfg from '../ads.config.json';
 import { ADS_POLICY, adsOf, interstitialDue } from './data/ads';
 import { isNative } from './platform';
+import { adsRemoved } from './purchases';
 import type { GameState } from './types';
 
 type Plugin = typeof import('@capacitor-community/admob');
@@ -27,7 +28,7 @@ const emit = () => listeners.forEach(f => f());
 export const onAdsChange = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn) } };
 export const adsSupported = () => isNative() || dev;
 /** True when a rewarded ad can be offered right now. */
-export const rewardedAvailable = () => (isNative() ? S.ready && S.rewardedReady : dev);
+export const rewardedAvailable = () => !adsRemoved() && (isNative() ? S.ready && S.rewardedReady : dev);
 
 function setBannerHeight(h: number) {
   S.bannerH = h;
@@ -46,11 +47,13 @@ async function load(): Promise<Plugin | null> {
 const retryInit = () => { clearTimeout(initTimer); initTimer = window.setTimeout(() => { if (!S.ready) void initAds() }, 8000) };
 
 async function prepareInterstitial() {
+  if (adsRemoved()) return;
   const p = await load();
   if (!p || !S.canRequest || S.interReady) return;
   try { await p.AdMob.prepareInterstitial(req(cfg.units.interstitial)); S.interReady = true } catch { S.interReady = false }
 }
 async function prepareRewarded() {
+  if (adsRemoved()) return;
   const p = await load();
   if (!p || !S.canRequest || S.rewardedReady || rewardedBusy) return;
   rewardedBusy = true;
@@ -104,6 +107,7 @@ function safeBottom() {
 }
 
 async function showBannerNow() {
+  if (adsRemoved()) return;
   const p = await load();
   if (!p || !S.ready || !S.bannerOn) return;
   try {
@@ -118,6 +122,16 @@ async function showBannerNow() {
 
 /** Show or hide the bottom banner (shown on the calm screens, never in combat, dialogue or cinematics). */
 export async function setBanner(on: boolean) {
+  if (adsRemoved()) {
+    S.bannerOn = false;
+    clearTimeout(bannerTimer);
+    if (!isNative()) { if (S.bannerH !== 0) setBannerHeight(0); return; }
+    const p = await load();
+    if (p && S.bannerShown) { try { await p.AdMob.hideBanner() } catch { /* ignore */ } }
+    S.bannerShown = false;
+    if (S.bannerH !== 0) setBannerHeight(0);
+    return;
+  }
   if (S.bannerOn === on) return;
   S.bannerOn = on;
   if (!isNative()) return;
@@ -130,7 +144,7 @@ export async function setBanner(on: boolean) {
 
 /** Show an interstitial if the policy allows, a couple of seconds after a natural break. */
 export function maybeInterstitial(s: GameState, canShow: () => boolean, delayMs = 2500) {
-  if (!isNative() || !S.ready) return;
+  if (adsRemoved() || !isNative() || !S.ready) return;
   const t = window.setTimeout(async () => {
     timers.delete(t);
     const now = Date.now();
@@ -152,7 +166,7 @@ export type RewardedResult = { ok: true } | { ok: false; reason: 'unavailable' |
 
 /** Watch a rewarded video. Resolves { ok: true } only when the reward was earned. */
 export async function showRewarded(): Promise<RewardedResult> {
-  if (!adsSupported()) return { ok: false, reason: 'unavailable' };
+  if (adsRemoved() || !adsSupported()) return { ok: false, reason: 'unavailable' };
   if (!isNative()) { await new Promise(r => setTimeout(r, 700)); return { ok: true } } // dev simulation
   if (!S.ready) return { ok: false, reason: 'not_ready' };
   if (!S.rewardedReady) { void prepareRewarded(); return { ok: false, reason: 'loading' } }

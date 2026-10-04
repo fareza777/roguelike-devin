@@ -4,3 +4,6 @@ dist/
 .DS_Store
 android/.gradle/
 android/app/build/
+android/release-keystore.properties
+android/app/release-upload.jks
+android/app/release-upload-password.txt

@@ -4,6 +4,8 @@ import { icon } from '../icons';
 import type { GameState, Meta } from '../types';
 import { UI, esc, stillArt } from './common';
 import { privacyOptionsRequired } from '../ads';
+import { adsRemoved } from '../purchases';
+import { isNative } from '../platform';
 
 export const VERSION_LABEL = '3.0.0';
 export const INTRO_LENGTH = INTRO.length;
@@ -69,6 +71,7 @@ export function settings(meta: Meta, ui: UI, inGame: boolean) {
     <div class="grid2 section">
       <button class="btn" data-act="replayIntro">${icon('journal')}Replay intro</button><button class="btn" data-act="replayTutorial">${icon('lore')}Replay tutorial</button>
       ${privacyOptionsRequired() ? `<button class="btn" data-act="privacy">${icon('settings')}Ad privacy options</button>` : ''}
+      ${isNative() ? `<button class="btn" data-act="${adsRemoved() ? 'restoreAds' : 'removeAds'}">${icon('shield')}<span>${adsRemoved() ? 'Ads removed' : 'Remove all ads'}<small>${adsRemoved() ? 'Purchased on Google Play' : 'One-time purchase · $4.99'}</small></span></button>` : ''}
       ${inGame ? `<button class="btn" data-act="toTitle">${icon('back')}Main menu</button>` : ''}
       <button class="btn danger" data-act="deleteSave" ${load() ? '' : 'disabled'}>${ui.confirmDelete ? 'Tap again to erase' : 'Erase save'}</button>
     </div>
@@ -81,7 +84,7 @@ export function about() {
     ${eclipse('small')}<h2>Dreadmarch: The Black Meridian</h2><p class="muted">Version ${VERSION_LABEL}</p>
     <p>A dark-fantasy roguelike RPG of grim choices, grid exploration, tactical combat and slow madness. Traverse a shattered continent, break the seals, and decide what morning means.</p>
     <div class="section left"><h3>Credits</h3><p>Design, writing and code: the Dreadmarch team.<br>Typefaces: Cinzel and Crimson Pro (SIL Open Font License).<br>Icons by Lorc, Delapouite, Skoll, Willdabeast, Sbed and others from game-icons.net, licensed CC BY 3.0. Painted art created for Dreadmarch.</p></div>
-    <div class="section left"><h3>Privacy</h3><p>Dreadmarch plays fully offline and your chronicle is stored only on this device. There are no accounts and no analytics. The app shows Google AdMob ads (a banner, occasional full-screen ads and optional rewarded videos); AdMob may use an advertising ID according to your consent choices. Rewarded ads are always optional.</p></div>
+    <div class="section left"><h3>Privacy</h3><p>The core chronicle plays offline and your save stays on this device. There are no accounts or in-app analytics. Google AdMob may show a banner, occasional full-screen ads and optional rewarded videos, subject to your consent choices. A one-time Google Play purchase can remove all ads. Read the full privacy policy from the store listing.</p></div>
     <div class="grid2 section"><button class="btn" data-act="share">${icon('share')}Share the game</button><button class="btn" data-act="rate">${icon('star')}Rate on Play Store</button></div>
     <div class="row-end"><span></span><button class="btn primary" data-go="title">Back</button></div>
   </div></div>`;
